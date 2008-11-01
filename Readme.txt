@@ -24,8 +24,8 @@ Enjoy!
 *** NOTE TO MAC OS X, LINUX AND WIN32 SOURCE USERS: ***
 
 Python 2.5 or 2.6 is required to run Brain Workshop on Mac OS X
-and Linux.
-Python 2.4 may also be used as long as python-ctypes is installed.
+and Linux. Python 2.4 may also work as long as the python-ctypes
+package is installed.
 [Note: Windows versions have python included.]
 
 Python 2.6 can be downloaded here:
@@ -53,9 +53,10 @@ Change Log:
       configuration settings. The config file config.ini will be
       created if necessary when BW is launched for the first time.
 * OpenAL is now the default sound driver in Linux if available.
-      If you're having sound problems, it may help to download,
-      complile & install OpenAL Soft.
+      If you're having sound problems, it may help to install the
+      python-openal package.
 * There's no longer any need to install pyglet on Mac OS X or Linux.
+      It's now included with the source distribution.
 
 4.12:
 * Fixed level increase threshold in Novice mode
