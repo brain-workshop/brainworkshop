@@ -3750,7 +3750,7 @@ def on_key_press(symbol, modifiers):
                 
         elif mode.tick != 0 and mode.trial_number > 0:
             if mode.mode == 7 or mode.mode == 8 or mode.mode == 9:
-                if symbol == key.BACKSPACE or symbol == key.DELETE or symbol == key.NUM_DELETE:
+                if symbol == key.BACKSPACE or symbol == key.DELETE:
                     arithmeticAnswerLabel.reset_input()
                 elif symbol == key.MINUS or symbol == key.NUM_SUBTRACT:
                     arithmeticAnswerLabel.input('-')
