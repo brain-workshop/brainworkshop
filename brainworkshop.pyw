@@ -14,7 +14,7 @@
 # License: GPL (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.2'
+VERSION = '4.21'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser
 from decimal import Decimal
@@ -3539,7 +3539,15 @@ def toggle_manual_mode():
         mode.enforce_standard_mode()
         
     update_all_labels()
+
     
+    
+def dump_pyglet_info():
+    from pyglet import info
+    sys.stdout = open(os.path.join(get_main_dir(), FOLDER_DATA, 'dump.txt'), 'w')
+    info.dump()
+    window.on_close()
+
 # there are 3 event loops:
 #   on_key_press: listens to the keyboard and acts when certain keys are pressed
 #   on_draw:      draws everything to the screen something like 60 times per second
@@ -3553,7 +3561,10 @@ def toggle_manual_mode():
 @window.event
 def on_key_press(symbol, modifiers):
     
-    if mode.draw_graph:
+    if symbol == key.D and (modifiers & key.MOD_CTRL):
+        dump_pyglet_info()
+    
+    elif mode.draw_graph:
         if symbol == key.ESCAPE or symbol == key.G or symbol == key.X:
             mode.draw_graph = False
             
