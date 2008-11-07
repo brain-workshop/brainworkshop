@@ -27,8 +27,8 @@ FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
 CHARTFILE = ['chart01-dnb.txt', 'chart02-tnb.txt', 'chart03-dlnb.txt', 'chart04-tlnb.txt',
-             'chart05-qlnb.txt','chart06-anb.txt', 'chart07-danb.txt', 'chart08-tanb.txt'
-             'chart09-ponb.txt', 'chart10-aunb.txt']
+             'chart05-qlnb.txt','chart06-anb.txt', 'chart07-danb.txt', 'chart08-tanb.txt',
+             'chart09-ponb.txt', 'chart10-aunb.txt', 'chart11-dvnb.txt']
 ARITHMETIC_ACCEPTABLE_DECIMALS = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9',
                        '0.125', '0.25', '0.375', '0.625', '0.75', '0.875',
                        '0.15', '0.35', '0.45', '0.55', '0.65', '0.85', '0.95',]
@@ -1065,7 +1065,7 @@ class Graph:
             elif x == 7: output.append('Date\tTriple Arithmetic N-Back Average\n')
             elif x == 8: output.append('Date\tPosition N-Back Average\n')
             elif x == 9: output.append('Date\tAudio N-Back Average\n')
-            elif x == 10: output.append('Date\tVariable N-Back Average\n')
+            elif x == 10: output.append('Date\tDual Variable N-Back Average\n')
             keyslist = dictionary.keys()
             keyslist.sort()
             if len(keyslist) == 0: continue
@@ -1832,6 +1832,7 @@ class GameModeLabel:
                 str_list.append('Triple Arithmetic ')
             elif mode.mode == 12:
                 str_list.append('Dual Variable ')
+                
             str_list.append(str(mode.back))
             str_list.append('-Back')
             self.label.text = ''.join(str_list)
