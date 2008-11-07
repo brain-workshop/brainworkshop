@@ -248,9 +248,22 @@ KEY_AUDIOVIS = 106
 ######################################################################
 """
 
+def dump_pyglet_info():
+    from pyglet import info
+    sys.stdout = open(os.path.join(get_main_dir(), FOLDER_DATA, 'dump.txt'), 'w')
+    info.dump()
+    sys.stdout.close()
+    window.on_close()
+
 # parse config file & command line options
+try:
+    sys.argv[sys.argv.index('--dump')]
+    dump_pyglet_info()
+except:
+    pass
 try: CONFIGFILE = sys.argv[sys.argv.index('--configfile') + 1]
-except: pass
+except:
+    pass
 
 if not os.path.isfile(os.path.join(get_main_dir(), FOLDER_DATA, CONFIGFILE)):
     newconfigfile = open(os.path.join(os.path.join(get_main_dir(), FOLDER_DATA, CONFIGFILE)), 'w')
@@ -3540,13 +3553,6 @@ def toggle_manual_mode():
         
     update_all_labels()
 
-    
-    
-def dump_pyglet_info():
-    from pyglet import info
-    sys.stdout = open(os.path.join(get_main_dir(), FOLDER_DATA, 'dump.txt'), 'w')
-    info.dump()
-    window.on_close()
 
 # there are 3 event loops:
 #   on_key_press: listens to the keyboard and acts when certain keys are pressed

@@ -43,6 +43,11 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
+4.21:
+* Num pad should now work properly with Arithmetic N-Back modes.
+* Press Ctrl-D to dump various debugging information to the file
+      "dump.txt" in the data folder to aid in bug fixing.
+
 4.2:
 * Added new mode to stretch working memory: Dual Variable N-Back.
       The n-back level is displayed in the center and changes
