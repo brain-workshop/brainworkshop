@@ -14,7 +14,7 @@
 # License: GPL (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.21'
+VERSION = '4.22'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser
 from decimal import Decimal
@@ -38,6 +38,7 @@ WEB_SITE = 'http://brainworkshop.sourceforge.net/'
 TUTORIAL = 'http://brainworkshop.sourceforge.net/#tutorial'
 VERSION_CHECK = 'http://brainworkshop.sourceforge.net/version.txt'
 PYGLET_DOWNLOAD = 'http://pyglet.org/download.html'
+FORUM = 'http://groups.google.com/group/brain-training'
 TIMEOUT_SILENT = 3
 TICKS_MIN = 4
 TICKS_MAX = 20
@@ -327,6 +328,10 @@ try: THRESHOLD_FALLBACK = config.getint('DEFAULT', 'THRESHOLD_FALLBACK')
 except: THRESHOLD_FALLBACK = 50
 try: THRESHOLD_FALLBACK_SESSIONS = config.getint('DEFAULT', 'THRESHOLD_FALLBACK_SESSIONS')
 except: THRESHOLD_FALLBACK_SESSIONS = 3
+try: NOVICE_ADVANCE = config.getint('DEFAULT', 'NOVICE_ADVANCE')
+except: NOVICE_ADVANCE = 90
+try: NOVICE_FALLBACK = config.getint('DEFAULT', 'NOVICE_FALLBACK')
+except: NOVICE_FALLBACK = 75
 try: USE_MUSIC = config.getboolean('DEFAULT', 'USE_MUSIC')
 except: USE_MUSIC = True
 try: USE_APPLAUSE = config.getboolean('DEFAULT', 'USE_APPLAUSE')
@@ -435,7 +440,8 @@ except:
     sys.exit(1)
 
 try:
-    pyglet.options['audio'] = ('openal', 'alsa', 'directsound', )
+    pyglet.options['audio'] = ('directsound', 'alsa', 'openal', )
+    # use in pyglet 1.2: pyglet.options['audio'] = ('directsound', 'pulse', 'openal', )
     import pyglet.media
 except:
     str_list = []
@@ -565,6 +571,7 @@ IMAGES.append('spr_square_magenta.png')
 IMAGES.append('spr_square_cyan.png')
 IMAGES.append('spr_square_green.png')
 IMAGES.append('spr_square_grey.png')
+IMAGES.append('brain_graphic.png')
 
 
 for resource in (SOUNDS + PIANO_SOUNDS + NUMBER_SOUNDS + NATO_SOUNDS + IMAGES):
@@ -818,6 +825,7 @@ class Mode:
         self.show_missed = False
         self.game_select = False
         self.draw_graph = False
+        self.title_screen = True
         
         self.session_number = 0
         self.trial_number = 0
@@ -1178,6 +1186,8 @@ class Graph:
         ymin = 100000.0
         ymax = 0.0
         for entry in dates:
+            if dictionary[entry] == -1:
+                continue
             if dictionary[entry] < ymin:
                 ymin = dictionary[entry]
             if dictionary[entry] > ymax:
@@ -1187,6 +1197,15 @@ class Graph:
         
         ymin = int(math.floor(ymin * 4))/4.
         ymax = int(math.ceil(ymax * 4))/4.
+        
+        # add intermediate days
+        z = 0
+        while z < len(dates) - 1:
+            if dates[z+1].toordinal() > dates[z].toordinal() + 1:
+                newdate = date.fromordinal(dates[z].toordinal() + 1)
+                dates.insert(z+1, newdate)
+                dictionary[newdate] = -1
+            z += 1
         
         points = []
         xaxislabels = []
@@ -1212,13 +1231,12 @@ class Graph:
         for index in range(len(dates)):
             x = int(xinterval * index + left)
             y = int((dictionary[dates[index]] - ymin)/(ymax - ymin) * height + bottom)
-            points.append(x)
-            points.append(y)
+            if dictionary[dates[index]] != -1:
+                points.append(x)
+                points.append(y)
             datestring = str(dates[index])[2:]
             datestring = datestring.replace('-', '\n')
-            if skip():
-                pass
-            else:
+            if not skip():
                 xaxislabels.append(pyglet.text.Label(datestring, multiline=True, width=12,
                                       font_size = 8, bold=False, color=COLOR_TEXT,
                                       x = x, y = bottom - 15,
@@ -1244,11 +1262,6 @@ class Graph:
                 left - 10, y,
                 left, y)), ('c3B', axiscolor * 2))
             y_marking += y_marking_interval
-
-        
-        pyglet.graphics.draw(len(dates), pyglet.gl.GL_LINE_STRIP, ('v2i',
-            points),
-            ('c3B', linecolor * len(dates)))
         
         drawaxes()
             
@@ -1256,6 +1269,19 @@ class Graph:
             label.draw()
         for label in yaxislabels:
             label.draw()
+            
+        pyglet.graphics.draw(len(points) // 2, pyglet.gl.GL_LINE_STRIP, ('v2i',
+            points),
+            ('c3B', linecolor * (len(points) // 2)))                                                                        
+
+        radius = 2
+        for index in range(0, len(points) // 2):
+            pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i',
+                (points[index * 2] - radius, points[index * 2 + 1] - radius,
+                points[index * 2] - radius, points[index * 2 + 1] + radius,
+                points[index * 2] + radius, points[index * 2 + 1] + radius,
+                points[index * 2] + radius, points[index * 2 + 1] - radius)),
+                ('c3B', linecolor * 4))
             
         str_list = []
         str_list.append('Last 50 rounds:   ')
@@ -1435,11 +1461,11 @@ class Field:
             self.x4, self.y1,
             self.x4, self.y2)),
                   ('c3B', self.color8))
-        
+                
         self.crosshair_visible = False
         # initialize crosshair
         self.crosshair_update()
-        
+                
     # draw the target cross in the center
     def crosshair_update(self):
         if (not mode.paused) and mode.mode != 4 and mode.mode != 7 and mode.mode != 11 and mode.mode != 12:
@@ -1914,38 +1940,67 @@ class KeysListLabel:
             str_list.append('ESC: Exit\n')
             
         self.label.text = ''.join(str_list)
+
+class TitleMessageLabel:
+    def __init__(self):
+        self.label = pyglet.text.Label(
+            'Brain Workshop',
+            #multiline = True, width = window.width // 2,
+            font_size = 32, bold = True, color = COLOR_TEXT,
+            x = window.width // 2, y = window.height - 35,
+            anchor_x = 'center', anchor_y = 'center')
+    def draw(self):
+        self.label.draw()
+
+class TitleKeysLabel:
+    def __init__(self):
+        str_list = []
+        if not NOVICE_MODE:
+            str_list.append('C: Choose Game Mode\n')
+        str_list.append('G: Daily Progress Graph\n')
+        str_list.append('H: Help / Tutorial\n\n')
+        str_list.append('F: Go to Forum / Mailing List')
+        
+        self.keys = pyglet.text.Label(
+            ''.join(str_list),
+            multiline = True, width = 260,
+            font_size = 12, bold = True, color = COLOR_TEXT,
+            x = window.width // 2, y = 170,
+            anchor_x = 'center', anchor_y = 'top')
+        
+        self.space = pyglet.text.Label(
+            'SPACE: Enter the Workshop',
+            font_size = 20, bold = True, color = (32, 32, 255, 255),
+            x = window.width // 2, y = 35,
+            anchor_x = 'center', anchor_y = 'center')
+    def draw(self):
+        self.space.draw()
+        self.keys.draw()
+
         
 # this is the word "brain" above the brain logo.
 class LogoUpperLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
-            '',
+            'Brain',
             font_size=11, bold = True,
             color=COLOR_TEXT,
             x=field.center_x, y=field.center_y + 30,
-            anchor_x='center', anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        if not mode.started:
-            self.label.text = 'Brain'
-        else:
-            self.label.text = ''
+            anchor_x='center', anchor_y='center')
+    def draw(self):
+        self.label.draw()
 
 # this is the word "workshop" below the brain logo.
 class LogoLowerLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
-            '',
+            'Workshop',
             font_size=11, bold = True,
             color=COLOR_TEXT,
             x=field.center_x, y=field.center_y - 27,
-            anchor_x='center', anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        if not mode.started:
-            self.label.text = 'Workshop'
-        else:
-            self.label.text = ''
+            anchor_x='center', anchor_y='center')
+    def draw(self):
+        self.label.draw()
 
 # this is the word "Paused" which appears when the game is paused.
 class PausedLabel:
@@ -3220,8 +3275,6 @@ def update_all_labels(do_analysis = False):
         analysisLabel.update(skip = True)
     gameModeLabel.update()
     keysListLabel.update()
-    logoUpperLabel.update()
-    logoLowerLabel.update()
     pausedLabel.update()
     sessionInfoLabel.update()
     thresholdLabel.update()
@@ -3293,7 +3346,7 @@ def new_session():
         # compute variable n-back sequence using beta distribution
         mode.variable = []
         for index in range(0, mode.num_trials):
-            mode.variable.append(int(random.betavariate(mode.back / 2.5, 1) * mode.back + 1))
+            mode.variable.append(int(random.betavariate(mode.back / 2.0, 1) * mode.back + 1))
     field.crosshair_update()
     reset_input()
     stats.initialize_session()
@@ -3570,7 +3623,28 @@ def on_key_press(symbol, modifiers):
     
     if symbol == key.D and (modifiers & key.MOD_CTRL):
         dump_pyglet_info()
+        
+    elif mode.title_screen and not mode.draw_graph and not mode.game_select:
+        if symbol == key.ESCAPE:
+            window.on_close()
+            
+        elif symbol == key.SPACE:
+            mode.title_screen = False
+            
+        elif symbol == key.C and not NOVICE_MODE:
+            mode.game_select = True
+                                    
+        elif symbol == key.H:
+            webbrowser.open_new_tab(TUTORIAL)
+                
+        elif symbol == key.G:
+            graph.parse_stats()
+            graph.graph = mode.mode
+            mode.draw_graph = True
     
+        elif symbol == key.F:
+            webbrowser.open_new_tab(FORUM)
+
     elif mode.draw_graph:
         if symbol == key.ESCAPE or symbol == key.G or symbol == key.X:
             mode.draw_graph = False
@@ -3592,6 +3666,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._1 or symbol == key.NUM_1:
             mode.mode = 11
             if not mode.manual:
@@ -3600,6 +3675,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._2 or symbol == key.NUM_2:
             mode.mode = 2
             if not mode.manual:
@@ -3608,6 +3684,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._3 or symbol == key.NUM_3:
             mode.mode = 3
             if not mode.manual:
@@ -3616,6 +3693,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._4 or symbol == key.NUM_4:
             mode.mode = 4
             if not mode.manual:
@@ -3624,6 +3702,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._5 or symbol == key.NUM_5:
             mode.mode = 5
             if not mode.manual:
@@ -3632,6 +3711,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._6 or symbol == key.NUM_6:
             mode.mode = 6
             if not mode.manual:
@@ -3640,6 +3720,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._7 or symbol == key.NUM_7:
             mode.mode = 7
             if not mode.manual:
@@ -3648,6 +3729,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._8 or symbol == key.NUM_8:
             mode.mode = 8
             if not mode.manual:
@@ -3656,6 +3738,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key._9 or symbol == key.NUM_9:
             mode.mode = 9
             if not mode.manual:
@@ -3664,6 +3747,7 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
         elif symbol == key.A:
             mode.mode = 12
             if not mode.manual:
@@ -3672,11 +3756,12 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
+            mode.title_screen = False
             
     elif not mode.started:
         
         if symbol == key.ESCAPE:
-            window.on_close()
+            mode.title_screen = True
         
         elif symbol == key.SPACE:
             new_session()
@@ -3827,10 +3912,16 @@ def on_draw():
         graph.draw()
     elif mode.game_select:
         gameSelect.draw()
+    elif mode.title_screen:
+        brain_graphic.draw()
+        titleMessageLabel.draw()
+        titleKeysLabel.draw()
     else:
         batch.draw()
         if not mode.started:
             brain_icon.draw()
+            logoUpperLabel.draw()
+            logoLowerLabel.draw()
 
 # the event timer loop. Runs every 1/4 second. This loop controls the session
 # game logic.
@@ -3912,6 +4003,8 @@ noviceWarningLabel = NoviceWarningLabel()
 keysListLabel = KeysListLabel()
 logoUpperLabel = LogoUpperLabel()
 logoLowerLabel = LogoLowerLabel()
+titleMessageLabel = TitleMessageLabel()
+titleKeysLabel = TitleKeysLabel()
 pausedLabel = PausedLabel()
 congratsLabel = CongratsLabel()
 sessionInfoLabel = SessionInfoLabel()
@@ -3938,6 +4031,9 @@ update_all_labels()
 brain_icon = pyglet.sprite.Sprite(pyglet.resource.image(IMAGES[0]))
 brain_icon.set_position(field.center_x - brain_icon.width//2,
                            field.center_y - brain_icon.height//2)
+brain_graphic = pyglet.sprite.Sprite(pyglet.resource.image(IMAGES[9]))
+brain_graphic.set_position(field.center_x - brain_graphic.width//2,
+                           field.center_y - brain_graphic.height//2 + 40)
 
 # start the event loops!
 if __name__ == '__main__':

@@ -43,10 +43,13 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
-4.21:
+4.22:
+* There's a new title screen.
+* Launching in Novice Mode will no longer cause a crash.
+* Progress graph: date axis will no longer skip days.
+* Progress graph: data points are now indicated with a dot.
 * Num pad should now work properly with Arithmetic N-Back modes.
-* Press Ctrl-D to dump various debugging information to the file
-      "dump.txt" in the data folder to aid in bug fixing.
+* Difficulty of Dual Variable N-Back has been increased slightly.
 
 4.2:
 * Added new mode to stretch working memory: Dual Variable N-Back.
