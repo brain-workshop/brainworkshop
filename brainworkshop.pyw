@@ -440,7 +440,7 @@ except:
     sys.exit(1)
 
 try:
-    pyglet.options['audio'] = ('directsound', 'alsa', 'openal', )
+    pyglet.options['audio'] = ('directsound', 'openal', 'alsa', )
     # use in pyglet 1.2: pyglet.options['audio'] = ('directsound', 'pulse', 'openal', )
     import pyglet.media
 except:
@@ -1969,7 +1969,7 @@ class TitleKeysLabel:
             anchor_x = 'center', anchor_y = 'top')
         
         self.space = pyglet.text.Label(
-            'SPACE: Enter the Workshop',
+            'Press SPACE to enter the Workshop',
             font_size = 20, bold = True, color = (32, 32, 255, 255),
             x = window.width // 2, y = 35,
             anchor_x = 'center', anchor_y = 'center')
@@ -3625,7 +3625,7 @@ def on_key_press(symbol, modifiers):
         dump_pyglet_info()
         
     elif mode.title_screen and not mode.draw_graph and not mode.game_select:
-        if symbol == key.ESCAPE:
+        if symbol == key.ESCAPE or symbol == key.X:
             window.on_close()
             
         elif symbol == key.SPACE:
@@ -3760,7 +3760,7 @@ def on_key_press(symbol, modifiers):
             
     elif not mode.started:
         
-        if symbol == key.ESCAPE:
+        if symbol == key.ESCAPE or symbol == key.X:
             mode.title_screen = True
         
         elif symbol == key.SPACE:
