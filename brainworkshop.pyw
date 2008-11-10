@@ -14,7 +14,7 @@
 # License: GPL (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.22'
+VERSION = '4.23'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser
 from decimal import Decimal
@@ -43,9 +43,6 @@ TIMEOUT_SILENT = 3
 TICKS_MIN = 4
 TICKS_MAX = 20
 TICK_DURATION = 0.25
-COLOR_LABEL_CORRECT = (64, 255, 64, 255)
-COLOR_LABEL_OOPS = (64, 64, 255, 255)
-COLOR_LABEL_INCORRECT = (255, 64, 64, 255)
                                            
 # some functions to assist in path determination
 def main_is_frozen():
@@ -150,13 +147,11 @@ MANUAL = False
 # Default: 2
 GAME_MODE = 2
 
-# Default starting n-back level.
-# must be greater than zero, or -1.
-# The value -1 signifies the following:
-#    - Dual & Triple N-Back: start at 2-back
-#    - Dual, Tri & Quad Letter N-Back: start at 1-back
-# Default: -1
-NBACK_LEVEL = -1
+# Default starting n-back levels.
+# must be greater than or equal to 1.
+# Look above to find the corresponding mode number.
+# Mode number:      2 3 4 5 6 7 8 9 10 11 12
+NBACK_LEVELS = [0,0,2,2,1,1,1,1,1,1, 2, 2, 2]
 
 # Default number of trials per session.
 # Must be greater than or equal to 1.
@@ -218,6 +213,29 @@ ARITHMETIC_USE_MULTIPLICATION = True
 ARITHMETIC_USE_DIVISION = True
 ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL = 6
 
+# Colors for the color n-back task
+# format: (red, green, blue, 255)
+# Note: Changing these colors will have no effect in Dual or
+#   Triple N-Back unless OLD_STYLE_SQUARES is set to True. 
+COLOR_1 = (255, 0, 0, 255)
+COLOR_2 = (48, 48, 48, 255)
+COLOR_2_BLK = (255, 255, 255, 255)
+COLOR_3 = (0, 0, 255, 255)
+COLOR_4 = (255, 255, 0, 255)
+COLOR_5 = (255, 0, 255, 255)
+COLOR_6 = (0, 255, 255, 255)
+COLOR_7 = (0, 255, 0, 255)
+COLOR_8 = (208, 208, 208, 255)
+COLOR_8_BLK = (64, 64, 64, 255)
+
+# text color
+COLOR_TEXT = (0, 0, 0, 255)
+COLOR_TEXT_BLK = (240, 240, 240, 255)
+
+# input label color
+COLOR_LABEL_CORRECT = (64, 255, 64, 255)
+COLOR_LABEL_OOPS = (64, 64, 255, 255)
+COLOR_LABEL_INCORRECT = (255, 64, 64, 255)
 
 ######################################################################
 # Keyboard definitions.
@@ -316,8 +334,8 @@ try: MANUAL = config.getboolean('DEFAULT', 'MANUAL')
 except: MANUAL = False
 try: GAME_MODE = config.getint('DEFAULT', 'GAME_MODE')
 except: GAME_MODE = 2
-try: NBACK_LEVEL = config.getint('DEFAULT', 'NBACK_LEVEL')
-except: NBACK_LEVEL = -1
+try: NBACK_LEVELS = eval(config.get('DEFAULT', 'NBACK_LEVELS'))
+except: NBACK_LEVELS = [0,0,2,2,1,1,1,1,1,1, 2, 2, 2]
 try: NUM_TRIALS = config.getint('DEFAULT', 'NUM_TRIALS')
 except: NUM_TRIALS = 20
 try: QUARTER_SECONDS_PER_TRIAL = config.getint('DEFAULT', 'QUARTER_SECONDS_PER_TRIAL')
@@ -366,6 +384,38 @@ except: ARITHMETIC_USE_DIVISION = True
 try: ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL = config.getint('DEFAULT', 'ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL')
 except: ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL = 6
 
+try: COLOR_1 = eval(config.get('DEFAULT', 'COLOR_1'))
+except: COLOR_1 = (255, 0, 0, 255)
+try: COLOR_2 = eval(config.get('DEFAULT', 'COLOR_2'))
+except: COLOR_2 = (48, 48, 48, 255)
+try: COLOR_2_BLK = eval(config.get('DEFAULT', 'COLOR_2_BLK'))
+except: COLOR_2_BLK = (255, 255, 255, 255)
+try: COLOR_3 = eval(config.get('DEFAULT', 'COLOR_3'))
+except: COLOR_3 = (0, 0, 255, 255)
+try: COLOR_4 = eval(config.get('DEFAULT', 'COLOR_4'))
+except: COLOR_4 = (255, 255, 0, 255)
+try: COLOR_5 = eval(config.get('DEFAULT', 'COLOR_5'))
+except: COLOR_5 = (255, 0, 255, 255)
+try: COLOR_6 = eval(config.get('DEFAULT', 'COLOR_6'))
+except: COLOR_6 = (0, 255, 255, 255)
+try: COLOR_7 = eval(config.get('DEFAULT', 'COLOR_7'))
+except: COLOR_7 = (0, 255, 0, 255)
+try: COLOR_8 = eval(config.get('DEFAULT', 'COLOR_8'))
+except: COLOR_8 = (208, 208, 208, 255)
+try: COLOR_8_BLK = eval(config.get('DEFAULT', 'COLOR_8_BLK'))
+except: COLOR_8_BLK = (64, 64, 64, 255)
+try: COLOR_TEXT = eval(config.get('DEFAULT', 'COLOR_TEXT'))
+except: COLOR_TEXT = (0, 0, 0, 255)
+try: COLOR_TEXT_BLK = eval(config.get('DEFAULT', 'COLOR_TEXT_BLK'))
+except: COLOR_TEXT_BLK = (240, 240, 240, 255)
+
+try: COLOR_LABEL_CORRECT = eval(config.get('DEFAULT', 'COLOR_LABEL_CORRECT'))
+except: COLOR_LABEL_CORRECT = (64, 255, 64, 255)
+try: COLOR_LABEL_OOPS = eval(config.get('DEFAULT', 'COLOR_LABEL_OOPS'))
+except: COLOR_LABEL_OOPS = (64, 64, 255, 255)
+try: COLOR_LABEL_INCORRECT = eval(config.get('DEFAULT', 'COLOR_LABEL_INCORRECT'))
+except: COLOR_LABEL_INCORRECT = (255, 64, 64, 255)
+
 try: KEY_POSITION = config.getint('DEFAULT', 'KEY_POSITION')
 except: KEY_POSITION = 97
 try: KEY_AUDIO = config.getint('DEFAULT', 'KEY_AUDIO')
@@ -380,9 +430,7 @@ try: KEY_AUDIOVIS = config.getint('DEFAULT', 'KEY_AUDIOVIS')
 except: KEY_AUDIOVIS = 106
 
 if BLACK_BACKGROUND:
-    COLOR_TEXT = (240, 240, 240, 255)
-else:
-    COLOR_TEXT = (0, 0, 0, 255)
+    COLOR_TEXT = COLOR_TEXT_BLK
 
 if NOVICE_MODE:
     GAME_MODE = 2
@@ -727,27 +775,27 @@ def fade_out(dt):
 # Color 1 is used in Dual N-Back mode.
 def get_color(color):
     if color == 1:
-        return (255, 0, 0, 255)   # red
+        return COLOR_1   # red
     elif color == 2:
         if BLACK_BACKGROUND:
-            return (255, 255, 255, 255) # white
+            return COLOR_2_BLK # white
         else:
-            return (48, 48, 48, 255)    # black
+            return COLOR_2    # black
     elif color == 3:
-        return (0, 0, 255, 255)   # blue
+        return COLOR_3  # blue
     elif color == 4:
-        return (255, 255, 0, 255)  # yellow
+        return COLOR_4  # yellow
     elif color == 5:
-        return (255, 0, 255, 255)  # magenta
+        return COLOR_5  # magenta
     elif color == 6:
-        return (0, 255, 255, 255)  # cyan
+        return COLOR_6  # cyan
     elif color == 7:
-        return (0, 255, 0, 255)   # green
+        return COLOR_7   # green
     elif color == 8:
         if BLACK_BACKGROUND:
-            return (64, 64, 64, 255) # dark gray
+            return COLOR_8_BLK # dark gray
         else:
-            return (208, 208, 208, 255) # light gray
+            return COLOR_8 # light gray
 
 # set the input text label size
 def input_label_size():
@@ -795,7 +843,7 @@ if WINDOW_FULLSCREEN:
 class Mode:
     def __init__(self):
         self.mode = GAME_MODE
-        self.back = NBACK_LEVEL
+        self.back = NBACK_LEVELS[self.mode]
         self.variable = []
         self.ticks_per_trial = QUARTER_SECONDS_PER_TRIAL
         self.num_trials = NUM_TRIALS
@@ -838,20 +886,7 @@ class Mode:
         self.bt_sequence = []
         
     def enforce_standard_mode(self):
-        if NBACK_LEVEL == -1:
-            if self.mode == 10: self.back = 2
-            if self.mode == 11: self.back = 2
-            elif self.mode == 2: self.back = 2
-            elif self.mode == 3: self.back = 2
-            elif self.mode == 4: self.back = 1
-            elif self.mode == 5: self.back = 1
-            elif self.mode == 6: self.back = 1
-            elif self.mode == 7: self.back = 1
-            elif self.mode == 8: self.back = 1
-            elif self.mode == 9: self.back = 1
-            elif self.mode == 12: self.back = 2
-        else:
-            self.back = NBACK_LEVEL
+        self.back = NBACK_LEVELS[self.mode]
         self.ticks_per_trial = QUARTER_SECONDS_PER_TRIAL
         if self.mode == 7 or self.mode == 8 or self.mode == 9:
             self.ticks_per_trial += ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL
@@ -1183,6 +1218,7 @@ class Graph:
                 anchor_x = 'center', anchor_y = 'center')
             insufficient_label.draw()
             return
+        
         ymin = 100000.0
         ymax = 0.0
         for entry in dates:
@@ -1197,6 +1233,10 @@ class Graph:
         
         ymin = int(math.floor(ymin * 4))/4.
         ymax = int(math.ceil(ymax * 4))/4.
+        
+        # remove these two lines to revert to the old behaviour
+        ymin = 1.0
+        ymax += 0.25
         
         # add intermediate days
         z = 0

@@ -43,6 +43,14 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
+4.23:
+* Progress graphs now start from 1.0 on the vertical axis to give a
+  better overall picture.
+* Config file changes: The starting N-Back mode can now be set for
+  each game mode separately, and some colors can now be customized.
+  [Note: to see the new config options, delete your current config
+   file and relaunch Brain Workshop to generate a fresh config.]
+
 4.22:
 * There's a new title screen.
 * Launching in Novice Mode will no longer cause a crash.
