@@ -44,10 +44,28 @@ installation are available on the Brain Workshop web site:
 Change Log:
 
 4.23:
+
+* Variable n-back levels can be used with any game mode by pressing V.
+
+* Sounds for the auditory n-back task can be selected by pressing S.
+
+* Letter N-Back renamed to Combination N-Back.
+
+* New Morse Code sounds can be used with any n-back mode.
+  For the ultimate challenge try using Morse Code with Dual, Tri or
+  Quad Combination N-Back. Press J to open a Morse Code reference page.
+
 * Progress graphs now start from 1.0 on the vertical axis to give a
   better overall picture.
-* Config file changes: The starting N-Back mode can now be set for
-  each game mode separately, and some colors can now be customized.
+
+* The date rollover for the graph is now at 4:00 AM instead of midnight.
+* Music and applause is stopped when entering the progress graph to
+  avoid sound skipping. (The sound may not stop in Linux due to
+  driver limitations.)
+
+* Config file changes: The starting N-Back mode and game speed is
+  now separately adjustable for each game mode, and some colors
+  can be customized.
   [Note: to see the new config options, delete your current config
    file and relaunch Brain Workshop to generate a fresh config.]
 

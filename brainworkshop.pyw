@@ -26,19 +26,21 @@ NOVBO = True
 FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
-CHARTFILE = ['chart01-dnb.txt', 'chart02-tnb.txt', 'chart03-dlnb.txt', 'chart04-tlnb.txt',
-             'chart05-qlnb.txt','chart06-anb.txt', 'chart07-danb.txt', 'chart08-tanb.txt',
-             'chart09-ponb.txt', 'chart10-aunb.txt', 'chart11-dvnb.txt']
+CHARTFILE = ['chart-02-dnb.txt', 'chart-03-tnb.txt', 'chart-04-dlnb.txt', 'chart-05-tlnb.txt',
+             'chart-06-qlnb.txt','chart-07-anb.txt', 'chart-08-danb.txt', 'chart-09-tanb.txt',
+             'chart-10-ponb.txt', 'chart-11-aunb.txt',]
+             #'chart12-dvnb.txt', 'chart13-mnb.txt', 'chart14-dmnb.txt', 'chart15-tmnb.txt', 'chart16-qmnb.txt']
 ARITHMETIC_ACCEPTABLE_DECIMALS = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9',
                        '0.125', '0.25', '0.375', '0.625', '0.75', '0.875',
                        '0.15', '0.35', '0.45', '0.55', '0.65', '0.85', '0.95',]
 ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
 WEB_SITE = 'http://brainworkshop.sourceforge.net/'
-TUTORIAL = 'http://brainworkshop.sourceforge.net/#tutorial'
-VERSION_CHECK = 'http://brainworkshop.sourceforge.net/version.txt'
-PYGLET_DOWNLOAD = 'http://pyglet.org/download.html'
-FORUM = 'http://groups.google.com/group/brain-training'
+WEB_TUTORIAL = 'http://brainworkshop.sourceforge.net/#tutorial'
+WEB_VERSION_CHECK = 'http://brainworkshop.sourceforge.net/version.txt'
+WEB_PYGLET_DOWNLOAD = 'http://pyglet.org/download.html'
+WEB_FORUM = 'http://groups.google.com/group/brain-training'
+WEB_MORSE = 'http://en.wikipedia.org/wiki/Morse_code'
 TIMEOUT_SILENT = 3
 TICKS_MIN = 4
 TICKS_MAX = 20
@@ -84,11 +86,12 @@ NOVICE_MODE = False
 
 # This selects which sounds to use for audio n-back tasks.
 # Select any combination of letters, numbers, the NATO Phonetic Alphabet
-# (Alpha, Bravo, Charlie, etc), and piano notes.
+# (Alpha, Bravo, Charlie, etc), the C scale on piano, and morse code.
 USE_LETTERS = True
 USE_NUMBERS = False
 USE_NATO = False
 USE_PIANO = False
+USE_MORSE = False
 
 # Background color: True = black, False = white.
 # Default: False
@@ -113,7 +116,7 @@ SHOW_FEEDBACK = True
 HIDE_TEXT = False
 
 # Set the color of the square in Dual N-Back mode.
-# This also affects Dual Letter N-Back and Arithmetic N-Back.
+# This also affects Dual Combination N-Back and Arithmetic N-Back.
 # 1 = red, 2 = white/black, 3 = blue, 4 = yellow,
 # 5 = magenta, 6 = cyan, 7 = green, 8 = grey
 # Default: 3
@@ -129,20 +132,20 @@ OLD_STYLE_SQUARES = False
 # If this is False, the game will start in standard mode.
 # Default: False
 MANUAL = False
+USE_MUSIC_MANUAL = False
 
 # Starting game mode.
 # Possible values:
 # 2: Dual N-back (position & audio)
 # 3: Triple N-back (position, color & audio)
-# 4: Dual Letter N-Back (visual letter, audio)
-# 5: Triple Letter N-Back (position, visual letter, audio)
-# 6: Quadruple Letter N-Back (position, color, visual letter, audio)
+# 4: Dual Combination N-Back (visual letter, audio)
+# 5: Triple Combination N-Back (position, visual letter, audio)
+# 6: Quadruple Combination N-Back (position, color, visual letter, audio)
 # 7: Arithmetic N-Back
 # 8: Dual Arithmetic N-Back
 # 9: Triple Arithmetic N-Back
 # 10: Position N-Back
 # 11: Audio N-Back
-# 12: Dual Variable N-Back
 # Note: if NOVICE_MODE is True, only Dual N-Back will be available.
 # Default: 2
 GAME_MODE = 2
@@ -150,18 +153,41 @@ GAME_MODE = 2
 # Default starting n-back levels.
 # must be greater than or equal to 1.
 # Look above to find the corresponding mode number.
-# Mode number:      2 3 4 5 6 7 8 9 10 11 12
-NBACK_LEVELS = [0,0,2,2,1,1,1,1,1,1, 2, 2, 2]
+BACK_2 = 2
+BACK_3 = 2
+BACK_4 = 1
+BACK_5 = 1
+BACK_6 = 1
+BACK_7 = 1
+BACK_8 = 1
+BACK_9 = 1
+BACK_10 = 2
+BACK_11 = 2
+
+# Use Variable N-Back by default?
+# 0 = static n-back (default)
+# 1 = variable n-back
+VARIABLE_NBACK = 0
+
+# Number of quarter-seconds per trial.
+# Must be greater than or equal to 4 (ie, 1 second)
+# Look above to find the corresponding mode number.
+# Default: 12 (18 for the Arithmetic modes)
+TICKS_2 = 12
+TICKS_3 = 12
+TICKS_4 = 12
+TICKS_5 = 12
+TICKS_6 = 12
+TICKS_7 = 18
+TICKS_8 = 18
+TICKS_9 = 18
+TICKS_10 = 12
+TICKS_11 = 12
 
 # Default number of trials per session.
 # Must be greater than or equal to 1.
 # Default: 20
 NUM_TRIALS = 20
-
-# Number of quarter-seconds per trial.
-# Must be greater than or equal to 4 (ie, 1 second)
-# Default: 12
-QUARTER_SECONDS_PER_TRIAL = 12
 
 # Thresholds for n-back level advancing & fallback.
 # Values are 0-100.
@@ -171,7 +197,7 @@ QUARTER_SECONDS_PER_TRIAL = 12
 #    the fallback threshold that will trigger a level decrease.
 # Note: in Novice mode, only NOVICE_ADVANCE and NOVICE_FALLBACK
 #    are used.
-# Defaults: 80, 50, 3
+# Defaults: 80, 50, 3, 90, 75
 THRESHOLD_ADVANCE = 80
 THRESHOLD_FALLBACK = 50
 THRESHOLD_FALLBACK_SESSIONS = 3
@@ -183,7 +209,6 @@ NOVICE_FALLBACK = 75
 # Defaults: True, True, False, 1.0, 1.0
 USE_MUSIC = True
 USE_APPLAUSE = True
-USE_MUSIC_MANUAL = False
 MUSIC_VOLUME = 1.0
 SFX_VOLUME = 1.0
 
@@ -211,12 +236,12 @@ ARITHMETIC_USE_ADDITION = True
 ARITHMETIC_USE_SUBTRACTION = True
 ARITHMETIC_USE_MULTIPLICATION = True
 ARITHMETIC_USE_DIVISION = True
-ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL = 6
 
 # Colors for the color n-back task
 # format: (red, green, blue, 255)
 # Note: Changing these colors will have no effect in Dual or
 #   Triple N-Back unless OLD_STYLE_SQUARES is set to True. 
+# the _BLK colors are used when BLACK_BACKGROUND is set to True.
 COLOR_1 = (255, 0, 0, 255)
 COLOR_2 = (48, 48, 48, 255)
 COLOR_2_BLK = (255, 255, 255, 255)
@@ -254,7 +279,7 @@ KEY_AUDIO = 108
 # Color match. Default: 102 (F)
 KEY_COLOR = 102
 
-# These are used in the Letter N-Back modes.
+# These are used in the Combination N-Back modes.
 # Visual & n-visual match. Default: 115 (S)
 KEY_VISVIS = 115
 # Visual & n-audio match. Default: 100 (D)
@@ -312,6 +337,8 @@ try: USE_NATO = config.getboolean('DEFAULT', 'USE_NATO')
 except: USE_NATO = False
 try: USE_PIANO = config.getboolean('DEFAULT', 'USE_PIANO')
 except: USE_PIANO = False
+try: USE_MORSE = config.getboolean('DEFAULT', 'USE_MORSE')
+except: USE_MORSE = False
 try: BLACK_BACKGROUND = config.getboolean('DEFAULT', 'BLACK_BACKGROUND')
 except: BLACK_BACKGROUND = False
 try: WINDOW_FULLSCREEN = config.getboolean('DEFAULT', 'WINDOW_FULLSCREEN')
@@ -332,14 +359,58 @@ try: OLD_STYLE_SQUARES = config.getboolean('DEFAULT', 'OLD_STYLE_SQUARES')
 except: OLD_STYLE_SQUARES = False
 try: MANUAL = config.getboolean('DEFAULT', 'MANUAL')
 except: MANUAL = False
+try: USE_MUSIC_MANUAL = config.getboolean('DEFAULT', 'USE_MUSIC_MANUAL')
+except: USE_MUSIC_MANUAL = False
 try: GAME_MODE = config.getint('DEFAULT', 'GAME_MODE')
 except: GAME_MODE = 2
-try: NBACK_LEVELS = eval(config.get('DEFAULT', 'NBACK_LEVELS'))
-except: NBACK_LEVELS = [0,0,2,2,1,1,1,1,1,1, 2, 2, 2]
+
+try: BACK_2 = config.getint('DEFAULT', 'BACK_2')
+except: BACK_2 = 2
+try: BACK_3 = config.getint('DEFAULT', 'BACK_3')
+except: BACK_3 = 2
+try: BACK_4 = config.getint('DEFAULT', 'BACK_4')
+except: BACK_4 = 1
+try: BACK_5 = config.getint('DEFAULT', 'BACK_5')
+except: BACK_5 = 1
+try: BACK_6 = config.getint('DEFAULT', 'BACK_6')
+except: BACK_6 = 1
+try: BACK_7 = config.getint('DEFAULT', 'BACK_7')
+except: BACK_7 = 1
+try: BACK_8 = config.getint('DEFAULT', 'BACK_8')
+except: BACK_8 = 1
+try: BACK_9 = config.getint('DEFAULT', 'BACK_9')
+except: BACK_9 = 1
+try: BACK_10 = config.getint('DEFAULT', 'BACK_10')
+except: BACK_10 = 2
+try: BACK_11 = config.getint('DEFAULT', 'BACK_11')
+except: BACK_11 = 2
+
+try: VARIABLE_NBACK = config.getint('DEFAULT', 'VARIABLE_NBACK')
+except: VARIABLE_NBACK = 0
+
+try: TICKS_2 = config.getint('DEFAULT', 'TICKS_2')
+except: TICKS_2 = 12
+try: TICKS_3 = config.getint('DEFAULT', 'TICKS_3')
+except: TICKS_3 = 12
+try: TICKS_4 = config.getint('DEFAULT', 'TICKS_4')
+except: TICKS_4 = 12
+try: TICKS_5 = config.getint('DEFAULT', 'TICKS_5')
+except: TICKS_5 = 12
+try: TICKS_6 = config.getint('DEFAULT', 'TICKS_6')
+except: TICKS_6 = 12
+try: TICKS_7 = config.getint('DEFAULT', 'TICKS_7')
+except: TICKS_7 = 18
+try: TICKS_8 = config.getint('DEFAULT', 'TICKS_8')
+except: TICKS_8 = 18
+try: TICKS_9 = config.getint('DEFAULT', 'TICKS_9')
+except: TICKS_9 = 18
+try: TICKS_10 = config.getint('DEFAULT', 'TICKS_10')
+except: TICKS_10 = 12
+try: TICKS_11 = config.getint('DEFAULT', 'TICKS_11')
+except: TICKS_11 = 12
+
 try: NUM_TRIALS = config.getint('DEFAULT', 'NUM_TRIALS')
 except: NUM_TRIALS = 20
-try: QUARTER_SECONDS_PER_TRIAL = config.getint('DEFAULT', 'QUARTER_SECONDS_PER_TRIAL')
-except: QUARTER_SECONDS_PER_TRIAL = 12
 try: THRESHOLD_ADVANCE = config.getint('DEFAULT', 'THRESHOLD_ADVANCE')
 except: THRESHOLD_ADVANCE = 80
 try: THRESHOLD_FALLBACK = config.getint('DEFAULT', 'THRESHOLD_FALLBACK')
@@ -354,8 +425,6 @@ try: USE_MUSIC = config.getboolean('DEFAULT', 'USE_MUSIC')
 except: USE_MUSIC = True
 try: USE_APPLAUSE = config.getboolean('DEFAULT', 'USE_APPLAUSE')
 except: USE_APPLAUSE = True
-try: USE_MUSIC_MANUAL = config.getboolean('DEFAULT', 'USE_MUSIC_MANUAL')
-except: USE_MUSIC_MANUAL = False
 try: MUSIC_VOLUME = config.getfloat('DEFAULT', 'MUSIC_VOLUME')
 except: MUSIC_VOLUME = 1.0
 try: SFX_VOLUME = config.getfloat('DEFAULT', 'SFX_VOLUME')
@@ -381,8 +450,6 @@ try: ARITHMETIC_USE_MULTIPLICATION = config.getboolean('DEFAULT', 'ARITHMETIC_US
 except: ARITHMETIC_USE_MULTIPLICATION = True
 try: ARITHMETIC_USE_DIVISION = config.getboolean('DEFAULT', 'ARITHMETIC_USE_DIVISION')
 except: ARITHMETIC_USE_DIVISION = True
-try: ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL = config.getint('DEFAULT', 'ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL')
-except: ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL = 6
 
 try: COLOR_1 = eval(config.get('DEFAULT', 'COLOR_1'))
 except: COLOR_1 = (255, 0, 0, 255)
@@ -438,6 +505,8 @@ if NOVICE_MODE:
     USE_NUMBERS = False
     USE_NATO = False
     USE_PIANO = False
+    USE_MORSE = False
+    VARIABLE_NBACK = 0
 
 def get_threshold_advance():
     if NOVICE_MODE:
@@ -456,7 +525,7 @@ def update_check():
     global update_available
     global update_version
     socket.setdefaulttimeout(TIMEOUT_SILENT)
-    req = urllib2.Request(VERSION_CHECK)
+    req = urllib2.Request(WEB_VERSION_CHECK)
     try:
         response = urllib2.urlopen(req)
         version = Decimal(response.readline())
@@ -483,7 +552,7 @@ except:
     str_list.append('Full text of error:\n')
     str_list.append(str(sys.exc_info()))
     str_list.append('\n\nPlease visit ')
-    str_list.append(PYGLET_DOWNLOAD)
+    str_list.append(WEB_PYGLET_DOWNLOAD)
     print >> sys.stderr, ''.join(str_list)
     sys.exit(1)
 
@@ -533,7 +602,7 @@ except:
     str_list.append('\nError: pyglet 1.1 or greater is required.\n')
     str_list.append('You probably have an older version of pyglet installed.\n\n')
     str_list.append('Please visit ')
-    str_list.append(PYGLET_DOWNLOAD)
+    str_list.append(WEB_PYGLET_DOWNLOAD)
     print >> sys.stderr, ''.join(str_list)
     sys.exit(1)
     
@@ -609,6 +678,44 @@ NATO_SOUNDS.append('nato_x.wav')
 NATO_SOUNDS.append('nato_y.wav')
 NATO_SOUNDS.append('nato_z.wav')
 
+MORSE_SOUNDS = []
+MORSE_SOUNDS.append('morse_0.wav')
+MORSE_SOUNDS.append('morse_1.wav')
+MORSE_SOUNDS.append('morse_2.wav')
+MORSE_SOUNDS.append('morse_3.wav')
+MORSE_SOUNDS.append('morse_4.wav')
+MORSE_SOUNDS.append('morse_5.wav')
+MORSE_SOUNDS.append('morse_6.wav')
+MORSE_SOUNDS.append('morse_7.wav')
+MORSE_SOUNDS.append('morse_8.wav')
+MORSE_SOUNDS.append('morse_9.wav')
+MORSE_SOUNDS.append('morse_a.wav')
+MORSE_SOUNDS.append('morse_b.wav')
+MORSE_SOUNDS.append('morse_c.wav')
+MORSE_SOUNDS.append('morse_d.wav')
+MORSE_SOUNDS.append('morse_e.wav')
+MORSE_SOUNDS.append('morse_f.wav')
+MORSE_SOUNDS.append('morse_g.wav')
+MORSE_SOUNDS.append('morse_h.wav')
+MORSE_SOUNDS.append('morse_i.wav')
+MORSE_SOUNDS.append('morse_j.wav')
+MORSE_SOUNDS.append('morse_k.wav')
+MORSE_SOUNDS.append('morse_l.wav')
+MORSE_SOUNDS.append('morse_m.wav')
+MORSE_SOUNDS.append('morse_n.wav')
+MORSE_SOUNDS.append('morse_o.wav')
+MORSE_SOUNDS.append('morse_p.wav')
+MORSE_SOUNDS.append('morse_q.wav')
+MORSE_SOUNDS.append('morse_r.wav')
+MORSE_SOUNDS.append('morse_s.wav')
+MORSE_SOUNDS.append('morse_t.wav')
+MORSE_SOUNDS.append('morse_u.wav')
+MORSE_SOUNDS.append('morse_v.wav')
+MORSE_SOUNDS.append('morse_w.wav')
+MORSE_SOUNDS.append('morse_x.wav')
+MORSE_SOUNDS.append('morse_y.wav')
+MORSE_SOUNDS.append('morse_z.wav')
+
 IMAGES = []
 IMAGES.append('brain.png')
 IMAGES.append('spr_square_red.png')
@@ -622,7 +729,7 @@ IMAGES.append('spr_square_grey.png')
 IMAGES.append('brain_graphic.png')
 
 
-for resource in (SOUNDS + PIANO_SOUNDS + NUMBER_SOUNDS + NATO_SOUNDS + IMAGES):
+for resource in (SOUNDS + PIANO_SOUNDS + NUMBER_SOUNDS + NATO_SOUNDS + MORSE_SOUNDS + IMAGES):
     path = os.path.join(res_path, resource)
     if not os.access(path, os.F_OK):
         str_list = []
@@ -637,61 +744,96 @@ for soundfile in SOUNDS:
     sound.append(pyglet.resource.media(soundfile, streaming=False))
     
 numbersound = {}
-if USE_NUMBERS:
-    numbersound['0'] = pyglet.resource.media(NUMBER_SOUNDS[0], streaming=False)
-    numbersound['1'] = pyglet.resource.media(NUMBER_SOUNDS[1], streaming=False)
-    numbersound['2'] = pyglet.resource.media(NUMBER_SOUNDS[2], streaming=False)
-    numbersound['3'] = pyglet.resource.media(NUMBER_SOUNDS[3], streaming=False)
-    numbersound['4'] = pyglet.resource.media(NUMBER_SOUNDS[4], streaming=False)
-    numbersound['5'] = pyglet.resource.media(NUMBER_SOUNDS[5], streaming=False)
-    numbersound['6'] = pyglet.resource.media(NUMBER_SOUNDS[6], streaming=False)
-    numbersound['7'] = pyglet.resource.media(NUMBER_SOUNDS[7], streaming=False)
-    numbersound['8'] = pyglet.resource.media(NUMBER_SOUNDS[8], streaming=False)
-    numbersound['9'] = pyglet.resource.media(NUMBER_SOUNDS[9], streaming=False)
-    numbersound['10'] = pyglet.resource.media(NUMBER_SOUNDS[10], streaming=False)
-    numbersound['11'] = pyglet.resource.media(NUMBER_SOUNDS[11], streaming=False)
-    numbersound['12'] = pyglet.resource.media(NUMBER_SOUNDS[12], streaming=False)
-    numbersound['13'] = pyglet.resource.media(NUMBER_SOUNDS[13], streaming=False)
+numbersound['0'] = pyglet.resource.media(NUMBER_SOUNDS[0], streaming=False)
+numbersound['1'] = pyglet.resource.media(NUMBER_SOUNDS[1], streaming=False)
+numbersound['2'] = pyglet.resource.media(NUMBER_SOUNDS[2], streaming=False)
+numbersound['3'] = pyglet.resource.media(NUMBER_SOUNDS[3], streaming=False)
+numbersound['4'] = pyglet.resource.media(NUMBER_SOUNDS[4], streaming=False)
+numbersound['5'] = pyglet.resource.media(NUMBER_SOUNDS[5], streaming=False)
+numbersound['6'] = pyglet.resource.media(NUMBER_SOUNDS[6], streaming=False)
+numbersound['7'] = pyglet.resource.media(NUMBER_SOUNDS[7], streaming=False)
+numbersound['8'] = pyglet.resource.media(NUMBER_SOUNDS[8], streaming=False)
+numbersound['9'] = pyglet.resource.media(NUMBER_SOUNDS[9], streaming=False)
+numbersound['10'] = pyglet.resource.media(NUMBER_SOUNDS[10], streaming=False)
+numbersound['11'] = pyglet.resource.media(NUMBER_SOUNDS[11], streaming=False)
+numbersound['12'] = pyglet.resource.media(NUMBER_SOUNDS[12], streaming=False)
+numbersound['13'] = pyglet.resource.media(NUMBER_SOUNDS[13], streaming=False)
 
 pianosound = {}
-if USE_PIANO:
-    pianosound['C4'] = pyglet.resource.media(PIANO_SOUNDS[0], streaming=False)
-    pianosound['D4'] = pyglet.resource.media(PIANO_SOUNDS[1], streaming=False)
-    pianosound['E4'] = pyglet.resource.media(PIANO_SOUNDS[2], streaming=False)
-    pianosound['F4'] = pyglet.resource.media(PIANO_SOUNDS[3], streaming=False)
-    pianosound['G4'] = pyglet.resource.media(PIANO_SOUNDS[4], streaming=False)
-    pianosound['A4'] = pyglet.resource.media(PIANO_SOUNDS[5], streaming=False)
-    pianosound['B4'] = pyglet.resource.media(PIANO_SOUNDS[6], streaming=False)
-    pianosound['C5'] = pyglet.resource.media(PIANO_SOUNDS[7], streaming=False)
+pianosound['C4'] = pyglet.resource.media(PIANO_SOUNDS[0], streaming=False)
+pianosound['D4'] = pyglet.resource.media(PIANO_SOUNDS[1], streaming=False)
+pianosound['E4'] = pyglet.resource.media(PIANO_SOUNDS[2], streaming=False)
+pianosound['F4'] = pyglet.resource.media(PIANO_SOUNDS[3], streaming=False)
+pianosound['G4'] = pyglet.resource.media(PIANO_SOUNDS[4], streaming=False)
+pianosound['A4'] = pyglet.resource.media(PIANO_SOUNDS[5], streaming=False)
+pianosound['B4'] = pyglet.resource.media(PIANO_SOUNDS[6], streaming=False)
+pianosound['C5'] = pyglet.resource.media(PIANO_SOUNDS[7], streaming=False)
 
-nato = {}
-if USE_NATO:
-    nato['A'] = pyglet.resource.media(NATO_SOUNDS[0], streaming=False)
-    nato['B'] = pyglet.resource.media(NATO_SOUNDS[1], streaming=False)
-    nato['C'] = pyglet.resource.media(NATO_SOUNDS[2], streaming=False)
-    nato['D'] = pyglet.resource.media(NATO_SOUNDS[3], streaming=False)
-    nato['E'] = pyglet.resource.media(NATO_SOUNDS[4], streaming=False)
-    nato['F'] = pyglet.resource.media(NATO_SOUNDS[5], streaming=False)
-    nato['G'] = pyglet.resource.media(NATO_SOUNDS[6], streaming=False)
-    nato['H'] = pyglet.resource.media(NATO_SOUNDS[7], streaming=False)
-    nato['I'] = pyglet.resource.media(NATO_SOUNDS[8], streaming=False)
-    nato['J'] = pyglet.resource.media(NATO_SOUNDS[9], streaming=False)
-    nato['K'] = pyglet.resource.media(NATO_SOUNDS[10], streaming=False)
-    nato['L'] = pyglet.resource.media(NATO_SOUNDS[11], streaming=False)
-    nato['M'] = pyglet.resource.media(NATO_SOUNDS[12], streaming=False)
-    nato['N'] = pyglet.resource.media(NATO_SOUNDS[13], streaming=False)
-    nato['O'] = pyglet.resource.media(NATO_SOUNDS[14], streaming=False)
-    nato['P'] = pyglet.resource.media(NATO_SOUNDS[15], streaming=False)
-    nato['Q'] = pyglet.resource.media(NATO_SOUNDS[16], streaming=False)
-    nato['R'] = pyglet.resource.media(NATO_SOUNDS[17], streaming=False)
-    nato['S'] = pyglet.resource.media(NATO_SOUNDS[18], streaming=False)
-    nato['T'] = pyglet.resource.media(NATO_SOUNDS[19], streaming=False)
-    nato['U'] = pyglet.resource.media(NATO_SOUNDS[20], streaming=False)
-    nato['V'] = pyglet.resource.media(NATO_SOUNDS[21], streaming=False)
-    nato['W'] = pyglet.resource.media(NATO_SOUNDS[22], streaming=False)
-    nato['X'] = pyglet.resource.media(NATO_SOUNDS[23], streaming=False)
-    nato['Y'] = pyglet.resource.media(NATO_SOUNDS[24], streaming=False)
-    nato['Z'] = pyglet.resource.media(NATO_SOUNDS[25], streaming=False)
+natosound = {}
+natosound['A'] = pyglet.resource.media(NATO_SOUNDS[0], streaming=False)
+natosound['B'] = pyglet.resource.media(NATO_SOUNDS[1], streaming=False)
+natosound['C'] = pyglet.resource.media(NATO_SOUNDS[2], streaming=False)
+natosound['D'] = pyglet.resource.media(NATO_SOUNDS[3], streaming=False)
+natosound['E'] = pyglet.resource.media(NATO_SOUNDS[4], streaming=False)
+natosound['F'] = pyglet.resource.media(NATO_SOUNDS[5], streaming=False)
+natosound['G'] = pyglet.resource.media(NATO_SOUNDS[6], streaming=False)
+natosound['H'] = pyglet.resource.media(NATO_SOUNDS[7], streaming=False)
+natosound['I'] = pyglet.resource.media(NATO_SOUNDS[8], streaming=False)
+natosound['J'] = pyglet.resource.media(NATO_SOUNDS[9], streaming=False)
+natosound['K'] = pyglet.resource.media(NATO_SOUNDS[10], streaming=False)
+natosound['L'] = pyglet.resource.media(NATO_SOUNDS[11], streaming=False)
+natosound['M'] = pyglet.resource.media(NATO_SOUNDS[12], streaming=False)
+natosound['N'] = pyglet.resource.media(NATO_SOUNDS[13], streaming=False)
+natosound['O'] = pyglet.resource.media(NATO_SOUNDS[14], streaming=False)
+natosound['P'] = pyglet.resource.media(NATO_SOUNDS[15], streaming=False)
+natosound['Q'] = pyglet.resource.media(NATO_SOUNDS[16], streaming=False)
+natosound['R'] = pyglet.resource.media(NATO_SOUNDS[17], streaming=False)
+natosound['S'] = pyglet.resource.media(NATO_SOUNDS[18], streaming=False)
+natosound['T'] = pyglet.resource.media(NATO_SOUNDS[19], streaming=False)
+natosound['U'] = pyglet.resource.media(NATO_SOUNDS[20], streaming=False)
+natosound['V'] = pyglet.resource.media(NATO_SOUNDS[21], streaming=False)
+natosound['W'] = pyglet.resource.media(NATO_SOUNDS[22], streaming=False)
+natosound['X'] = pyglet.resource.media(NATO_SOUNDS[23], streaming=False)
+natosound['Y'] = pyglet.resource.media(NATO_SOUNDS[24], streaming=False)
+natosound['Z'] = pyglet.resource.media(NATO_SOUNDS[25], streaming=False)
+    
+morsesound = {}
+morsesound['0'] = pyglet.resource.media(MORSE_SOUNDS[0], streaming=False)
+morsesound['1'] = pyglet.resource.media(MORSE_SOUNDS[1], streaming=False)
+morsesound['2'] = pyglet.resource.media(MORSE_SOUNDS[2], streaming=False)
+morsesound['3'] = pyglet.resource.media(MORSE_SOUNDS[3], streaming=False)
+morsesound['4'] = pyglet.resource.media(MORSE_SOUNDS[4], streaming=False)
+morsesound['5'] = pyglet.resource.media(MORSE_SOUNDS[5], streaming=False)
+morsesound['6'] = pyglet.resource.media(MORSE_SOUNDS[6], streaming=False)
+morsesound['7'] = pyglet.resource.media(MORSE_SOUNDS[7], streaming=False)
+morsesound['8'] = pyglet.resource.media(MORSE_SOUNDS[8], streaming=False)
+morsesound['9'] = pyglet.resource.media(MORSE_SOUNDS[9], streaming=False)
+morsesound['A'] = pyglet.resource.media(MORSE_SOUNDS[10], streaming=False)
+morsesound['B'] = pyglet.resource.media(MORSE_SOUNDS[11], streaming=False)
+morsesound['C'] = pyglet.resource.media(MORSE_SOUNDS[12], streaming=False)
+morsesound['D'] = pyglet.resource.media(MORSE_SOUNDS[13], streaming=False)
+morsesound['E'] = pyglet.resource.media(MORSE_SOUNDS[14], streaming=False)
+morsesound['F'] = pyglet.resource.media(MORSE_SOUNDS[15], streaming=False)
+morsesound['G'] = pyglet.resource.media(MORSE_SOUNDS[16], streaming=False)
+morsesound['H'] = pyglet.resource.media(MORSE_SOUNDS[17], streaming=False)
+morsesound['I'] = pyglet.resource.media(MORSE_SOUNDS[18], streaming=False)
+morsesound['J'] = pyglet.resource.media(MORSE_SOUNDS[19], streaming=False)
+morsesound['K'] = pyglet.resource.media(MORSE_SOUNDS[20], streaming=False)
+morsesound['L'] = pyglet.resource.media(MORSE_SOUNDS[21], streaming=False)
+morsesound['M'] = pyglet.resource.media(MORSE_SOUNDS[22], streaming=False)
+morsesound['N'] = pyglet.resource.media(MORSE_SOUNDS[23], streaming=False)
+morsesound['O'] = pyglet.resource.media(MORSE_SOUNDS[24], streaming=False)
+morsesound['P'] = pyglet.resource.media(MORSE_SOUNDS[25], streaming=False)
+morsesound['Q'] = pyglet.resource.media(MORSE_SOUNDS[26], streaming=False)
+morsesound['R'] = pyglet.resource.media(MORSE_SOUNDS[27], streaming=False)
+morsesound['S'] = pyglet.resource.media(MORSE_SOUNDS[28], streaming=False)
+morsesound['T'] = pyglet.resource.media(MORSE_SOUNDS[29], streaming=False)
+morsesound['U'] = pyglet.resource.media(MORSE_SOUNDS[30], streaming=False)
+morsesound['V'] = pyglet.resource.media(MORSE_SOUNDS[31], streaming=False)
+morsesound['W'] = pyglet.resource.media(MORSE_SOUNDS[32], streaming=False)
+morsesound['X'] = pyglet.resource.media(MORSE_SOUNDS[33], streaming=False)
+morsesound['Y'] = pyglet.resource.media(MORSE_SOUNDS[34], streaming=False)
+morsesound['Z'] = pyglet.resource.media(MORSE_SOUNDS[35], streaming=False)
     
 if USE_MUSIC:
     MUSIC_ADVANCE = []
@@ -745,6 +887,13 @@ if USE_MUSIC:
 
 applauseplayer = pyglet.media.ManagedSoundPlayer()
 musicplayer = pyglet.media.ManagedSoundPlayer()
+
+def sound_stop():
+    global applauseplayer
+    global musicplayer
+    musicplayer.volume = 0
+    applauseplayer.volume = 0
+
 def fade_out(dt):
     global applauseplayer
     global musicplayer
@@ -799,18 +948,81 @@ def get_color(color):
 
 # set the input text label size
 def input_label_size():
-    if mode.mode == 10 or mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 12:
+    m = mode.mode
+    if m == 2 or m == 3 or m == 7 or m == 8 or m == 9 or m == 10 or m == 11: # or m == 12 or m == 13:
         return 16
-    if mode.mode == 4:
+    if mode.mode == 4: # or m == 14:
         return 14
-    if mode.mode == 5:
+    if mode.mode == 5: # or m == 15:
         return 13
-    if mode.mode == 6:
+    if mode.mode == 6: # or m == 16:
         return 11
-    if mode.mode == 7 or mode.mode == 8 or mode.mode == 9:
-        return 16
+    sys.exit(1)
 
-    
+def default_nback_mode(mode):
+    if mode == 2:
+        return BACK_2
+    if mode == 3:
+        return BACK_3
+    if mode == 4:
+        return BACK_4
+    if mode == 5:
+        return BACK_5
+    if mode == 6:
+        return BACK_6
+    if mode == 7:
+        return BACK_7
+    if mode == 8:
+        return BACK_8
+    if mode == 9:
+        return BACK_9
+    if mode == 10:
+        return BACK_10
+    if mode == 11:
+        return BACK_11
+    #if mode == 12:
+        #return BACK_12
+    #if mode == 13:
+        #return BACK_13
+    #if mode == 14:
+        #return BACK_14
+    #if mode == 15:
+        #return BACK_15
+    #if mode == 16:
+        #return BACK_16
+
+def default_ticks(mode):
+    if mode == 2:
+        return TICKS_2
+    if mode == 3:
+        return TICKS_3
+    if mode == 4:
+        return TICKS_4
+    if mode == 5:
+        return TICKS_5
+    if mode == 6:
+        return TICKS_6
+    if mode == 7:
+        return TICKS_7
+    if mode == 8:
+        return TICKS_8
+    if mode == 9:
+        return TICKS_9
+    if mode == 10:
+        return TICKS_10
+    if mode == 11:
+        return TICKS_11
+    #if mode == 12:
+        #return TICKS_12
+    #if mode == 13:
+        #return TICKS_13
+    #if mode == 14:
+        #return TICKS_14
+    #if mode == 15:
+        #return TICKS_15
+    #if mode == 16:
+        #return TICKS_16
+
 #Create the game window
 caption = []
 caption.append('Brain Workshop ')
@@ -843,10 +1055,11 @@ if WINDOW_FULLSCREEN:
 class Mode:
     def __init__(self):
         self.mode = GAME_MODE
-        self.back = NBACK_LEVELS[self.mode]
-        self.variable = []
-        self.ticks_per_trial = QUARTER_SECONDS_PER_TRIAL
+        self.back = default_nback_mode(self.mode)
+        self.ticks_per_trial = default_ticks(self.mode)
         self.num_trials = NUM_TRIALS
+
+        self.variable_list = []
         
         self.manual = MANUAL
         if not self.manual:
@@ -872,6 +1085,7 @@ class Mode:
         self.paused = False
         self.show_missed = False
         self.game_select = False
+        self.sound_select = False
         self.draw_graph = False
         self.title_screen = True
         
@@ -886,10 +1100,8 @@ class Mode:
         self.bt_sequence = []
         
     def enforce_standard_mode(self):
-        self.back = NBACK_LEVELS[self.mode]
-        self.ticks_per_trial = QUARTER_SECONDS_PER_TRIAL
-        if self.mode == 7 or self.mode == 8 or self.mode == 9:
-            self.ticks_per_trial += ARITHMETIC_ADDITIONAL_QUARTER_SECONDS_PER_TRIAL
+        self.back = default_nback_mode(self.mode)
+        self.ticks_per_trial = default_ticks(self.mode)
         self.num_trials = NUM_TRIALS
         self.session_number = 0
 
@@ -916,8 +1128,14 @@ class Graph:
         self.tanb = {}
         self.ponb = {}
         self.aunb = {}
-        self.dvnb = {}
-        self.dictionaries = [self.dnb, self.tnb, self.dlnb, self.tlnb, self.qlnb, self.anb, self.danb, self.tanb, self.ponb, self.aunb, self.dvnb]
+        #self.dvnb = {}
+        #self.mnb = {}
+        #self.dmnb = {}
+        #self.tmnb = {}
+        #self.qmnb = {}
+        self.dictionaries = [self.dnb, self.tnb, self.dlnb, self.tlnb, self.qlnb, self.anb,
+                             self.danb, self.tanb, self.ponb, self.aunb,]
+                             #self.dvnb, self.mnb, self.dmnb, self.tmnb, self.qmnb]
         for dictionary in self.dictionaries:
             dictionary.clear()
         
@@ -931,9 +1149,15 @@ class Graph:
         self.percents.append([]) # anb
         self.percents.append([]) # danb
         self.percents.append([]) # tanb
-        self.percents.append([]) # dnb
-        self.percents.append([]) # tnb
-        self.percents.append([]) # dvnb
+        self.percents.append([]) # ponb
+        self.percents.append([]) # aunb
+        
+        #self.percents.append([]) # dvnb
+        
+        #self.percents.append([]) # mnb
+        #self.percents.append([]) # dmnb
+        #self.percents.append([]) # tmnb
+        #self.percents.append([]) # qmnb
         
         self.percents[0].append([])
         self.percents[0].append([])
@@ -973,11 +1197,31 @@ class Graph:
         
         self.percents[9].append([])
         
-        self.percents[10].append([])
-        self.percents[10].append([])
+        #self.percents[10].append([])
+        #self.percents[10].append([])
+        
+        #self.percents[11].append([])
+        
+        #self.percents[12].append([])
+        #self.percents[12].append([])
+        #self.percents[12].append([])
+        #self.percents[12].append([])
+        
+        #self.percents[13].append([])
+        #self.percents[13].append([])
+        #self.percents[13].append([])
+        #self.percents[13].append([])
+        #self.percents[13].append([])
+
+        #self.percents[14].append([])
+        #self.percents[14].append([])
+        #self.percents[14].append([])
+        #self.percents[14].append([])
+        #self.percents[14].append([])
+        #self.percents[14].append([])
         
     def next_mode(self):
-        if self.graph == 12:
+        if self.graph == 11:
             self.graph = 2
         else: self.graph += 1
         
@@ -993,6 +1237,9 @@ class Graph:
                     if line == '': continue
                     if line == '\n': continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
+                    hour = int(line[11:13])
+                    if hour <= 3:
+                        datestamp = date.fromordinal(datestamp.toordinal() - 1)
                     if line.find('\t') >= 0:
                         separator = '\t'
                     else: separator = ','
@@ -1003,6 +1250,8 @@ class Graph:
                     except:
                         continue
                     newmode = int(newline[3])
+                    if newmode > 11:
+                        continue
                     newback = int(newline[4])
                     newpercent = int(newline[2])
                     dictionary = self.dictionaries[newmode - 2]
@@ -1050,9 +1299,30 @@ class Graph:
                             self.percents[8][0].append(int(newline[9]))
                         elif newmode == 11:
                             self.percents[9][0].append(int(newline[10]))
-                        elif newmode == 12:
-                            self.percents[10][0].append(int(newline[9]))
-                            self.percents[10][1].append(int(newline[10]))
+                        #elif newmode == 12:
+                            #self.percents[10][0].append(int(newline[9]))
+                            #self.percents[10][1].append(int(newline[10]))
+                        #elif newmode == 13:
+                            #self.percents[11][0].append(int(newline[10]))
+                        #elif newmode == 14:
+                            #self.percents[12][0].append(int(newline[12]))
+                            #self.percents[12][1].append(int(newline[13]))
+                            #self.percents[12][2].append(int(newline[14]))
+                            #self.percents[12][3].append(int(newline[10]))
+                        #elif newmode == 15:
+                            #self.percents[13][0].append(int(newline[9]))
+                            #self.percents[13][1].append(int(newline[12]))
+                            #self.percents[13][2].append(int(newline[13]))
+                            #self.percents[13][3].append(int(newline[14]))
+                            #self.percents[13][4].append(int(newline[10]))
+                        #elif newmode == 16:
+                            #self.percents[14][0].append(int(newline[9]))
+                            #self.percents[14][1].append(int(newline[12]))
+                            #self.percents[14][2].append(int(newline[13]))
+                            #self.percents[14][3].append(int(newline[11]))
+                            #self.percents[14][4].append(int(newline[14]))
+                            #self.percents[14][5].append(int(newline[10]))
+
                         
                 statsfile.close()
             except:
@@ -1100,19 +1370,26 @@ class Graph:
             output = []
             if x == 0: output.append('Date\tDual N-Back Average\n')
             elif x == 1: output.append('Date\tTriple N-Back Average\n')
-            elif x == 2: output.append('Date\tDual Letter N-Back Average\n')
-            elif x == 3: output.append('Date\tTri Letter N-Back Average\n')
-            elif x == 4: output.append('Date\tQuad Letter N-Back Average\n')
+            elif x == 2: output.append('Date\tDual Combination N-Back Average\n')
+            elif x == 3: output.append('Date\tTri Combination N-Back Average\n')
+            elif x == 4: output.append('Date\tQuad Combination N-Back Average\n')
             elif x == 5: output.append('Date\tArithmetic N-Back Average\n')
             elif x == 6: output.append('Date\tDual Arithmetic N-Back Average\n')
             elif x == 7: output.append('Date\tTriple Arithmetic N-Back Average\n')
             elif x == 8: output.append('Date\tPosition N-Back Average\n')
             elif x == 9: output.append('Date\tAudio N-Back Average\n')
-            elif x == 10: output.append('Date\tDual Variable N-Back Average\n')
+            #elif x == 10: output.append('Date\tDual Variable N-Back Average\n')
+            #elif x == 11: output.append('Date\tMorse Code N-Back Average\n')
+            #elif x == 12: output.append('Date\tDual Morse Code N-Back Average\n')
+            #elif x == 13: output.append('Date\tTri Morse Code N-Back Average\n')
+            #elif x == 14: output.append('Date\tQuad Morse Code N-Back Average\n')
+            
             keyslist = dictionary.keys()
             keyslist.sort()
             if len(keyslist) == 0: continue
             for datestamp in keyslist:
+                if dictionary[datestamp] == -1:
+                    continue
                 output.append(str(datestamp))
                 output.append('\t')
                 output.append(str(dictionary[datestamp]))
@@ -1159,15 +1436,19 @@ class Graph:
         dictionary = self.dictionaries[self.graph - 2]
         if self.graph == 2: graph_title = 'Dual N-Back'
         elif self.graph == 3: graph_title = 'Triple N-Back'
-        elif self.graph == 4: graph_title = 'Dual Letter N-Back'
-        elif self.graph == 5: graph_title = 'Tri Letter N-Back'
-        elif self.graph == 6: graph_title = 'Quad Letter N-Back'
+        elif self.graph == 4: graph_title = 'Dual Combination N-Back'
+        elif self.graph == 5: graph_title = 'Tri Combination N-Back'
+        elif self.graph == 6: graph_title = 'Quad Combination N-Back'
         elif self.graph == 7: graph_title = 'Arithmetic N-Back'
         elif self.graph == 8: graph_title = 'Dual Arithmetic N-Back'
         elif self.graph == 9: graph_title = 'Triple Arithmetic N-Back'
         elif self.graph == 10: graph_title = 'Position N-Back'
         elif self.graph == 11: graph_title = 'Audio N-Back'
-        elif self.graph == 12: graph_title = 'Dual Variable N-Back'
+        #elif self.graph == 12: graph_title = 'Dual Variable N-Back'
+        #elif self.graph == 13: graph_title = 'Morse Code N-Back'
+        #elif self.graph == 14: graph_title = 'Dual Morse Code N-Back'
+        #elif self.graph == 15: graph_title = 'Tri Morse Code N-Back'
+        #elif self.graph == 16: graph_title = 'Quad Morse Code N-Back'
         
         def drawaxes():
             pyglet.graphics.draw(3, pyglet.gl.GL_LINE_STRIP, ('v2i', (
@@ -1419,13 +1700,65 @@ class Graph:
             str_list.append('Sound: ')
             str_list.append(str(self.percents[9][0][len(self.percents[9][0])-1]))
             str_list.append('%   ')
-        if self.graph == 12:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[10][0][len(self.percents[10][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound: ')
-            str_list.append(str(self.percents[10][1][len(self.percents[10][1])-1]))
-            str_list.append('%   ')
+        #elif self.graph == 12:
+            #str_list.append('Position: ')
+            #str_list.append(str(self.percents[10][0][len(self.percents[10][0])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Sound: ')
+            #str_list.append(str(self.percents[10][1][len(self.percents[10][1])-1]))
+            #str_list.append('%   ')
+        #elif self.graph == 13:
+            #str_list.append('Sound: ')
+            #str_list.append(str(self.percents[11][0][len(self.percents[11][0])-1]))
+            #str_list.append('%   ')
+        #elif self.graph == 14:
+            #str_list.append('Vis & n-vis: ')
+            #str_list.append(str(self.percents[12][0][len(self.percents[12][0])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Vis & n-sound: ')
+            #str_list.append(str(self.percents[12][1][len(self.percents[12][1])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Sound & n-vis: ')
+            #str_list.append(str(self.percents[12][2][len(self.percents[12][2])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Sound: ')
+            #str_list.append(str(self.percents[12][3][len(self.percents[12][3])-1]))
+            #str_list.append('%   ')
+        #elif self.graph == 15:
+            #str_list.append('Position: ')
+            #str_list.append(str(self.percents[13][0][len(self.percents[13][0])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Vis & n-vis: ')
+            #str_list.append(str(self.percents[13][1][len(self.percents[13][1])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Vis & n-sound: ')
+            #str_list.append(str(self.percents[13][2][len(self.percents[13][2])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Sound & n-vis: ')
+            #str_list.append(str(self.percents[13][3][len(self.percents[13][3])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Sound: ')
+            #str_list.append(str(self.percents[13][4][len(self.percents[13][4])-1]))
+            #str_list.append('%   ')
+        #elif self.graph == 16:
+            #str_list.append('Position: ')
+            #str_list.append(str(self.percents[14][0][len(self.percents[14][0])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Vis & n-vis: ')
+            #str_list.append(str(self.percents[14][1][len(self.percents[14][1])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Vis & n-sound: ')
+            #str_list.append(str(self.percents[14][2][len(self.percents[14][2])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Color: ')
+            #str_list.append(str(self.percents[14][3][len(self.percents[14][3])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Sound & n-vis: ')
+            #str_list.append(str(self.percents[14][4][len(self.percents[14][4])-1]))
+            #str_list.append('%   ')
+            #str_list.append('Sound: ')
+            #str_list.append(str(self.percents[14][5][len(self.percents[14][5])-1]))
+            #str_list.append('%   ')
            
         percentagesLabel = pyglet.text.Label(''.join(str_list),
             font_size = 11, bold = False, color = COLOR_TEXT,
@@ -1438,7 +1771,7 @@ class Graph:
 class GameSelect:
     def __init__(self):
         str_list = []
-        str_list.append('Please type a number from 0 to 9 or A to choose the game mode.\n')
+        str_list.append('Type a number or letter choose the game mode.\n')
         str_list.append('\n\n')
         str_list.append('  0: Position N-Back\n')
         str_list.append('  1: Audio N-Back\n')
@@ -1446,27 +1779,81 @@ class GameSelect:
         str_list.append('  2: Dual N-Back (default)\n')
         str_list.append('  3: Triple N-Back\n')
         str_list.append('\n')
-        str_list.append('  4: Dual Letter N-Back\n')
-        str_list.append('  5: Tri Letter N-Back\n')
-        str_list.append('  6: Quad Letter N-Back\n')
+        str_list.append('  4: Dual Combination N-Back\n')
+        str_list.append('  5: Tri Combination N-Back\n')
+        str_list.append('  6: Quad Combination N-Back\n')
         str_list.append('\n')
         str_list.append('  7: Arithmetic N-Back\n')
         str_list.append('  8: Dual Arithmetic N-Back\n')
         str_list.append('  9: Triple Arithmetic N-Back\n')
-        str_list.append('\n')
-        str_list.append('  A: Dual Variable N-Back\n')
+        #str_list.append('\n')
+        #str_list.append('  A: Dual Variable N-Back\n')
         str_list.append('\n\n')
         str_list.append('  ESC: Cancel')
         
+        #str_list2 = []
+        #str_list2.append('\n\n\n\n')
+        #str_list2.append('  S: Morse Code N-Back\n')
+        #str_list2.append('  D: Dual Morse Code N-Back\n')
+        #str_list2.append('  F: Tri Morse Code N-Back\n')
+        #str_list2.append('  G: Quad Morse Code N-Back\n')
+        
         self.label = pyglet.text.Label(
-            ''.join(str_list), multiline = True, width = 400,
+            ''.join(str_list), multiline = True, width = 450,
             font_size=14, bold=False, color = COLOR_TEXT,
             x = window.width // 2, y = window.height - 50,
             anchor_x='center', anchor_y='top')
+        #self.label2 = pyglet.text.Label(
+            #''.join(str_list2), multiline = True, width = 450,
+            #font_size=14, bold=False, color = COLOR_TEXT,
+            #x = window.width // 3 * 2, y = window.height - 50,
+            #anchor_x='center', anchor_y='top')
         
     def draw(self):
         self.label.draw()
+        #self.label2.draw()
             
+class SoundSelect:
+    def __init__(self):
+                
+        self.label = pyglet.text.Label(
+            '', multiline = True, width = 450,
+            font_size=14, bold=False, color = COLOR_TEXT,
+            x = window.width // 3, y = window.height - 50,
+            anchor_x='center', anchor_y='top')
+        
+    def draw(self):
+        str_list = []
+        str_list.append('Type a number to choose sounds for the auditory n-back task.\n\n')
+        str_list.append('If multiple sounds are selected, one will be randomly chosen each session.\n\n')
+        str_list.append('Edit the config file to set permanent defaults.\n')
+        str_list.append('\n\n')
+        if USE_LETTERS:
+            str_list.append('Yes')
+        else: str_list.append('No  ')
+        str_list.append('  1:  Letters\n')
+        if USE_NUMBERS:
+            str_list.append('Yes')
+        else: str_list.append('No  ')
+        str_list.append('  2:  Numbers\n')
+        if USE_NATO:
+            str_list.append('Yes')
+        else: str_list.append('No  ')
+        str_list.append('  3:  NATO Phonetic Alphabet\n')
+        if USE_PIANO:
+            str_list.append('Yes')
+        else: str_list.append('No  ')
+        str_list.append('  4:  Piano Notes\n')
+        if USE_MORSE:
+            str_list.append('Yes')
+        else: str_list.append('No  ')
+        str_list.append('  5:  Morse Code\n')
+        str_list.append('\n\n')
+        str_list.append('SPACE: Continue')
+        
+        self.label.text = ''.join(str_list)
+        
+        self.label.draw()            
 
 # this class controls the field.
 # the field is the grid on which the squares appear
@@ -1508,7 +1895,7 @@ class Field:
                 
     # draw the target cross in the center
     def crosshair_update(self):
-        if (not mode.paused) and mode.mode != 4 and mode.mode != 7 and mode.mode != 11 and mode.mode != 12:
+        if (not mode.paused) and mode.mode != 4 and mode.mode != 7 and mode.mode != 11 and VARIABLE_NBACK == 0: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
             if self.crosshair_visible: return
             else:
                 self.v_crosshair = batch.add(4, pyglet.gl.GL_LINES, None, ('v2i', (
@@ -1753,8 +2140,14 @@ class Visual:
         if variable > 0:
             # display variable n-back level
             self.variable_label.text = str(variable)
-            self.variable_label.x = field.center_x
-            self.variable_label.y = field.center_y + 4
+
+            if mode.mode == 4 or mode.mode == 7 or mode.mode == 11:
+                self.variable_label.x = field.center_x
+                self.variable_label.y = field.center_y - field.size//3 + 4
+            else:
+                self.variable_label.x = field.center_x
+                self.variable_label.y = field.center_y + 4
+
             self.variable_label.color = self.color
         
         self.visible = True
@@ -1885,20 +2278,29 @@ class GameModeLabel:
             elif mode.mode == 3:
                 str_list.append('Triple ')
             elif mode.mode == 4:
-                str_list.append('Dual Letter ')
+                str_list.append('Dual Combination ')
             elif mode.mode == 5:
-                str_list.append('Tri Letter ')
+                str_list.append('Tri Combination ')
             elif mode.mode == 6:
-                str_list.append('Quad Letter ')
+                str_list.append('Quad Combination ')
             elif mode.mode == 7:
                 str_list.append('Arithmetic ')
             elif mode.mode == 8:
                 str_list.append('Dual Arithmetic ')
             elif mode.mode == 9:
                 str_list.append('Triple Arithmetic ')
-            elif mode.mode == 12:
-                str_list.append('Dual Variable ')
-                
+            #elif mode.mode == 12:
+                #str_list.append('Dual Variable ')
+            #elif mode.mode == 13:
+                #str_list.append('Morse Code ')
+            #elif mode.mode == 14:
+                #str_list.append('Dual Morse Code ')
+            #elif mode.mode == 15:
+                #str_list.append('Tri Morse Code ')
+            #elif mode.mode == 16:
+                #str_list.append('Quad Morse Code ')
+            if VARIABLE_NBACK == 1:
+                str_list.append('V. ')
             str_list.append(str(mode.back))
             str_list.append('-Back')
             self.label.text = ''.join(str_list)
@@ -1923,7 +2325,7 @@ class NoviceWarningLabel:
 
     def show(self):
         pyglet.clock.unschedule(noviceWarningLabel.hide)
-        self.label.text = 'Please disable Novice Mode to access additional game modes.'
+        self.label.text = 'Please disable Novice Mode to access additional modes.'
         pyglet.clock.schedule_once(noviceWarningLabel.hide, 3.0)
     def hide(self, dt):
         self.label.text = ''
@@ -1954,6 +2356,9 @@ class KeysListLabel:
                 self.label.y = window.height - 10
             else:
                 self.label.y = window.height - 40
+            if USE_MORSE:
+                str_list.append('J: Morse Code Reference\n')
+                str_list.append('\n')
             str_list.append('H: Help / Tutorial\n')
             str_list.append('\n')
             if mode.manual:
@@ -1968,6 +2373,9 @@ class KeysListLabel:
                 str_list.append('F6: Increase Speed\n')
                 str_list.append('\n')
             str_list.append('C: Choose Game Type\n')
+            str_list.append('S: Select Sounds\n')
+            if not NOVICE_MODE:
+                str_list.append('V: Variable n-back toggle\n')
             if mode.manual:
                 str_list.append('M: Standard Mode\n')
             else:
@@ -1997,15 +2405,16 @@ class TitleKeysLabel:
         str_list = []
         if not NOVICE_MODE:
             str_list.append('C: Choose Game Mode\n')
+            str_list.append('S: Choose Sounds\n\n')
         str_list.append('G: Daily Progress Graph\n')
-        str_list.append('H: Help / Tutorial\n\n')
+        str_list.append('H: Help / Tutorial\n')
         str_list.append('F: Go to Forum / Mailing List')
         
         self.keys = pyglet.text.Label(
             ''.join(str_list),
             multiline = True, width = 260,
             font_size = 12, bold = True, color = COLOR_TEXT,
-            x = window.width // 2, y = 170,
+            x = window.width // 2, y = 180,
             anchor_x = 'center', anchor_y = 'top')
         
         self.space = pyglet.text.Label(
@@ -2159,14 +2568,14 @@ class PositionLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 8 or mode.mode == 9 or mode.mode == 12:
+        elif mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 8 or mode.mode == 9: # or mode.mode == 12:
             str_list = []
             str_list.append(key.symbol_string(KEY_POSITION))
             str_list.append(': position match')
             self.label.text = ''.join(str_list)
         elif mode.mode == 4:
             self.label.text = ''
-        elif mode.mode == 5 or mode.mode == 6:
+        elif mode.mode == 5 or mode.mode == 6: # or mode.mode == 15 or mode.mode == 16:
             str_list = []
             str_list.append(key.symbol_string(KEY_POSITION))
             str_list.append(': position')
@@ -2205,16 +2614,19 @@ class VisvisLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
-            if mode.mode == 4: self.label.anchor_x = 'left'
+        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
+            if mode.mode == 4 or mode.mode == 14: self.label.anchor_x = 'left'
             else: self.label.anchor_x = 'center'
             str_list = []
             str_list.append(key.symbol_string(KEY_VISVIS))
             str_list.append(': vis & n-vis')
             self.label.text = ''.join(str_list)
-            if mode.mode == 4: self.label.x = 20
-            elif mode.mode == 5: self.label.x = window.width // 4
-            elif mode.mode == 6: self.label.x = window.width // 5
+            if mode.mode == 4: # or mode.mode == 14:
+                self.label.x = 20
+            elif mode.mode == 5: # or mode.mode == 15:
+                self.label.x = window.width // 4
+            elif mode.mode == 6: # or mode.mode == 16:
+                self.label.x = window.width // 5
         else:
             self.label.text = ''
         if SHOW_FEEDBACK and mode.visvis_input:
@@ -2249,14 +2661,17 @@ class VisaudioLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             str_list = []
             str_list.append(key.symbol_string(KEY_VISAUDIO))
             str_list.append(': vis & n-sound')
             self.label.text = ''.join(str_list)
-            if mode.mode == 4: self.label.x = window.width // 3
-            elif mode.mode == 5: self.label.x = window.width // 2
-            elif mode.mode == 6: self.label.x = window.width // 5 * 2
+            if mode.mode == 4: # or mode.mode == 14:
+                self.label.x = window.width // 3
+            elif mode.mode == 5: # or mode.mode == 15:
+                self.label.x = window.width // 2
+            elif mode.mode == 6: # or mode.mode == 16:
+                self.label.x = window.width // 5 * 2
         else:
             self.label.text = ''
         if SHOW_FEEDBACK and mode.visaudio_input:
@@ -2298,7 +2713,7 @@ class ColorLabel:
             self.label.text = ''.join(str_list)
             self.label.anchor_x = 'center'
             self.label.x = window.width // 2
-        elif mode.mode == 6:
+        elif mode.mode == 6: # or mode.mode == 16:
             str_list = []
             str_list.append(key.symbol_string(KEY_COLOR))
             str_list.append(': color')
@@ -2346,14 +2761,17 @@ class AudiovisLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             str_list = []
             str_list.append(key.symbol_string(KEY_AUDIOVIS))
             str_list.append(': sound & n-vis')
             self.label.text = ''.join(str_list)
-            if mode.mode == 4: self.label.x = window.width // 3 * 2
-            elif mode.mode == 5: self.label.x = window.width // 4 * 3
-            elif mode.mode == 6: self.label.x = window.width // 5 * 4
+            if mode.mode == 4: # or mode.mode == 14:
+                self.label.x = window.width // 3 * 2
+            elif mode.mode == 5: # or mode.mode == 15:
+                self.label.x = window.width // 4 * 3
+            elif mode.mode == 6: # or mode.mode == 16:
+                self.label.x = window.width // 5 * 4
         else:
             self.label.text = ''
         if SHOW_FEEDBACK and mode.audiovis_input:
@@ -2388,12 +2806,12 @@ class AudioLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 12:
+        elif mode.mode == 11 or mode.mode == 2 or mode.mode == 3: # or mode.mode == 12 or mode.mode == 13:
             str_list = []
             str_list.append(key.symbol_string(KEY_AUDIO))
             str_list.append(': sound match')
             self.label.text = ''.join(str_list)
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             str_list = []
             str_list.append(key.symbol_string(KEY_AUDIO))
             str_list.append(': sound')
@@ -2509,20 +2927,30 @@ class SpaceLabel:
             elif mode.mode == 3:
                 str_list.append('Triple ')
             elif mode.mode == 4:
-                str_list.append('Dual Letter ')
+                str_list.append('Dual Combination ')
             elif mode.mode == 5:
-                str_list.append('Tri Letter ')
+                str_list.append('Tri Combination ')
             elif mode.mode == 6:
-                str_list.append('Quad Letter ')
+                str_list.append('Quad Combination ')
             elif mode.mode == 7:
                 str_list.append('Arithmetic ')
             elif mode.mode == 8:
                 str_list.append('Dual Arithmetic ')
             elif mode.mode == 9:
                 str_list.append('Triple Arithmetic ')
-            elif mode.mode == 12:
-                str_list.append('Dual Variable ')
+            #elif mode.mode == 12:
+                #str_list.append('Dual Variable ')
+            #elif mode.mode == 13:
+                #str_list.append('Morse Code ')
+            #elif mode.mode == 14:
+                #str_list.append('Dual Morse Code ')
+            #elif mode.mode == 15:
+                #str_list.append('Tri Morse Code ')
+            #elif mode.mode == 16:
+                #str_list.append('Quad Morse Code ')
                 
+            if VARIABLE_NBACK == 1:
+                str_list.append('V. ')
             str_list.append(str(mode.back))
             str_list.append('-Back')
             self.label.text = ''.join(str_list)
@@ -2531,8 +2959,8 @@ def check_match(input_type, check_missed = False):
     current = 0
     back_data = ''
     operation = 0
-    if mode.mode == 12:
-        nback_trial = mode.trial_number - mode.variable[mode.trial_number - mode.back - 1] - 1
+    if VARIABLE_NBACK == 1:
+        nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - mode.back - 1] - 1
     else:
         nback_trial = mode.trial_number - mode.back - 1
         
@@ -2618,7 +3046,7 @@ class AnalysisLabel:
             if mode.mode != 12:
                 back = mode.back
             else:
-                back = mode.variable[x - mode.back]
+                back = mode.variable_list[x - mode.back]
                             
             # data is a dictionary of lists.
 
@@ -2702,7 +3130,7 @@ class AnalysisLabel:
         separator = '   '
         str_list.append('Correct-Errors:   ')
         
-        if mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 5 or mode.mode == 6 or mode.mode == 8 or mode.mode == 9 or mode.mode == 12:
+        if mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 5 or mode.mode == 6 or mode.mode == 8 or mode.mode == 9: # or mode.mode == 12:
             str_list.append(key.symbol_string(KEY_POSITION))
             str_list.append(':')
             str_list.append(str(position_right))
@@ -2710,7 +3138,7 @@ class AnalysisLabel:
             str_list.append(str(position_wrong))
             str_list.append(separator)
             
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             str_list.append(key.symbol_string(KEY_VISVIS))
             str_list.append(':')
             str_list.append(str(visvis_right))
@@ -2725,7 +3153,7 @@ class AnalysisLabel:
             str_list.append(str(visaudio_wrong))
             str_list.append(separator)
 
-        if mode.mode == 3 or mode.mode == 6 or mode.mode == 9:
+        if mode.mode == 3 or mode.mode == 6 or mode.mode == 9: # or mode.mode == 16:
             str_list.append(key.symbol_string(KEY_COLOR))
             str_list.append(':')
             str_list.append(str(color_right))
@@ -2733,7 +3161,7 @@ class AnalysisLabel:
             str_list.append(str(color_wrong))
             str_list.append(separator)
             
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             str_list.append(key.symbol_string(KEY_AUDIOVIS))
             str_list.append(':')
             str_list.append(str(audiovis_right))
@@ -2741,7 +3169,7 @@ class AnalysisLabel:
             str_list.append(str(audiovis_wrong))
             str_list.append(separator)
             
-        if mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 4 or mode.mode == 5 or mode.mode == 6 or mode.mode == 12:
+        if mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 12: # or mode.mode == 13 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             str_list.append(key.symbol_string(KEY_AUDIO))
             str_list.append(':')
             str_list.append(str(audio_right))
@@ -2824,11 +3252,47 @@ class AnalysisLabel:
             wrong += color_wrong
             right += arithmetic_right
             wrong += arithmetic_wrong
-        elif mode.mode == 12:
-            right += position_right
-            wrong += position_wrong
-            right += audio_right
-            wrong += audio_wrong
+        #elif mode.mode == 12:
+            #right += position_right
+            #wrong += position_wrong
+            #right += audio_right
+            #wrong += audio_wrong
+        #elif mode.mode == 13:
+            #right += audio_right
+            #wrong += audio_wrong
+        #elif mode.mode == 14:
+            #right += visvis_right
+            #wrong += visvis_wrong
+            #right += visaudio_right
+            #wrong += visaudio_wrong
+            #right += audiovis_right
+            #wrong += audiovis_wrong
+            #right += audio_right
+            #wrong += audio_wrong
+        #elif mode.mode == 15:
+            #right += position_right
+            #wrong += position_wrong
+            #right += visvis_right
+            #wrong += visvis_wrong
+            #right += visaudio_right
+            #wrong += visaudio_wrong
+            #right += audiovis_right
+            #wrong += audiovis_wrong
+            #right += audio_right
+            #wrong += audio_wrong
+        #elif mode.mode == 16:
+            #right += position_right
+            #wrong += position_wrong
+            #right += visvis_right
+            #wrong += visvis_wrong
+            #right += visaudio_right
+            #wrong += visaudio_wrong
+            #right += color_right
+            #wrong += color_wrong
+            #right += audiovis_right
+            #wrong += audiovis_wrong
+            #right += audio_right
+            #wrong += audio_wrong
             
         total = right + wrong
         if total == 0:
@@ -2837,41 +3301,41 @@ class AnalysisLabel:
             percent = int(right * 100 / float(right + wrong))
         
         category_percents = {}
-        if mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 5 or mode.mode == 6 or mode.mode == 8 or mode.mode == 9 or mode.mode == 12:
+        if mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 5 or mode.mode == 6 or mode.mode == 8 or mode.mode == 9: # or mode.mode == 12:
             if position_right + position_wrong == 0:
                 category_percents['position'] = 0
             else:
                 category_percents['position'] = int(position_right * 100 / float(position_right + position_wrong))
         else: category_percents['position'] = 0
         
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             if visvis_right + visvis_wrong == 0:
                 category_percents['visvis'] = 0
             else:
                 category_percents['visvis'] = int(visvis_right * 100 / float(visvis_right + visvis_wrong))
         else: category_percents['visvis'] = 0
         
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             if visaudio_right + visaudio_wrong == 0:
                 category_percents['visaudio'] = 0
             else:
                 category_percents['visaudio'] = int(visaudio_right * 100 / float(visaudio_right + visaudio_wrong))
         else: category_percents['visaudio'] = 0
         
-        if mode.mode == 3 or mode.mode == 6 or mode.mode == 9:
+        if mode.mode == 3 or mode.mode == 6 or mode.mode == 9: # or mode.mode == 16:
             if color_right + color_wrong == 0:
                 category_percents['color'] = 0
             else:
                 category_percents['color'] = int(color_right * 100 / float(color_right + color_wrong))
         else: category_percents['color'] = 0
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6:
+        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             if audiovis_right + audiovis_wrong == 0:
                 category_percents['audiovis'] = 0
             else:
                 category_percents['audiovis'] = int(audiovis_right * 100 / float(audiovis_right + audiovis_wrong))
         else: category_percents['audiovis'] = 0
         
-        if mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 4 or mode.mode == 5 or mode.mode == 6 or mode.mode == 12:
+        if mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 12: # or mode.mode == 13 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
             if audio_right + audio_wrong == 0:
                 category_percents['audio'] = 0
             else:
@@ -2951,11 +3415,14 @@ class ChartLabel:
                 use_last_session = False
                 statsfile_path = os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE)
                 statsfile = open(statsfile_path, 'r')
+                today = date.today()
+                if int(strftime('%H')) <= 3:
+                    today = date.fromordinal(today.toordinal() - 1)
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
-                    if datestamp != date.today():
+                    if datestamp != today:
                         continue
                     if line.find('\t') >= 0:
                         separator = '\t'
@@ -2963,6 +3430,8 @@ class ChartLabel:
                     stats.sessions_today += 1
                     newline = line.split(separator)
                     newmode = int(newline[3])
+                    if newmode > 11:
+                        continue
                     newback = int(newline[4])
                     newpercent = int(newline[2])
                     newmanual = 0
@@ -3048,13 +3517,17 @@ class ChartLabel:
             elif stats.history[x][1] == 11: str_list.append('Au')
             elif stats.history[x][1] == 2: str_list.append('D')
             elif stats.history[x][1] == 3: str_list.append('T')
-            elif stats.history[x][1] == 4: str_list.append('DL')
-            elif stats.history[x][1] == 5: str_list.append('TL')
-            elif stats.history[x][1] == 6: str_list.append('QL')
+            elif stats.history[x][1] == 4: str_list.append('DC')
+            elif stats.history[x][1] == 5: str_list.append('TC')
+            elif stats.history[x][1] == 6: str_list.append('QC')
             elif stats.history[x][1] == 7: str_list.append('A')
             elif stats.history[x][1] == 8: str_list.append('DA')
             elif stats.history[x][1] == 9: str_list.append('TA')
-            elif stats.history[x][1] == 12: str_list.append('DV')
+            #elif stats.history[x][1] == 12: str_list.append('DV')
+            #elif stats.history[x][1] == 13: str_list.append('M')
+            #elif stats.history[x][1] == 14: str_list.append('DM')
+            #elif stats.history[x][1] == 15: str_list.append('TM')
+            #elif stats.history[x][1] == 16: str_list.append('QM')
             str_list.append(str(stats.history[x][2]))
             str_list.append('B')
             self.column2[index].text = ''.join(str_list)
@@ -3190,13 +3663,17 @@ class Stats:
                 elif mode.mode == 11: str_list.append('Au')
                 elif mode.mode == 2: str_list.append('D')
                 elif mode.mode == 3: str_list.append('T')
-                elif mode.mode == 4: str_list.append('DL')
-                elif mode.mode == 5: str_list.append('TL')
-                elif mode.mode == 6: str_list.append('QL')
+                elif mode.mode == 4: str_list.append('DC')
+                elif mode.mode == 5: str_list.append('TC')
+                elif mode.mode == 6: str_list.append('QC')
                 elif mode.mode == 7: str_list.append('A')
                 elif mode.mode == 8: str_list.append('DA')
                 elif mode.mode == 9: str_list.append('TA')
-                elif mode.mode == 12: str_list.append('DV')
+                #elif mode.mode == 12: str_blist.append('DV')
+                #elif mode.mode == 13: str_list.append('M')
+                #elif mode.mode == 14: str_list.append('DM')
+                #elif mode.mode == 15: str_list.append('TM')
+                #elif mode.mode == 16: str_list.append('QM')
                 str_list.append(str(mode.back))
                 str_list.append('B')
                 str_list.append(separator)
@@ -3347,6 +3824,9 @@ def new_session():
     
     # initialize sounds
     choices = []
+    #if mode.mode == 13 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
+        #choices.append('morse')
+    #else:
     if USE_LETTERS:
         choices.append('letters')
     if USE_NUMBERS:
@@ -3355,6 +3835,8 @@ def new_session():
         choices.append('nato')
     if USE_PIANO:
         choices.append('piano')
+    if USE_MORSE:
+        choices.append('morse')
     if len(choices) == 0:
         choices.append('letters')
     mode.sound_mode = random.choice(choices)
@@ -3373,20 +3855,26 @@ def new_session():
         for piano in pianos:
             mode.soundlist.append(pianosound[piano])
     elif mode.sound_mode == 'nato':
-        letters = random.sample(nato.keys(), 8)
+        letters = random.sample(natosound.keys(), 8)
         visual.set_letters(letters)
         mode.soundlist = []
         for letter in letters:
-            mode.soundlist.append(nato[letter])
+            mode.soundlist.append(natosound[letter])
+    elif mode.sound_mode == 'morse':
+        morses = random.sample(morsesound.keys(), 8)
+        visual.set_letters(morses)
+        mode.soundlist = []
+        for morse in morses:
+            mode.soundlist.append(morsesound[morse])
             
     if NOVICE_MODE:
         compute_bt_sequence()
         
-    if mode.mode == 12:
+    if VARIABLE_NBACK == 1:
         # compute variable n-back sequence using beta distribution
-        mode.variable = []
+        mode.variable_list = []
         for index in range(0, mode.num_trials):
-            mode.variable.append(int(random.betavariate(mode.back / 2.0, 1) * mode.back + 1))
+            mode.variable_list.append(int(random.betavariate(mode.back / 2.0, 1) * mode.back + 1))
     field.crosshair_update()
     reset_input()
     stats.initialize_session()
@@ -3518,7 +4006,7 @@ def generate_stimulus():
         input_types = []
         if mode.mode == 10:
             input_types.append('position')
-        elif mode.mode == 11:
+        elif mode.mode == 11: # or mode.mode == 13:
             input_types.append('audio')
         elif mode.mode == 2:
             input_types.append('position')
@@ -3527,18 +4015,18 @@ def generate_stimulus():
             input_types.append('position')
             input_types.append('color')
             input_types.append('audio')
-        elif mode.mode == 4:
+        elif mode.mode == 4: # or mode.mode == 14:
             input_types.append('visvis')
             input_types.append('visaudio')
             input_types.append('audiovis')
             input_types.append('audio')
-        elif mode.mode == 5:
+        elif mode.mode == 5: # or mode.mode == 15:
             input_types.append('position')
             input_types.append('visvis')
             input_types.append('visaudio')
             input_types.append('audiovis')
             input_types.append('audio')
-        elif mode.mode == 6:
+        elif mode.mode == 6: # or mode.mode == 16:
             input_types.append('position')
             input_types.append('color')
             input_types.append('visvis')
@@ -3550,13 +4038,13 @@ def generate_stimulus():
         elif mode.mode == 9:
             input_types.append('position')
             input_types.append('color')
-        elif mode.mode == 12:
-            input_types.append('position')
-            input_types.append('audio')
+        #elif mode.mode == 12:
+            #input_types.append('position')
+            #input_types.append('audio')
 
         choice = random.choice(input_types)
-        if mode.mode == 12:
-            nback_trial = mode.trial_number - mode.variable[mode.trial_number - mode.back - 1] - 1
+        if VARIABLE_NBACK == 1:
+            nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - mode.back - 1] - 1
         else:
             nback_trial = mode.trial_number - mode.back - 1
 
@@ -3581,7 +4069,7 @@ def generate_stimulus():
     if mode.mode == 10:
         mode.current_color = VISUAL_COLOR
         mode.current_vis = 0
-    elif mode.mode == 11:
+    elif mode.mode == 11: # or mode.mode == 13:
         mode.current_color = VISUAL_COLOR
         mode.current_vis = 0
         mode.current_position = 0
@@ -3590,12 +4078,12 @@ def generate_stimulus():
         mode.current_vis = 0
     elif mode.mode == 3:
         mode.current_vis = 0
-    elif mode.mode == 4:
+    elif mode.mode == 4: # or mode.mode == 14:
         mode.current_position = 0
         mode.current_color = VISUAL_COLOR
-    elif mode.mode == 5:
+    elif mode.mode == 5: # or mode.mode == 15:
         mode.current_color = VISUAL_COLOR
-    elif mode.mode == 6:
+    elif mode.mode == 6: # or mode.mode == 16:
         pass
     elif mode.mode == 7:
         mode.current_position = 0
@@ -3604,9 +4092,9 @@ def generate_stimulus():
         mode.current_color = VISUAL_COLOR
     elif mode.mode == 9:
         pass
-    elif mode.mode == 12:
-        mode.current_color = VISUAL_COLOR
-        mode.current_vis = 0
+    #elif mode.mode == 12:
+        #mode.current_color = VISUAL_COLOR
+        #mode.current_vis = 0
 
     # in novice mode, set using the predetermined sequence.
     if NOVICE_MODE:
@@ -3624,14 +4112,14 @@ def generate_stimulus():
             sound[11].play()
         elif mode.current_operation == 'divide':
             sound[12].play()
-    elif (mode.mode >= 2 and mode.mode <= 6) or mode.mode == 11 or mode.mode == 12:
+    elif (mode.mode >= 2 and mode.mode <= 6) or (mode.mode >= 11 and mode.mode <= 11):
         if mode.sound_mode == 'letters':
             sound[mode.current_audio].play()
-        elif mode.sound_mode == 'numbers' or mode.sound_mode == 'nato' or mode.sound_mode == 'piano':
+        elif mode.sound_mode == 'numbers' or mode.sound_mode == 'nato' or mode.sound_mode == 'piano' or mode.sound_mode == 'morse':
             mode.soundlist[mode.current_audio - 1].play()
             
-    if mode.mode == 12 and mode.trial_number > mode.back:
-        variable = mode.variable[mode.trial_number - 1 - mode.back]
+    if VARIABLE_NBACK == 1 and mode.trial_number > mode.back:
+        variable = mode.variable_list[mode.trial_number - 1 - mode.back]
     else:
         variable = 0
     visual.spawn(mode.current_position, mode.current_color, mode.current_vis, mode.current_number, mode.current_operation, variable)
@@ -3660,11 +4148,17 @@ def toggle_manual_mode():
 # this is where the keyboard keys are defined.
 @window.event
 def on_key_press(symbol, modifiers):
+    global USE_LETTERS
+    global USE_NUMBERS
+    global USE_NATO
+    global USE_PIANO
+    global USE_MORSE
+    global VARIABLE_NBACK
     
     if symbol == key.D and (modifiers & key.MOD_CTRL):
         dump_pyglet_info()
         
-    elif mode.title_screen and not mode.draw_graph and not mode.game_select:
+    elif mode.title_screen and not mode.draw_graph and not mode.game_select and not mode.sound_select:
         if symbol == key.ESCAPE or symbol == key.X:
             window.on_close()
             
@@ -3675,15 +4169,19 @@ def on_key_press(symbol, modifiers):
             mode.game_select = True
                                     
         elif symbol == key.H:
-            webbrowser.open_new_tab(TUTORIAL)
+            webbrowser.open_new_tab(WEB_TUTORIAL)
                 
         elif symbol == key.G:
+            sound_stop()
             graph.parse_stats()
             graph.graph = mode.mode
             mode.draw_graph = True
+            
+        elif symbol == key.S and not NOVICE_MODE:
+            mode.sound_select = True
     
         elif symbol == key.F:
-            webbrowser.open_new_tab(FORUM)
+            webbrowser.open_new_tab(WEB_FORUM)
 
     elif mode.draw_graph:
         if symbol == key.ESCAPE or symbol == key.G or symbol == key.X:
@@ -3694,110 +4192,91 @@ def on_key_press(symbol, modifiers):
 
         elif symbol == key.N:
             graph.next_mode()
-    
+            
     elif mode.game_select:
+        def execute_mode_change():
+            if not mode.manual:
+                mode.enforce_standard_mode()
+            update_all_labels()
+            mode.progress = 0
+            circles.update()
+            mode.game_select = False
+            mode.title_screen = False
+        
         if symbol == key.ESCAPE or symbol == key.C or symbol == key.X:
             mode.game_select = False
         elif symbol == key._0 or symbol == key.NUM_0:
             mode.mode = 10
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._1 or symbol == key.NUM_1:
             mode.mode = 11
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._2 or symbol == key.NUM_2:
             mode.mode = 2
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._3 or symbol == key.NUM_3:
             mode.mode = 3
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._4 or symbol == key.NUM_4:
             mode.mode = 4
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._5 or symbol == key.NUM_5:
             mode.mode = 5
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._6 or symbol == key.NUM_6:
             mode.mode = 6
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._7 or symbol == key.NUM_7:
             mode.mode = 7
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._8 or symbol == key.NUM_8:
             mode.mode = 8
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
         elif symbol == key._9 or symbol == key.NUM_9:
             mode.mode = 9
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
-        elif symbol == key.A:
-            mode.mode = 12
-            if not mode.manual:
-                mode.enforce_standard_mode()
-            update_all_labels()
-            mode.progress = 0
-            circles.update()
-            mode.game_select = False
-            mode.title_screen = False
+            execute_mode_change()
+        #elif symbol == key.A:
+            #mode.mode = 12
+            #execute_mode_change()
+        #elif symbol == key.S:
+            #mode.mode = 13
+            #execute_mode_change()
+        #elif symbol == key.D:
+            #mode.mode = 14
+            #execute_mode_change()
+        #elif symbol == key.F:
+            #mode.mode = 15
+            #execute_mode_change()
+        #elif symbol == key.G:
+            #mode.mode = 16
+            #execute_mode_change()
             
+    elif mode.sound_select:
+        if symbol == key.ESCAPE or symbol == key.S or symbol == key.X or symbol == key.SPACE:
+            mode.sound_select = False
+            
+        elif symbol == key._1 or symbol == key.NUM_1:
+            if USE_LETTERS:
+                USE_LETTERS = False
+            else: USE_LETTERS = True
+        elif symbol == key._2 or symbol == key.NUM_2:
+            if USE_NUMBERS:
+                USE_NUMBERS = False
+            else: USE_NUMBERS = True
+        elif symbol == key._3 or symbol == key.NUM_3:
+            if USE_NATO:
+                USE_NATO = False
+            else: USE_NATO = True
+        elif symbol == key._4 or symbol == key.NUM_4:
+            if USE_PIANO:
+                USE_PIANO = False
+            else: USE_PIANO = True
+        elif symbol == key._5 or symbol == key.NUM_5:
+            if USE_MORSE:
+                USE_MORSE = False
+            else: USE_MORSE = True
+            keysListLabel.update()
+    
     elif not mode.started:
         
         if symbol == key.ESCAPE or symbol == key.X:
@@ -3827,22 +4306,35 @@ def on_key_press(symbol, modifiers):
             mode.num_trials += 5
             sessionInfoLabel.flash()            
             
-        elif symbol == key.F5 and mode.manual:
-            if mode.ticks_per_trial > TICKS_MIN:
-                mode.ticks_per_trial -= 1
-                sessionInfoLabel.flash()
             
-        elif symbol == key.F6 and mode.manual:
+        elif symbol == key.F5 and mode.manual:
             if mode.ticks_per_trial < TICKS_MAX:
                 mode.ticks_per_trial += 1
                 sessionInfoLabel.flash()
                         
+        elif symbol == key.F6 and mode.manual:
+            if mode.ticks_per_trial > TICKS_MIN:
+                mode.ticks_per_trial -= 1
+                sessionInfoLabel.flash()
+
         elif symbol == key.C:
             if NOVICE_MODE:
                 noviceWarningLabel.show()
                 return
             mode.game_select = True
-                        
+        elif symbol == key.S:
+            if NOVICE_MODE:
+                noviceWarningLabel.show()
+                return
+            mode.sound_select = True
+            
+        elif symbol == key.V and not NOVICE_MODE:
+            if VARIABLE_NBACK == 1:
+                VARIABLE_NBACK = 0
+            else: VARIABLE_NBACK = 1
+            gameModeLabel.flash()
+            spaceLabel.update()
+
         elif symbol == key.W:
             webbrowser.open_new_tab(WEB_SITE)
             if update_available:
@@ -3855,7 +4347,10 @@ def on_key_press(symbol, modifiers):
             circles.update()
 
         elif symbol == key.H:
-            webbrowser.open_new_tab(TUTORIAL)
+            webbrowser.open_new_tab(WEB_TUTORIAL)
+            
+        elif symbol == key.J and USE_MORSE:
+            webbrowser.open_new_tab(WEB_MORSE)
                 
         elif symbol == key.C and (modifiers & key.MOD_CTRL):
             stats.clear()
@@ -3866,6 +4361,7 @@ def on_key_press(symbol, modifiers):
             circles.update()
             
         elif symbol == key.G:
+            sound_stop()
             graph.parse_stats()
             graph.graph = mode.mode
             mode.draw_graph = True
@@ -3952,6 +4448,8 @@ def on_draw():
         graph.draw()
     elif mode.game_select:
         gameSelect.draw()
+    elif mode.sound_select:
+        soundSelect.draw()
     elif mode.title_screen:
         brain_graphic.draw()
         titleMessageLabel.draw()
@@ -4037,6 +4535,7 @@ graph = Graph()
 circles = Circles()
 
 gameSelect = GameSelect()
+soundSelect = SoundSelect()
 updateLabel = UpdateLabel()
 gameModeLabel = GameModeLabel()
 noviceWarningLabel = NoviceWarningLabel()
