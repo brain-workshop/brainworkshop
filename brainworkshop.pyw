@@ -14,7 +14,7 @@
 # License: GPL (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.23'
+VERSION = '4.3'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser
 from decimal import Decimal
@@ -1022,6 +1022,7 @@ def default_ticks(mode):
         #return TICKS_15
     #if mode == 16:
         #return TICKS_16
+        
 
 #Create the game window
 caption = []
@@ -1770,6 +1771,26 @@ class Graph:
 
 class GameSelect:
     def __init__(self):
+        
+        #str_list2 = []
+        #str_list2.append('\n\n\n\n')
+        #str_list2.append('  S: Morse Code N-Back\n')
+        #str_list2.append('  D: Dual Morse Code N-Back\n')
+        #str_list2.append('  F: Tri Morse Code N-Back\n')
+        #str_list2.append('  G: Quad Morse Code N-Back\n')
+        
+        self.label = pyglet.text.Label(
+            '', multiline = True, width = 450,
+            font_size=14, bold=False, color = COLOR_TEXT,
+            x = window.width // 2, y = window.height - 50,
+            anchor_x='center', anchor_y='top')
+        #self.label2 = pyglet.text.Label(
+            #''.join(str_list2), multiline = True, width = 450,
+            #font_size=14, bold=False, color = COLOR_TEXT,
+            #x = window.width // 3 * 2, y = window.height - 50,
+            #anchor_x='center', anchor_y='top')
+        
+    def draw(self):
         str_list = []
         str_list.append('Type a number or letter choose the game mode.\n')
         str_list.append('\n\n')
@@ -1786,30 +1807,17 @@ class GameSelect:
         str_list.append('  7: Arithmetic N-Back\n')
         str_list.append('  8: Dual Arithmetic N-Back\n')
         str_list.append('  9: Triple Arithmetic N-Back\n')
-        #str_list.append('\n')
-        #str_list.append('  A: Dual Variable N-Back\n')
+        str_list.append('\n')
+        str_list.append('  V: Use Variable n-back levels?')
+        if VARIABLE_NBACK == 1:
+            str_list.append('   YES')
+        elif VARIABLE_NBACK == 0:
+            str_list.append('   NO')
         str_list.append('\n\n')
         str_list.append('  ESC: Cancel')
+
+        self.label.text = ''.join(str_list)
         
-        #str_list2 = []
-        #str_list2.append('\n\n\n\n')
-        #str_list2.append('  S: Morse Code N-Back\n')
-        #str_list2.append('  D: Dual Morse Code N-Back\n')
-        #str_list2.append('  F: Tri Morse Code N-Back\n')
-        #str_list2.append('  G: Quad Morse Code N-Back\n')
-        
-        self.label = pyglet.text.Label(
-            ''.join(str_list), multiline = True, width = 450,
-            font_size=14, bold=False, color = COLOR_TEXT,
-            x = window.width // 2, y = window.height - 50,
-            anchor_x='center', anchor_y='top')
-        #self.label2 = pyglet.text.Label(
-            #''.join(str_list2), multiline = True, width = 450,
-            #font_size=14, bold=False, color = COLOR_TEXT,
-            #x = window.width // 3 * 2, y = window.height - 50,
-            #anchor_x='center', anchor_y='top')
-        
-    def draw(self):
         self.label.draw()
         #self.label2.draw()
             
@@ -2374,8 +2382,6 @@ class KeysListLabel:
                 str_list.append('\n')
             str_list.append('C: Choose Game Type\n')
             str_list.append('S: Select Sounds\n')
-            if not NOVICE_MODE:
-                str_list.append('V: Variable n-back toggle\n')
             if mode.manual:
                 str_list.append('M: Standard Mode\n')
             else:
@@ -2961,7 +2967,7 @@ def check_match(input_type, check_missed = False):
     operation = 0
     if VARIABLE_NBACK == 1:
         nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - mode.back - 1] - 1
-    else:
+    elif VARIABLE_NBACK == 0:
         nback_trial = mode.trial_number - mode.back - 1
         
     if len(stats.session['position']) < mode.back:
@@ -3554,13 +3560,27 @@ class AverageLabel:
             average = 0.
             total_sessions = 0
             for x in range(len(stats.history) - 20, len(stats.history)):
-                if x < 0: continue
+                if x < 0:
+                    continue
+                if stats.history[x][1] != mode.mode:
+                    continue
                 total_sessions += 1
                 average += stats.history[x][2]
-            if len(stats.history) > 0:
+            if total_sessions > 0:
                 average /= total_sessions
+            else: average = 0.
             str_list = []
-            str_list.append('n-back average: ')
+            if mode.mode == 10: str_list.append('PoNB')
+            elif mode.mode == 11: str_list.append('AuNB')
+            elif mode.mode == 2: str_list.append('DNB')
+            elif mode.mode == 3: str_list.append('TNB')
+            elif mode.mode == 4: str_list.append('DCNB')
+            elif mode.mode == 5: str_list.append('TCNB')
+            elif mode.mode == 6: str_list.append('QCNB')
+            elif mode.mode == 7: str_list.append('ANB')
+            elif mode.mode == 8: str_list.append('DANB')
+            elif mode.mode == 9: str_list.append('TANB')
+            str_list.append(' average: ')
             str_list.append(str(round(average, 2)))
             self.label.text = ''.join(str_list)
 
@@ -4201,10 +4221,13 @@ def on_key_press(symbol, modifiers):
             mode.progress = 0
             circles.update()
             mode.game_select = False
-            mode.title_screen = False
         
         if symbol == key.ESCAPE or symbol == key.C or symbol == key.X:
             mode.game_select = False
+        elif symbol == key.V:
+            if VARIABLE_NBACK == 1:
+                VARIABLE_NBACK = 0
+            else: VARIABLE_NBACK = 1
         elif symbol == key._0 or symbol == key.NUM_0:
             mode.mode = 10
             execute_mode_change()
@@ -4328,13 +4351,6 @@ def on_key_press(symbol, modifiers):
                 return
             mode.sound_select = True
             
-        elif symbol == key.V and not NOVICE_MODE:
-            if VARIABLE_NBACK == 1:
-                VARIABLE_NBACK = 0
-            else: VARIABLE_NBACK = 1
-            gameModeLabel.flash()
-            spaceLabel.update()
-
         elif symbol == key.W:
             webbrowser.open_new_tab(WEB_SITE)
             if update_available:
