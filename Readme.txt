@@ -45,7 +45,8 @@ Change Log:
 
 4.3:
 
-* Variable n-back levels can be used with any game mode by pressing V.
+* Variable n-back levels can be used with any game mode by pressing V
+  in the Choose Game Mode screen.
 
 * Sounds for the auditory n-back task can be selected by pressing S.
 
