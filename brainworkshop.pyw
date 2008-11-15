@@ -3049,9 +3049,9 @@ class AnalysisLabel:
             if x < mode.back: continue
             
             data = stats.session
-            if mode.mode != 12:
+            if VARIABLE_NBACK == 0:
                 back = mode.back
-            else:
+            elif VARIABLE_NBACK == 1:
                 back = mode.variable_list[x - mode.back]
                             
             # data is a dictionary of lists.
