@@ -107,6 +107,9 @@ WINDOW_FULLSCREEN = False
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 
+# Skip title screen?
+SKIP_TITLE_SCREEN = False
+
 # Display feedback of correct/incorrect input?
 # Default: True
 SHOW_FEEDBACK = True
@@ -347,6 +350,8 @@ try: WINDOW_WIDTH = config.getint('DEFAULT', 'WINDOW_WIDTH')
 except: WINDOW_WIDTH = 800
 try: WINDOW_HEIGHT = config.getint('DEFAULT', 'WINDOW_HEIGHT')
 except: WINDOW_HEIGHT = 600
+try: SKIP_TITLE_SCREEN = config.getboolean('DEFAULT', 'SKIP_TITLE_SCREEN')
+except: SKIP_TITLE_SCREEN = False
 try: SHOW_FEEDBACK = config.getboolean('DEFAULT', 'SHOW_FEEDBACK')
 except: SHOW_FEEDBACK = True
 try: HIDE_TEXT = config.getboolean('DEFAULT', 'HIDE_TEXT')
@@ -507,7 +512,7 @@ if NOVICE_MODE:
     USE_PIANO = False
     USE_MORSE = False
     VARIABLE_NBACK = 0
-
+    
 def get_threshold_advance():
     if NOVICE_MODE:
         return NOVICE_ADVANCE
@@ -516,7 +521,6 @@ def get_threshold_fallback():
     if NOVICE_MODE:
         return NOVICE_FALLBACK
     return THRESHOLD_FALLBACK
-
 
 # this function checks if a new update for Brain Workshop is available.
 update_available = False
@@ -1088,7 +1092,11 @@ class Mode:
         self.game_select = False
         self.sound_select = False
         self.draw_graph = False
-        self.title_screen = True
+        if SKIP_TITLE_SCREEN:
+            self.title_screen = False
+        else:
+            self.title_screen = True
+        self.shrink_brain = False
         
         self.session_number = 0
         self.trial_number = 0
@@ -1824,18 +1832,26 @@ class GameSelect:
 class SoundSelect:
     def __init__(self):
                 
-        self.label = pyglet.text.Label(
+        str_list = []
+        str_list.append('Type a number to choose sounds for the auditory n-back task.\n\n')
+        str_list.append('If multiple sounds are selected, one will be randomly chosen each session.\n')
+        str_list.append('\n\n')
+        
+        self.label1 = pyglet.text.Label(
+            ''.join(str_list), multiline = True, width = 450,
+            font_size=14, bold=False, color = COLOR_TEXT,
+            x = window.width // 2, y = window.height - 50,
+            anchor_x='center', anchor_y='top')
+        
+        self.label2 = pyglet.text.Label(
             '', multiline = True, width = 450,
             font_size=14, bold=False, color = COLOR_TEXT,
-            x = window.width // 3, y = window.height - 50,
+            x = window.width // 2, y = window.height - 200,
             anchor_x='center', anchor_y='top')
         
     def draw(self):
+                
         str_list = []
-        str_list.append('Type a number to choose sounds for the auditory n-back task.\n\n')
-        str_list.append('If multiple sounds are selected, one will be randomly chosen each session.\n\n')
-        str_list.append('Edit the config file to set permanent defaults.\n')
-        str_list.append('\n\n')
         if USE_LETTERS:
             str_list.append('Yes')
         else: str_list.append('No  ')
@@ -1859,9 +1875,10 @@ class SoundSelect:
         str_list.append('\n\n')
         str_list.append('SPACE: Continue')
         
-        self.label.text = ''.join(str_list)
+        self.label2.text = ''.join(str_list)
         
-        self.label.draw()            
+        self.label1.draw()
+        self.label2.draw()
 
 # this class controls the field.
 # the field is the grid on which the squares appear
@@ -4184,6 +4201,8 @@ def on_key_press(symbol, modifiers):
             
         elif symbol == key.SPACE:
             mode.title_screen = False
+            #mode.shrink_brain = True
+            #pyglet.clock.schedule_interval(shrink_brain, 1/60.)
             
         elif symbol == key.C and not NOVICE_MODE:
             mode.game_select = True
@@ -4303,7 +4322,10 @@ def on_key_press(symbol, modifiers):
     elif not mode.started:
         
         if symbol == key.ESCAPE or symbol == key.X:
-            mode.title_screen = True
+            if SKIP_TITLE_SCREEN:
+                window.on_close()
+            else:
+                mode.title_screen = True
         
         elif symbol == key.SPACE:
             new_session()
@@ -4459,6 +4481,8 @@ def on_key_press(symbol, modifiers):
 # the loop where everything is drawn on the screen.
 @window.event
 def on_draw():
+    if mode.shrink_brain:
+        return
     window.clear()
     if mode.draw_graph:
         graph.draw()
@@ -4589,6 +4613,20 @@ brain_icon.set_position(field.center_x - brain_icon.width//2,
 brain_graphic = pyglet.sprite.Sprite(pyglet.resource.image(IMAGES[9]))
 brain_graphic.set_position(field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
+
+def shrink_brain(dt):
+    brain_graphic.scale -= dt * 2
+    brain_graphic.x = field.center_x - brain_graphic.image.width//2  + 2 + (brain_graphic.image.width - brain_graphic.width) // 2
+    brain_graphic.y = field.center_y - brain_graphic.image.height//2 - 1 + (brain_graphic.image.height - brain_graphic.height) // 2
+    window.clear()
+    brain_graphic.draw()
+    if brain_graphic.width < 56:
+        mode.shrink_brain = False
+        pyglet.clock.unschedule(shrink_brain)
+        brain_graphic.scale = 1
+        brain_graphic.set_position(field.center_x - brain_graphic.width//2,
+                           field.center_y - brain_graphic.height//2 + 40)
+        
 
 # start the event loops!
 if __name__ == '__main__':
