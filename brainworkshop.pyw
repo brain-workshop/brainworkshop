@@ -14,7 +14,7 @@
 # License: GPL (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.3'
+VERSION = '4.31'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser
 from decimal import Decimal
@@ -611,7 +611,8 @@ except:
     sys.exit(1)
     
 SOUNDS = []
-SOUNDS.append('applause.wav') #0 this sound plays when a certain score is achieved
+#SOUNDS.append('applause.wav') #0 this sound plays when a certain score is achieved
+SOUNDS.append('c.wav')
 SOUNDS.append('c.wav') #1 sounds 1-8 are the eight non-NATO letter sounds.
 SOUNDS.append('h.wav') #2
 SOUNDS.append('k.wav') #3
@@ -624,6 +625,11 @@ SOUNDS.append('operation_plus.wav')#9
 SOUNDS.append('operation_minus.wav')#10
 SOUNDS.append('operation_times.wav')#11
 SOUNDS.append('operation_divide.wav')#12
+
+APPLAUSE_SOUNDS = []
+APPLAUSE_SOUNDS.append('applause_1.wav')
+APPLAUSE_SOUNDS.append('applause_2.wav')
+
 # Make sure DEFAULT_LETTERS corresponds to the letter sounds above, in the
 # same order.
 DEFAULT_LETTERS = ['C', 'H', 'K', 'L', 'Q', 'R', 'S', 'T']
@@ -733,7 +739,7 @@ IMAGES.append('spr_square_grey.png')
 IMAGES.append('brain_graphic.png')
 
 
-for resource in (SOUNDS + PIANO_SOUNDS + NUMBER_SOUNDS + NATO_SOUNDS + MORSE_SOUNDS + IMAGES):
+for resource in (SOUNDS + APPLAUSE_SOUNDS + PIANO_SOUNDS + NUMBER_SOUNDS + NATO_SOUNDS + MORSE_SOUNDS + IMAGES):
     path = os.path.join(res_path, resource)
     if not os.access(path, os.F_OK):
         str_list = []
@@ -746,6 +752,11 @@ for resource in (SOUNDS + PIANO_SOUNDS + NUMBER_SOUNDS + NATO_SOUNDS + MORSE_SOU
 sound = []
 for soundfile in SOUNDS:
     sound.append(pyglet.resource.media(soundfile, streaming=False))
+    
+if USE_APPLAUSE:
+    applausesound = []
+    for soundfile in APPLAUSE_SOUNDS:
+        applausesound.append(pyglet.resource.media(soundfile, streaming=False))
     
 numbersound = {}
 numbersound['0'] = pyglet.resource.media(NUMBER_SOUNDS[0], streaming=False)
@@ -842,6 +853,7 @@ morsesound['Z'] = pyglet.resource.media(MORSE_SOUNDS[35], streaming=False)
 if USE_MUSIC:
     MUSIC_ADVANCE = []
     MUSIC_ADVANCE.append('areyouawake.ogg')
+    MUSIC_ADVANCE.append('cematinla.ogg')
     MUSIC_ADVANCE.append('glassworks.ogg')
     MUSIC_ADVANCE.append('joyfulnoise.ogg')
     MUSIC_ADVANCE.append('mamaguela.ogg')
@@ -856,9 +868,11 @@ if USE_MUSIC:
     MUSIC_GREAT.append('caribe.ogg')
     MUSIC_GREAT.append('cornerpocket.ogg')
     MUSIC_GREAT.append('elubechango.ogg')
+    MUSIC_GREAT.append('femmedargent.ogg')
     MUSIC_GREAT.append('frevorasgado.ogg')
     MUSIC_GREAT.append('linusandlucy.ogg')
     MUSIC_GREAT.append('quieroserpoeta.ogg')
+    MUSIC_GREAT.append('spellbound.ogg')
     MUSIC_GREAT.append('streetlife.ogg')
     MUSIC_GREAT.append('suspensionbridge.ogg')
     
@@ -3770,7 +3784,8 @@ class Stats:
                 mode.progress = 0
                 circles.update()
                 if USE_APPLAUSE:
-                    applauseplayer = sound[0].play()
+                    #applauseplayer = sound[0].play()
+                    applauseplayer = random.choice(applausesound).play()
                     applauseplayer.volume = SFX_VOLUME
                 advance = True
             elif mode.back > 1 and percent < get_threshold_fallback():

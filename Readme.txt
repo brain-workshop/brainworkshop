@@ -43,31 +43,26 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
-4.3:
+4.31:
+* A setting to skip the title screen was added to the config file.
+* Three new music clips were added as well as better applause sounds.
 
+4.3:
 * Variable n-back levels can be used with any game mode by pressing V
   in the Choose Game Mode screen.
-
 * Sounds for the auditory n-back task can be selected by pressing S.
-
 * Letter N-Back renamed to Combination N-Back.
-
 * New Morse Code sounds can be used with any n-back mode.
   For the ultimate challenge try using Morse Code with Dual, Tri or
   Quad Combination N-Back. Press J to open a Morse Code reference page.
-
 * Average n-back indicator will only count sessions specific to the
   current game mode.
-
 * Progress graphs now start from 1.0 on the vertical axis to give a
   better overall picture.
-
 * The cutoff for daily averages is is now 4:00 AM instead of midnight.
-
 * Music and applause is stopped when entering the progress graph to
   avoid sound skipping. (The sound may not stop in Linux due to
   driver limitations.)
-
 * Config file changes: The starting N-Back mode and game speed is
   now separately adjustable for each game mode, and some colors
   can be customized. Variable N-Back can also be set as default.
