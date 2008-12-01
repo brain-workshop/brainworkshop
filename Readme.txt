@@ -44,8 +44,9 @@ installation are available on the Brain Workshop web site:
 Change Log:
 
 4.31:
-* A setting to skip the title screen was added to the config file.
 * Three new music clips were added as well as better applause sounds.
+* A setting to skip the title screen was added to the config file.
+* The Clear Stats key (Control-C) is working again.
 
 4.3:
 * Variable n-back levels can be used with any game mode by pressing V

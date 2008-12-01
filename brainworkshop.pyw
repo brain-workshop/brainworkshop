@@ -209,7 +209,7 @@ NOVICE_FALLBACK = 75
 
 # Music/SFX options.
 # Volumes are from 0.0 (silent) to 1.0 (full)
-# Defaults: True, True, False, 1.0, 1.0
+# Defaults: True, True, 1.0, 1.0
 USE_MUSIC = True
 USE_APPLAUSE = True
 MUSIC_VOLUME = 1.0
@@ -1061,6 +1061,8 @@ class MyWindow(pyglet.window.Window):
         pass
     
 window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style)
+if sys.platform == 'linux2':
+    window.set_icon(pyglet.resource.image(IMAGES[0]))
 
 # set the background color of the window
 if BLACK_BACKGROUND:
@@ -4376,6 +4378,14 @@ def on_key_press(symbol, modifiers):
             if mode.ticks_per_trial > TICKS_MIN:
                 mode.ticks_per_trial -= 1
                 sessionInfoLabel.flash()
+                
+        elif symbol == key.C and (modifiers & key.MOD_CTRL):
+            stats.clear()
+            chartLabel.update()
+            averageLabel.update()
+            todayLabel.update()
+            mode.progress = 0
+            circles.update()
 
         elif symbol == key.C:
             if NOVICE_MODE:
@@ -4404,15 +4414,7 @@ def on_key_press(symbol, modifiers):
             
         elif symbol == key.J and USE_MORSE:
             webbrowser.open_new_tab(WEB_MORSE)
-                
-        elif symbol == key.C and (modifiers & key.MOD_CTRL):
-            stats.clear()
-            chartLabel.update()
-            averageLabel.update()
-            todayLabel.update()
-            mode.progress = 0
-            circles.update()
-            
+                            
         elif symbol == key.G:
             sound_stop()
             graph.parse_stats()
