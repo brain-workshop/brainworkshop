@@ -47,7 +47,8 @@ Change Log:
 * Novice Mode was renamed to Jaeggi Mode.
 * Animation of the squares is turned off in Jaeggi Mode.
 * The data and res directories can now be specified on the command line
-  using the --datadir and --resdir parameters (contributed by Timo Lindfors).
+  using the --datadir and --resdir parameters
+  (contributed by Timo Juhani Lindfors <timo.lindfors@iki.fi>).
 * The daily rollover hour for stats can now be specified in the config file.
 * A setting to skip the title screen was added to the config file.
 * Three new music clips and higher quality applause sounds were added.
