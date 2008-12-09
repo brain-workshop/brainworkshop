@@ -44,10 +44,13 @@ installation are available on the Brain Workshop web site:
 Change Log:
 
 4.31:
+* Novice Mode was renamed to Jaeggi Mode.
+* Animation of the squares is turned off in Jaeggi Mode.
 * The data and res directories can now be specified on the command line
-  using the --datadir and --resdir parameters.
-* Three new music clips and higher quality applause sounds were added.
+  using the --datadir and --resdir parameters (contributed by Timo Lindfors).
+* The daily rollover hour for stats can now be specified in the config file.
 * A setting to skip the title screen was added to the config file.
+* Three new music clips and higher quality applause sounds were added.
 * The Clear Stats key (Control-C) is working again.
 
 4.3:
