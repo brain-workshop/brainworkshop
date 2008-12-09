@@ -55,10 +55,21 @@ def get_main_dir():
     if main_is_frozen():
         return os.path.dirname(sys.executable)
     return sys.path[0]    
+def get_data_dir():
+    try:
+        return sys.argv[sys.argv.index('--datadir') + 1]
+    except:
+        return os.path.join(get_main_dir(), FOLDER_DATA)
+def get_res_dir():
+    try:
+        return sys.argv[sys.argv.index('--resdir') + 1]
+    except:
+        return os.path.join(get_main_dir(), FOLDER_RES)
 
 CONFIGFILE_DEFAULT_CONTENTS = """
 ######################################################################
 # Brain Workshop configuration file
+#
 # 
 # To change configuration options:
 #   1. Edit this file as desired,
@@ -297,7 +308,7 @@ KEY_AUDIOVIS = 106
 
 def dump_pyglet_info():
     from pyglet import info
-    sys.stdout = open(os.path.join(get_main_dir(), FOLDER_DATA, 'dump.txt'), 'w')
+    sys.stdout = open(os.path.join(get_data_dir(), 'dump.txt'), 'w')
     info.dump()
     sys.stdout.close()
     window.on_close()
@@ -312,19 +323,19 @@ try: CONFIGFILE = sys.argv[sys.argv.index('--configfile') + 1]
 except:
     pass
 
-if not os.path.isfile(os.path.join(get_main_dir(), FOLDER_DATA, CONFIGFILE)):
-    newconfigfile = open(os.path.join(os.path.join(get_main_dir(), FOLDER_DATA, CONFIGFILE)), 'w')
+if not os.path.isfile(os.path.join(get_data_dir(), CONFIGFILE)):
+    newconfigfile = open(os.path.join(os.path.join(get_data_dir(), CONFIGFILE)), 'w')
     newconfigfile.write(CONFIGFILE_DEFAULT_CONTENTS)
     newconfigfile.close()
     
 try:
     config = ConfigParser.ConfigParser()
-    config.read(os.path.join(get_main_dir(), FOLDER_DATA, CONFIGFILE))
+    config.read(os.path.join(get_data_dir(), CONFIGFILE))
 except:
     if CONFIGFILE != 'config.ini':
         str_list = []
         str_list.append('\nUnable to load config file:\n')
-        str_list.append(os.path.join(get_main_dir(), FOLDER_DATA, CONFIGFILE))
+        str_list.append(os.path.join(get_data_dir(), CONFIGFILE))
         str_list.append('\nFull text of error:\n')
         str_list.append(str(sys.exc_info()))
         print >> sys.stderr, ''.join(str_list)
@@ -589,7 +600,7 @@ if USE_MUSIC:
 # --- BEGIN RESOURCE INITIALIZATION SECTION ----------------------------------
 #
 
-res_path = os.path.join(get_main_dir(), FOLDER_RES)
+res_path = get_res_dir()
 if not os.access(res_path, os.F_OK):
     str_list = []
     str_list.append('\nError: the resource folder\n')
@@ -1254,9 +1265,9 @@ class Graph:
         self.reset_dictionaries()
         self.reset_percents()
         
-        if os.path.isfile(os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE)):
+        if os.path.isfile(os.path.join(get_data_dir(), STATSFILE)):
             try:
-                statsfile_path = os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE)
+                statsfile_path = os.path.join(get_data_dir(), STATSFILE)
                 statsfile = open(statsfile_path, 'r')
                 for line in statsfile:
                     if line == '': continue
@@ -1353,7 +1364,7 @@ class Graph:
             except:
                 str_list = []
                 str_list.append('\nError parsing stats file\n')
-                str_list.append(os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE))
+                str_list.append(os.path.join(get_data_dir(), STATSFILE))
                 str_list.append('\n\n')
                 str_list.append('Full text of error:\n\n')
                 str_list.append(str(sys.exc_info()))
@@ -1421,7 +1432,7 @@ class Graph:
                 output.append('\n')
         
             try:
-                chartfile_path = os.path.join(get_main_dir(), FOLDER_DATA, chartfile_name)
+                chartfile_path = os.path.join(get_data_dir(), chartfile_name)
                 chartfile = open(chartfile_path, 'w')
                 chartfile.write(''.join(output))
                 chartfile.close()
@@ -1429,7 +1440,7 @@ class Graph:
             except:
                 str_list = []
                 str_list.append('\nError writing chart file\n')
-                str_list.append(os.path.join(get_main_dir(), FOLDER_DATA, chartfile_name))
+                str_list.append(os.path.join(get_data_dir(), chartfile_name))
                 str_list.append('\n\n')
                 str_list.append('Full text of error:\n\n')
                 str_list.append(str(sys.exc_info()))
@@ -3446,13 +3457,13 @@ class ChartLabel:
                 x = self.start_x + self.column_spacing_12 + self.column_spacing_23, y = self.start_y - zap * self.line_spacing,
                 anchor_x = 'left', anchor_y = 'top', batch=batch))
                         
-        if os.path.isfile(os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE)):
+        if os.path.isfile(os.path.join(get_data_dir(), STATSFILE)):
             try:
                 last_session_number = 0
                 last_mode = 0
                 last_back = 0
                 use_last_session = False
-                statsfile_path = os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE)
+                statsfile_path = os.path.join(get_data_dir(), STATSFILE)
                 statsfile = open(statsfile_path, 'r')
                 today = date.today()
                 if int(strftime('%H')) <= 3:
@@ -3509,7 +3520,7 @@ class ChartLabel:
             except:
                 str_list = []
                 str_list.append('\nError parsing stats file\n')
-                str_list.append(os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE))
+                str_list.append(os.path.join(get_data_dir(), STATSFILE))
                 str_list.append('\n\n')
                 str_list.append('Full text of error:\n\n')
                 str_list.append(str(sys.exc_info()))
@@ -3707,7 +3718,7 @@ class Stats:
         if ATTEMPT_TO_SAVE_STATS:
             try:
                 separator = STATS_SEPARATOR
-                statsfile_path = os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE)
+                statsfile_path = os.path.join(get_data_dir(), STATSFILE)
                 statsfile = open(statsfile_path, 'a')
                 str_list = []
                 str_list.append(strftime("%Y-%m-%d %H:%M:%S"))
@@ -3765,7 +3776,7 @@ class Stats:
             except:
                 str_list = []
                 str_list.append('\nError writing to stats file\n')
-                str_list.append(os.path.join(get_main_dir(), FOLDER_DATA, STATSFILE))
+                str_list.append(os.path.join(get_data_dir(), STATSFILE))
                 str_list.append('\n\n')
                 str_list.append('Full text of error:\n\n')
                 str_list.append(str(sys.exc_info()))

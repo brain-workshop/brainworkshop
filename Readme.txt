@@ -44,7 +44,9 @@ installation are available on the Brain Workshop web site:
 Change Log:
 
 4.31:
-* Three new music clips were added as well as better applause sounds.
+* The data and res directories can now be specified on the command line
+  using the --datadir and --resdir parameters.
+* Three new music clips and higher quality applause sounds were added.
 * A setting to skip the title screen was added to the config file.
 * The Clear Stats key (Control-C) is working again.
 
