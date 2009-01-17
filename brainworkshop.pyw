@@ -30,9 +30,6 @@ CHARTFILE = ['chart-02-dnb.txt', 'chart-03-tnb.txt', 'chart-04-dlnb.txt', 'chart
              'chart-06-qlnb.txt','chart-07-anb.txt', 'chart-08-danb.txt', 'chart-09-tanb.txt',
              'chart-10-ponb.txt', 'chart-11-aunb.txt',]
              #'chart12-dvnb.txt', 'chart13-mnb.txt', 'chart14-dmnb.txt', 'chart15-tmnb.txt', 'chart16-qmnb.txt']
-ARITHMETIC_ACCEPTABLE_DECIMALS = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9',
-                       '0.125', '0.25', '0.375', '0.625', '0.75', '0.875',
-                       '0.15', '0.35', '0.45', '0.55', '0.65', '0.85', '0.95',]
 ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
 WEB_SITE = 'http://brainworkshop.sourceforge.net/'
@@ -97,6 +94,22 @@ CONFIGFILE_DEFAULT_CONTENTS += """
 # Default: False
 JAEGGI_MODE = False
 
+# In Jaeggi Mode, adjust the default appearance and sounds of Brain Workshop
+# to emulate the original software used in the study?
+# If this is enabled, the following options will be set:
+#    USE_LETTERS = True, USE_NUMBERS = False, USE_NATO = False,
+#    USE_PIANO = False, USE_MORSE = False, ANIMATE_SQUARES = False,
+#    OLD_STYLE_SQUARES = True, GRIDLINES = False, SHOW_FEEDBACK = False
+# Default: True
+JAEGGI_FORCE_OPTIONS = True 
+
+# In Jaeggi Mode, further adjust the appearance to match the original
+# software as closely as possible?
+# If this is enabled, the following options will be set:
+#    BLACK_BACKGROUND = True, WINDOW_FULLSCREEN = True, HIDE_TEXT = True
+# Default: False
+JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
+
 # This selects which sounds to use for audio n-back tasks.
 # Select any combination of letters, numbers, the NATO Phonetic Alphabet
 # (Alpha, Bravo, Charlie, etc), the C scale on piano, and morse code.
@@ -131,8 +144,9 @@ SHOW_FEEDBACK = True
 # Default: False
 HIDE_TEXT = False
 
-# Show grid lines?
+# Show grid lines and crosshairs?
 GRIDLINES = True
+CROSSHAIRS = True
 
 # Set the color of the square in Dual N-Back mode.
 # This also affects Dual Combination N-Back and Arithmetic N-Back.
@@ -258,6 +272,9 @@ ARITHMETIC_USE_ADDITION = True
 ARITHMETIC_USE_SUBTRACTION = True
 ARITHMETIC_USE_MULTIPLICATION = True
 ARITHMETIC_USE_DIVISION = True
+ARITHMETIC_ACCEPTABLE_DECIMALS = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6',
+    '0.7', '0.8', '0.9', '0.125', '0.25', '0.375', '0.625', '0.75', '0.875',
+    '0.15', '0.35', '0.45', '0.55', '0.65', '0.85', '0.95',]
 
 # Colors for the color n-back task
 # format: (red, green, blue, 255)
@@ -351,6 +368,10 @@ except:
 
 try: JAEGGI_MODE = config.getboolean('DEFAULT', 'JAEGGI_MODE')
 except: JAEGGI_MODE = False
+try: JAEGGI_FORCE_OPTIONS = config.getboolean('DEFAULT', 'JAEGGI_FORCE_OPTIONS')
+except: JAEGGI_FORCE_OPTIONS = True
+try: JAEGGI_FORCE_OPTIONS_ADDITIONAL = config.getboolean('DEFAULT', 'JAEGGI_FORCE_OPTIONS_ADDITIONAL')
+except: JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
 try: USE_LETTERS = config.getboolean('DEFAULT', 'USE_LETTERS')
 except: USE_LETTERS = True
 try: USE_NUMBERS = config.getboolean('DEFAULT', 'USE_NUMBERS')
@@ -377,6 +398,8 @@ try: HIDE_TEXT = config.getboolean('DEFAULT', 'HIDE_TEXT')
 except: HIDE_TEXT = False
 try: GRIDLINES = config.getboolean('DEFAULT', 'GRIDLINES')
 except: GRIDLINES = True
+try: CROSSHAIRS = config.getboolean('DEFAULT', 'CROSSHAIRS')
+except: CROSSHAIRS = True
 try: VISUAL_COLOR = config.getint('DEFAULT', 'VISUAL_COLOR')
 except: VISUAL_COLOR = 3
 try: ANIMATE_SQUARES = config.getboolean('DEFAULT', 'ANIMATE_SQUARES')
@@ -478,7 +501,10 @@ try: ARITHMETIC_USE_MULTIPLICATION = config.getboolean('DEFAULT', 'ARITHMETIC_US
 except: ARITHMETIC_USE_MULTIPLICATION = True
 try: ARITHMETIC_USE_DIVISION = config.getboolean('DEFAULT', 'ARITHMETIC_USE_DIVISION')
 except: ARITHMETIC_USE_DIVISION = True
-
+try: ARITHMETIC_ACCEPTABLE_DECIMALS = eval(config.get('DEFAULT', 'ARITHMETIC_ACCEPTABLE_DECIMALS'))
+except: ARITHMETIC_ACCEPTABLE_DECIMALS = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9',
+                                          '0.125', '0.25', '0.375', '0.625', '0.75', '0.875',
+                                          '0.15', '0.35', '0.45', '0.55', '0.65', '0.85', '0.95',]
 try: COLOR_1 = eval(config.get('DEFAULT', 'COLOR_1'))
 except: COLOR_1 = (255, 0, 0, 255)
 try: COLOR_2 = eval(config.get('DEFAULT', 'COLOR_2'))
@@ -524,22 +550,27 @@ except: KEY_VISAUDIO = 100
 try: KEY_AUDIOVIS = config.getint('DEFAULT', 'KEY_AUDIOVIS')
 except: KEY_AUDIOVIS = 106
 
-if BLACK_BACKGROUND:
-    COLOR_TEXT = COLOR_TEXT_BLK
-
 if JAEGGI_MODE:
     GAME_MODE = 2
-    USE_LETTERS = True
-    USE_NUMBERS = False
-    USE_NATO = False
-    USE_PIANO = False
-    USE_MORSE = False
     VARIABLE_NBACK = 0
-    ANIMATE_SQUARES = False
-    GRIDLINES = False
-    SHOW_FEEDBACK = False
-    OLD_STYLE_SQUARES = True
-    
+    if JAEGGI_FORCE_OPTIONS:
+        USE_LETTERS = True
+        USE_NUMBERS = False
+        USE_NATO = False
+        USE_PIANO = False
+        USE_MORSE = False
+        ANIMATE_SQUARES = False
+        OLD_STYLE_SQUARES = True
+        GRIDLINES = False
+        SHOW_FEEDBACK = False
+    if JAEGGI_FORCE_OPTIONS_ADDITIONAL:
+        BLACK_BACKGROUND = True
+        WINDOW_FULLSCREEN = True
+        HIDE_TEXT = True
+
+if BLACK_BACKGROUND:
+    COLOR_TEXT = COLOR_TEXT_BLK
+        
 def get_threshold_advance():
     if JAEGGI_MODE:
         return JAEGGI_ADVANCE
@@ -1964,6 +1995,8 @@ class Field:
                 
     # draw the target cross in the center
     def crosshair_update(self):
+        if not CROSSHAIRS:
+            return
         if (not mode.paused) and mode.mode != 4 and mode.mode != 7 and mode.mode != 11 and VARIABLE_NBACK == 0: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
             if self.crosshair_visible: return
             else:
@@ -3483,14 +3516,22 @@ class ChartLabel:
                 statsfile_path = os.path.join(get_data_dir(), STATSFILE)
                 statsfile = open(statsfile_path, 'r')
                 today = date.today()
-                if int(strftime('%H')) < ROLLOVER_HOUR:
-                    today = date.fromordinal(today.toordinal() - 1)
+                yesterday = date.fromordinal(today.toordinal() - 1)
+                tomorrow = date.fromordinal(today.toordinal() + 1)
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
-                    if datestamp != today:
-                        continue
+                    hour = int(line[11:13])
+                    if int(strftime('%H')) < ROLLOVER_HOUR:
+                        if datestamp == today:
+                            pass
+                        elif datestamp == yesterday and hour >= ROLLOVER_HOUR:
+                            pass
+                        else: continue
+                    elif datestamp == today and hour >= ROLLOVER_HOUR:
+                        pass
+                    else: continue
                     if line.find('\t') >= 0:
                         separator = '\t'
                     else: separator = ','

@@ -45,13 +45,21 @@ Change Log:
 
 4.4:
 * Novice Mode was renamed to Jaeggi Mode.
-* Animation of the squares is turned off in Jaeggi Mode and the 
-  solid-color squares are used.
+* Jaeggi Mode will activate certain options to emulate the appearance
+  of the software used in the original study. Two configuration options
+  were added to control this behavior.
+  [Note: to see the new config options, delete your current config
+   file and relaunch Brain Workshop to generate a fresh config.]
 * The data and res directories can now be specified on the command line
   using the --datadir and --resdir parameters
   (contributed by Timo Juhani Lindfors <timo.lindfors@iki.fi>).
 * The daily rollover hour for stats can now be specified in the config file.
+* A bug was fixed where certain trials would not show up in the list
+  if the program was launched between midnight and 4 AM.
 * A setting to skip the title screen was added to the config file.
+* The grid lines and crosshairs can be toggled in the config file.
+* Arithmetic Mode: The acceptable decimal answers can be set in the
+  config file.
 * Three new music clips were added.
 * The Clear Stats key (Control-C) is working again.
 
