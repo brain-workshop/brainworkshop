@@ -9,12 +9,12 @@
 #
 # Also see Readme.txt.
 #
-# Copyright (C) 2008: Paul Hoskinson (plhosk@gmail.com)
+# Copyright (C) 2009: Paul Hoskinson (plhosk@gmail.com)
 #
-# License: GPL (http://www.gnu.org/copyleft/gpl.html)
+# The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.31'
+VERSION = '4.4'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser
 from decimal import Decimal
@@ -130,6 +130,9 @@ SHOW_FEEDBACK = True
 # Hide text during game? (this can be toggled in-game by pressing F8)
 # Default: False
 HIDE_TEXT = False
+
+# Show grid lines?
+GRIDLINES = True
 
 # Set the color of the square in Dual N-Back mode.
 # This also affects Dual Combination N-Back and Arithmetic N-Back.
@@ -372,6 +375,8 @@ try: SHOW_FEEDBACK = config.getboolean('DEFAULT', 'SHOW_FEEDBACK')
 except: SHOW_FEEDBACK = True
 try: HIDE_TEXT = config.getboolean('DEFAULT', 'HIDE_TEXT')
 except: HIDE_TEXT = False
+try: GRIDLINES = config.getboolean('DEFAULT', 'GRIDLINES')
+except: GRIDLINES = True
 try: VISUAL_COLOR = config.getint('DEFAULT', 'VISUAL_COLOR')
 except: VISUAL_COLOR = 3
 try: ANIMATE_SQUARES = config.getboolean('DEFAULT', 'ANIMATE_SQUARES')
@@ -531,6 +536,9 @@ if JAEGGI_MODE:
     USE_MORSE = False
     VARIABLE_NBACK = 0
     ANIMATE_SQUARES = False
+    GRIDLINES = False
+    SHOW_FEEDBACK = False
+    OLD_STYLE_SQUARES = True
     
 def get_threshold_advance():
     if JAEGGI_MODE:
@@ -630,8 +638,7 @@ except:
     sys.exit(1)
     
 SOUNDS = []
-#SOUNDS.append('applause.wav') #0 this sound plays when a certain score is achieved
-SOUNDS.append('c.wav')
+SOUNDS.append('c.wav') # this is a place holder
 SOUNDS.append('c.wav') #1 sounds 1-8 are the eight non-NATO letter sounds.
 SOUNDS.append('h.wav') #2
 SOUNDS.append('k.wav') #3
@@ -646,8 +653,9 @@ SOUNDS.append('operation_times.wav')#11
 SOUNDS.append('operation_divide.wav')#12
 
 APPLAUSE_SOUNDS = []
-APPLAUSE_SOUNDS.append('applause_1.wav')
-APPLAUSE_SOUNDS.append('applause_2.wav')
+APPLAUSE_SOUNDS.append('applause.wav')
+#APPLAUSE_SOUNDS.append('applause_1.wav')
+#APPLAUSE_SOUNDS.append('applause_2.wav')
 
 # Make sure DEFAULT_LETTERS corresponds to the letter sounds above, in the
 # same order.
@@ -1938,16 +1946,17 @@ class Field:
         self.y4 = self.center_y + self.size/6
         
         # add the inside lines
-        self.v_lines = batch.add(8, pyglet.gl.GL_LINES, None, ('v2i', (
-            self.x1, self.y3,
-            self.x2, self.y3,
-            self.x1, self.y4,
-            self.x2, self.y4,
-            self.x3, self.y1,
-            self.x3, self.y2,
-            self.x4, self.y1,
-            self.x4, self.y2)),
-                  ('c3B', self.color8))
+        if GRIDLINES:
+            self.v_lines = batch.add(8, pyglet.gl.GL_LINES, None, ('v2i', (
+                self.x1, self.y3,
+                self.x2, self.y3,
+                self.x1, self.y4,
+                self.x2, self.y4,
+                self.x3, self.y1,
+                self.x3, self.y2,
+                self.x4, self.y1,
+                self.x4, self.y2)),
+                      ('c3B', self.color8))
                 
         self.crosshair_visible = False
         # initialize crosshair
