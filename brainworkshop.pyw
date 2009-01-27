@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.4'
+VERSION = '4.41'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser
 from decimal import Decimal
@@ -99,14 +99,16 @@ JAEGGI_MODE = False
 # If this is enabled, the following options will be set:
 #    USE_LETTERS = True, USE_NUMBERS = False, USE_NATO = False,
 #    USE_PIANO = False, USE_MORSE = False, ANIMATE_SQUARES = False,
-#    OLD_STYLE_SQUARES = True, GRIDLINES = False, SHOW_FEEDBACK = False
+#    OLD_STYLE_SQUARES = True, OLD_STYLE_SHARP_CORNERS = True,
+#    SHOW_FEEDBACK = False, GRIDLINES = False, CROSSHAIRS = True
 # Default: True
 JAEGGI_FORCE_OPTIONS = True 
 
 # In Jaeggi Mode, further adjust the appearance to match the original
 # software as closely as possible?
 # If this is enabled, the following options will be set:
-#    BLACK_BACKGROUND = True, WINDOW_FULLSCREEN = True, HIDE_TEXT = True
+#    BLACK_BACKGROUND = True, WINDOW_FULLSCREEN = True,
+#    HIDE_TEXT = True, FIELD_EXPAND = True
 # Default: False
 JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
 
@@ -144,6 +146,10 @@ SHOW_FEEDBACK = True
 # Default: False
 HIDE_TEXT = False
 
+# Expand the field (squares) to fill the entire height of the screen?
+# Note: this should only be used with HIDE_TEXT = True.
+FIELD_EXPAND = False
+
 # Show grid lines and crosshairs?
 GRIDLINES = True
 CROSSHAIRS = True
@@ -159,7 +165,9 @@ VISUAL_COLOR = 3
 ANIMATE_SQUARES = True
 
 # Use the flat, single-color squares like in versions prior to 4.1?
+# Also, use sharp corners or rounded corners?
 OLD_STYLE_SQUARES = False
+OLD_STYLE_SHARP_CORNERS = False
 
 # Start in Manual mode?
 # If this is False, the game will start in standard mode.
@@ -396,6 +404,8 @@ try: SHOW_FEEDBACK = config.getboolean('DEFAULT', 'SHOW_FEEDBACK')
 except: SHOW_FEEDBACK = True
 try: HIDE_TEXT = config.getboolean('DEFAULT', 'HIDE_TEXT')
 except: HIDE_TEXT = False
+try: FIELD_EXPAND = config.getboolean('DEFAULT', 'FIELD_EXPAND')
+except: FIELD_EXPAND = False
 try: GRIDLINES = config.getboolean('DEFAULT', 'GRIDLINES')
 except: GRIDLINES = True
 try: CROSSHAIRS = config.getboolean('DEFAULT', 'CROSSHAIRS')
@@ -406,6 +416,8 @@ try: ANIMATE_SQUARES = config.getboolean('DEFAULT', 'ANIMATE_SQUARES')
 except: ANIMATE_SQUARES = True
 try: OLD_STYLE_SQUARES = config.getboolean('DEFAULT', 'OLD_STYLE_SQUARES')
 except: OLD_STYLE_SQUARES = False
+try: OLD_STYLE_SHARP_CORNERS = config.getboolean('DEFAULT', 'OLD_STYLE_SHARP_CORNERS')
+except: OLD_STYLE_SHARP_CORNERS = False
 try: MANUAL = config.getboolean('DEFAULT', 'MANUAL')
 except: MANUAL = False
 try: USE_MUSIC_MANUAL = config.getboolean('DEFAULT', 'USE_MUSIC_MANUAL')
@@ -561,12 +573,15 @@ if JAEGGI_MODE:
         USE_MORSE = False
         ANIMATE_SQUARES = False
         OLD_STYLE_SQUARES = True
+        OLD_STYLE_SHARP_CORNERS = True
         GRIDLINES = False
+        CROSSHAIRS = True
         SHOW_FEEDBACK = False
     if JAEGGI_FORCE_OPTIONS_ADDITIONAL:
         BLACK_BACKGROUND = True
         WINDOW_FULLSCREEN = True
         HIDE_TEXT = True
+        FIELD_EXPAND = True
 
 if BLACK_BACKGROUND:
     COLOR_TEXT = COLOR_TEXT_BLK
@@ -1958,7 +1973,9 @@ class SoundSelect:
 # the field is the grid on which the squares appear
 class Field:
     def __init__(self):
-        self.size = int(window.height * 0.625)
+        if FIELD_EXPAND:
+            self.size = int(window.height * 0.85)
+        else: self.size = int(window.height * 0.625)
         if BLACK_BACKGROUND:
             self.color = (64, 64, 64)
         else: 
@@ -1966,7 +1983,9 @@ class Field:
         self.color4 = self.color * 4
         self.color8 = self.color * 8
         self.center_x = window.width // 2
-        self.center_y = window.height // 2 + 20
+        if FIELD_EXPAND:
+            self.center_y = window.height // 2
+        else: self.center_y = window.height // 2 + 20
         self.x1 = self.center_x - self.size/2
         self.x2 = self.center_x + self.size/2
         self.x3 = self.center_x - self.size/6
@@ -2074,148 +2093,157 @@ class Visual:
                 ty = self.center_y + self.size // 2 - 2
                 cr = self.size // 5
                 
-                # decreases fast
-                df1 = 1-math.sin(math.radians(10))
-                df2 = 1-math.sin(math.radians(20))
-                df3 = 1-math.sin(math.radians(30))
-                df4 = 1-math.sin(math.radians(40))
-                df5 = 1-math.sin(math.radians(50))
-                df6 = 1-math.sin(math.radians(60))
-                df7 = 1-math.sin(math.radians(70))
-                df8 = 1-math.sin(math.radians(80))
-                # decreases slowly
-                ds1 = 1-math.cos(math.radians(10))
-                ds2 = 1-math.cos(math.radians(20))
-                ds3 = 1-math.cos(math.radians(30))
-                ds4 = 1-math.cos(math.radians(40))
-                ds5 = 1-math.cos(math.radians(50))
-                ds6 = 1-math.cos(math.radians(60))
-                ds7 = 1-math.cos(math.radians(70))
-                ds8 = 1-math.cos(math.radians(80))
+                if OLD_STYLE_SHARP_CORNERS:
+                    self.square = batch.add(4, pyglet.gl.GL_POLYGON, None, ('v2i', (
+                        lx, by,
+                        rx, by,
+                        rx, ty,
+                        lx, ty,)),
+                        ('c4B', self.color * 4))
+                else:
                 
-                x01=lx+cr
-                y01=by
-                x02=rx-cr
-                y02=by
-                x03=int(rx-cr*df1)
-                y03=int(by+cr*df8)
-                x04=int(rx-cr*df2)
-                y04=int(by+cr*df7)
-                x05=int(rx-cr*df3)
-                y05=int(by+cr*df6)
-                x06=int(rx-cr*df4)
-                y06=int(by+cr*df5)
-                x07=int(rx-cr*df5)
-                y07=int(by+cr*df4)
-                x08=int(rx-cr*df6)
-                y08=int(by+cr*df3)
-                x09=int(rx-cr*df7)
-                y09=int(by+cr*df2)
-                x10=int(rx-cr*df8)
-                y10=int(by+cr*df1)
-                x11=rx
-                y11=by+cr
-                x12=rx
-                y12=ty-cr
-                x13=int(rx-cr*df8)
-                y13=int(ty-cr*df1)
-                x14=int(rx-cr*df7)
-                y14=int(ty-cr*df2)
-                x15=int(rx-cr*df6)
-                y15=int(ty-cr*df3)
-                x16=int(rx-cr*df5)
-                y16=int(ty-cr*df4)
-                x17=int(rx-cr*df4)
-                y17=int(ty-cr*df5)
-                x18=int(rx-cr*df3)
-                y18=int(ty-cr*df6)
-                x19=int(rx-cr*df2)
-                y19=int(ty-cr*df7)
-                x20=int(rx-cr*df1)
-                y20=int(ty-cr*df8)
-                x21=rx-cr
-                y21=ty
-                x22=lx+cr
-                y22=ty
-                x23=int(lx+cr*ds8)
-                y23=int(ty-cr*ds1)
-                x24=int(lx+cr*ds7)
-                y24=int(ty-cr*ds2)
-                x25=int(lx+cr*ds6)
-                y25=int(ty-cr*ds3)
-                x26=int(lx+cr*ds5)
-                y26=int(ty-cr*ds4)
-                x27=int(lx+cr*ds4)
-                y27=int(ty-cr*ds5)
-                x28=int(lx+cr*ds3)
-                y28=int(ty-cr*ds6)
-                x29=int(lx+cr*ds2)
-                y29=int(ty-cr*ds7)
-                x30=int(lx+cr*ds1)
-                y30=int(ty-cr*ds8)
-                x31=lx
-                y31=ty-cr
-                x32=lx
-                y32=by+cr
-                x33=int(lx+cr*ds1)
-                y33=int(by+cr*df1)
-                x34=int(lx+cr*ds2)
-                y34=int(by+cr*df2)
-                x35=int(lx+cr*ds3)
-                y35=int(by+cr*df3)
-                x36=int(lx+cr*ds4)
-                y36=int(by+cr*df4)
-                x37=int(lx+cr*ds5)
-                y37=int(by+cr*df5)
-                x38=int(lx+cr*ds6)
-                y38=int(by+cr*df6)
-                x39=int(lx+cr*ds7)
-                y39=int(by+cr*df7)
-                x40=int(lx+cr*ds8)
-                y40=int(by+cr*df8)
-    
-                self.square = batch.add(40, pyglet.gl.GL_POLYGON, None, ('v2i', (
-                    x01, y01,
-                    x02, y02,
-                    x03, y03,
-                    x04, y04,
-                    x05, y05,
-                    x06, y06,
-                    x07, y07,
-                    x08, y08,
-                    x09, y09,
-                    x10, y10,
-                    x11, y11,
-                    x12, y12,
-                    x13, y13,
-                    x14, y14,
-                    x15, y15,
-                    x16, y16,
-                    x17, y17,
-                    x18, y18,
-                    x19, y19,
-                    x20, y20,
-                    x21, y21,
-                    x22, y22,
-                    x23, y23,
-                    x24, y24,
-                    x25, y25,
-                    x26, y26,
-                    x27, y27,
-                    x28, y28,
-                    x29, y29,
-                    x30, y30,
-                    x31, y31,
-                    x32, y32,
-                    x33, y33,
-                    x34, y34,
-                    x35, y35,
-                    x36, y36,
-                    x37, y37,
-                    x38, y38,
-                    x39, y39,
-                    x40, y40)),
-                    ('c4B', self.color * 40))
+                    # decreases fast
+                    df1 = 1-math.sin(math.radians(10))
+                    df2 = 1-math.sin(math.radians(20))
+                    df3 = 1-math.sin(math.radians(30))
+                    df4 = 1-math.sin(math.radians(40))
+                    df5 = 1-math.sin(math.radians(50))
+                    df6 = 1-math.sin(math.radians(60))
+                    df7 = 1-math.sin(math.radians(70))
+                    df8 = 1-math.sin(math.radians(80))
+                    # decreases slowly
+                    ds1 = 1-math.cos(math.radians(10))
+                    ds2 = 1-math.cos(math.radians(20))
+                    ds3 = 1-math.cos(math.radians(30))
+                    ds4 = 1-math.cos(math.radians(40))
+                    ds5 = 1-math.cos(math.radians(50))
+                    ds6 = 1-math.cos(math.radians(60))
+                    ds7 = 1-math.cos(math.radians(70))
+                    ds8 = 1-math.cos(math.radians(80))
+                    
+                    x01=lx+cr
+                    y01=by
+                    x02=rx-cr
+                    y02=by
+                    x03=int(rx-cr*df1)
+                    y03=int(by+cr*df8)
+                    x04=int(rx-cr*df2)
+                    y04=int(by+cr*df7)
+                    x05=int(rx-cr*df3)
+                    y05=int(by+cr*df6)
+                    x06=int(rx-cr*df4)
+                    y06=int(by+cr*df5)
+                    x07=int(rx-cr*df5)
+                    y07=int(by+cr*df4)
+                    x08=int(rx-cr*df6)
+                    y08=int(by+cr*df3)
+                    x09=int(rx-cr*df7)
+                    y09=int(by+cr*df2)
+                    x10=int(rx-cr*df8)
+                    y10=int(by+cr*df1)
+                    x11=rx
+                    y11=by+cr
+                    x12=rx
+                    y12=ty-cr
+                    x13=int(rx-cr*df8)
+                    y13=int(ty-cr*df1)
+                    x14=int(rx-cr*df7)
+                    y14=int(ty-cr*df2)
+                    x15=int(rx-cr*df6)
+                    y15=int(ty-cr*df3)
+                    x16=int(rx-cr*df5)
+                    y16=int(ty-cr*df4)
+                    x17=int(rx-cr*df4)
+                    y17=int(ty-cr*df5)
+                    x18=int(rx-cr*df3)
+                    y18=int(ty-cr*df6)
+                    x19=int(rx-cr*df2)
+                    y19=int(ty-cr*df7)
+                    x20=int(rx-cr*df1)
+                    y20=int(ty-cr*df8)
+                    x21=rx-cr
+                    y21=ty
+                    x22=lx+cr
+                    y22=ty
+                    x23=int(lx+cr*ds8)
+                    y23=int(ty-cr*ds1)
+                    x24=int(lx+cr*ds7)
+                    y24=int(ty-cr*ds2)
+                    x25=int(lx+cr*ds6)
+                    y25=int(ty-cr*ds3)
+                    x26=int(lx+cr*ds5)
+                    y26=int(ty-cr*ds4)
+                    x27=int(lx+cr*ds4)
+                    y27=int(ty-cr*ds5)
+                    x28=int(lx+cr*ds3)
+                    y28=int(ty-cr*ds6)
+                    x29=int(lx+cr*ds2)
+                    y29=int(ty-cr*ds7)
+                    x30=int(lx+cr*ds1)
+                    y30=int(ty-cr*ds8)
+                    x31=lx
+                    y31=ty-cr
+                    x32=lx
+                    y32=by+cr
+                    x33=int(lx+cr*ds1)
+                    y33=int(by+cr*df1)
+                    x34=int(lx+cr*ds2)
+                    y34=int(by+cr*df2)
+                    x35=int(lx+cr*ds3)
+                    y35=int(by+cr*df3)
+                    x36=int(lx+cr*ds4)
+                    y36=int(by+cr*df4)
+                    x37=int(lx+cr*ds5)
+                    y37=int(by+cr*df5)
+                    x38=int(lx+cr*ds6)
+                    y38=int(by+cr*df6)
+                    x39=int(lx+cr*ds7)
+                    y39=int(by+cr*df7)
+                    x40=int(lx+cr*ds8)
+                    y40=int(by+cr*df8)
+         
+                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None, ('v2i', (
+                        x01, y01,
+                        x02, y02,
+                        x03, y03,
+                        x04, y04,
+                        x05, y05,
+                        x06, y06,
+                        x07, y07,
+                        x08, y08,
+                        x09, y09,
+                        x10, y10,
+                        x11, y11,
+                        x12, y12,
+                        x13, y13,
+                        x14, y14,
+                        x15, y15,
+                        x16, y16,
+                        x17, y17,
+                        x18, y18,
+                        x19, y19,
+                        x20, y20,
+                        x21, y21,
+                        x22, y22,
+                        x23, y23,
+                        x24, y24,
+                        x25, y25,
+                        x26, y26,
+                        x27, y27,
+                        x28, y28,
+                        x29, y29,
+                        x30, y30,
+                        x31, y31,
+                        x32, y32,
+                        x33, y33,
+                        x34, y34,
+                        x35, y35,
+                        x36, y36,
+                        x37, y37,
+                        x38, y38,
+                        x39, y39,
+                        x40, y40)),
+                        ('c4B', self.color * 40))
                 
             else:
                 # use sprite squares   

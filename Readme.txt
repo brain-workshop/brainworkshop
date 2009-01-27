@@ -43,6 +43,9 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
+4.41:
+* The size of the field with the FIELD_EXPAND option was decreased slightly.
+
 4.4:
 * Novice Mode was renamed to Jaeggi Mode.
 * Jaeggi Mode will activate certain options to emulate the appearance
@@ -58,6 +61,9 @@ Change Log:
   if the program was launched between midnight and 4 AM.
 * A setting to skip the title screen was added to the config file.
 * The grid lines and crosshairs can be toggled in the config file.
+* A setting was added to select rounded or sharp corners for the
+  solid-color squares.
+* A setting was added to expand the size of the field to fill the screen.
 * Arithmetic Mode: The acceptable decimal answers can be set in the
   config file.
 * Three new music clips were added.
