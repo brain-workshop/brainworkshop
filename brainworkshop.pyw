@@ -3789,10 +3789,9 @@ def generate_stimulus():
                     possibilities.append(x)
                     continue
                 frac = Decimal(abs(number_nback)) / Decimal(abs(x))
-                frac -= frac.quantize(0)
-                for number in ARITHMETIC_ACCEPTABLE_DECIMALS:
-                    if frac == Decimal(number):
-                        possibilities.append(x)
+                print "x=", x, "n=", number_nback, "frac%1 = ", frac % 1
+                if (frac % 1) in map(Decimal, ARITHMETIC_ACCEPTABLE_DECIMALS):
+                    possibilities.append(x)
             mode.current_number = random.choice(possibilities)
         else:
             mode.current_number = random.randint(min_number, max_number)
