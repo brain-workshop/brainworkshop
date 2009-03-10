@@ -805,6 +805,8 @@ class Mode:
         self.ticks_per_trial = default_ticks(self.mode)
         self.num_trials = NUM_TRIALS
 
+        self.short_mode_names = {2:'D', 3:'T', 4:'DC', 5:'TC', 6:'QC', 7:'A', 
+                                 8:'DA', 9:'TA', 10:'Po', 11:'Au'} # DV, M, DM, TM, QM
         self.variable_list = []
         
         self.manual = MANUAL
@@ -855,7 +857,11 @@ class Mode:
         self.num_trials = NUM_TRIALS
         self.session_number = 0
 
-        
+    def short_name(self, mode=None, back=None):
+        if mode == None: mode = self.mode
+        if back == None: back = self.back
+        return self.short_mode_names[mode] + str(back) + 'B'
+    
 # What follows are the classes which control all the text and graphics.
 #
 # --- BEGIN GRAPHICS SECTION ----------------------------------------------
@@ -2799,345 +2805,85 @@ class AnalysisLabel:
             x=window.width//2, y=92,
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
+        
     def update(self, skip = False):
         if mode.started or mode.session_number == 0 or skip:
             self.label.text = ''
             return
         
-        position_right = 0
-        position_wrong = 0
-        color_right = 0
-        color_wrong = 0
-        visvis_right = 0
-        visvis_wrong = 0
-        visaudio_right = 0
-        visaudio_wrong = 0
-        audiovis_right = 0
-        audiovis_wrong = 0
-        audio_right = 0
-        audio_wrong = 0
-        arithmetic_right = 0
-        arithmetic_wrong = 0
-                    
-        for x in range(len(stats.session['position'])):
-            if x < mode.back: continue
-            
-            data = stats.session
-            if VARIABLE_NBACK == 0:
+        rights = {'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'audio':0, 'arithmetic':0}
+        wrongs = {'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'audio':0, 'arithmetic':0}
+        category_percents = {'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'audio':0, 'arithmetic':0}
+
+        modalities = { 2:['position', 'audio'],
+                       3:['position', 'color', 'audio'],
+                       4:['visvis', 'visaudio', 'audiovis', 'audio'],
+                       5:['position', 'visvis', 'visaudio', 'audiovis', 'audio'],
+                       6:['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio'],
+                       7:['arithmetic'],
+                       8:['position', 'arithmetic'],
+                       9:['position', 'color', 'arithmetic'],
+                       10:['position'],
+                       11:['audio']}
+        mods = modalities[mode.mode]
+        data = stats.session
+
+        for mod in mods:
+            for x in range(mode.back, len(data['position'])):
+
                 back = mode.back
-            elif VARIABLE_NBACK == 1:
-                back = mode.variable_list[x - mode.back]
-                            
-            # data is a dictionary of lists.
-
-            if data['position'][x] == data['position'][x-back] and data['position_input'][x]:
-                position_right += 1
-            elif data['position'][x] != data['position'][x-back] and data['position_input'][x]:
-                position_wrong += 1
-            elif data['position'][x] == data['position'][x-back] and not data['position_input'][x]:
-                position_wrong += 1
-            elif JAEGGI_MODE and data['position'][x] != data['position'][x-back] and not data['position_input'][x]:
-                    position_right += 1
-
-            if data['color'][x] == data['color'][x-back] and data['color_input'][x]:
-                color_right += 1
-            elif data['color'][x] != data['color'][x-back] and data['color_input'][x]:
-                color_wrong += 1
-            elif data['color'][x] == data['color'][x-back] and not data['color_input'][x]:
-                color_wrong += 1
-            elif JAEGGI_MODE and data['color'][x] != data['color'][x-back] and not data['color_input'][x]:
-                color_right += 1
-
-            if data['vis'][x] == data['vis'][x-back] and data['visvis_input'][x]:
-                visvis_right += 1
-            elif data['vis'][x] != data['vis'][x-back] and data['visvis_input'][x]:
-                visvis_wrong += 1
-            elif data['vis'][x] == data['vis'][x-back] and not data['visvis_input'][x]:
-                visvis_wrong += 1
-            elif JAEGGI_MODE and data['vis'][x] != data['vis'][x-back] and not data['visvis_input'][x]:
-                visvis_right += 1
-
-            if data['vis'][x] == data['audio'][x-back] and data['visaudio_input'][x]:
-                visaudio_right += 1
-            elif data['vis'][x] != data['audio'][x-back] and data['visaudio_input'][x]:
-                visaudio_wrong += 1
-            elif data['vis'][x] == data['audio'][x-back] and not data['visaudio_input'][x]:
-                visaudio_wrong += 1
-            elif JAEGGI_MODE and data['vis'][x] != data['audio'][x-back] and not data['visaudio_input'][x]:
-                visaudio_right += 1
-
-            if data['audio'][x] == data['vis'][x-back] and data['audiovis_input'][x]:
-                audiovis_right += 1
-            elif data['audio'][x] != data['vis'][x-back] and data['audiovis_input'][x]:
-                audiovis_wrong += 1
-            elif data['audio'][x] == data['vis'][x-back] and not data['audiovis_input'][x]:
-                audiovis_wrong += 1
-            elif JAEGGI_MODE and data['audio'][x] != data['vis'][x-back] and not data['audiovis_input'][x]:
-                audiovis_right += 1
-
-            if data['audio'][x] == data['audio'][x-back] and data['audio_input'][x]:
-                audio_right += 1
-            elif data['audio'][x] != data['audio'][x-back] and data['audio_input'][x]:
-                audio_wrong += 1
-            elif data['audio'][x] == data['audio'][x-back] and not data['audio_input'][x]:
-                audio_wrong += 1
-            elif JAEGGI_MODE and data['audio'][x] != data['audio'][x-back] and not data['audio_input'][x]:
-                audio_right += 1
-
-            if mode.mode == 7 or mode.mode == 8 or mode.mode == 9:
-                if data['operation'][x] == 'add':
-                    if data['number'][x-back] + data['number'][x] == data['arithmetic_input'][x]:
-                        arithmetic_right += 1
-                    else:
-                        arithmetic_wrong += 1
-                elif data['operation'][x] == 'subtract':
-                    if data['number'][x-back] - data['number'][x] == data['arithmetic_input'][x]:
-                        arithmetic_right += 1
-                    else:
-                        arithmetic_wrong += 1
-                elif data['operation'][x] == 'multiply':
-                    if data['number'][x-back] * data['number'][x] == data['arithmetic_input'][x]:
-                        arithmetic_right += 1
-                    else:
-                        arithmetic_wrong += 1
-                elif data['operation'][x] == 'divide':
-                    if Decimal(data['number'][x-back]) / Decimal(data['number'][x]) == data['arithmetic_input'][x]:
-                        arithmetic_right += 1
-                    else:
-                        arithmetic_wrong += 1
+                if VARIABLE_NBACK:
+                    back = mode.variable_list[x - mode.back]
+                                
+                # data is a dictionary of lists.
+                if mod in ['position', 'audio', 'color']:
+                    rights[mod] += int(data[mod][x] == data[mod][x-back] and data[mod+'_input'][x])
+                    wrongs[mod] += int(data[mod][x] == data[mod][x-back]  ^  data[mod+'_input'][x]) # XOR
+                    if JAEGGI_MODE: 
+                        rights[mod] += int(data[mod][x] != data[mod][x-back]  and not data[mod+'_input'][x])
                 
-        str_list = []
-        separator = '   '
-        str_list.append('Correct-Errors:   ')
+                if mod in ['visvis', 'visaudio', 'audiovis']:
+                    modnow = mod.startswith('vis') and 'vis' or 'audio' # these are the python<2.5 compatible versions
+                    modthn = mod.endswith('vis')   and 'vis' or 'audio' # of 'vis' if mod.startswith('vis') else 'audio'
+                    rights[mod] += int(data[modnow][x] == data[modthn][x-back] and data[mod+'_input'][x])
+                    wrongs[mod] += int(data[modnow][x] == data[modthn][x-back]  ^  data[mod+'_input'][x]) 
+                    if JAEGGI_MODE: 
+                        rights[mod] += int(data[modnow][x] != data[modthn][x-back]  and not data[mod+'_input'][x])
+                    
+                if mod in ['arithmetic']:
+                    ops = {'add':'+', 'subtract':'-', 'multiply':'*', 'divide':'/'}
+                    answer = eval("Decimal(data['number'][x-back]) %s Decimal(data['number'][x])" % ops[data['operation'][x]])
+                    rights[mod] += int(answer == Decimal(data[mod+'_input'][x])) # data[...][x] is only Decimal if op == /
+                    wrongs[mod] += int(answer != Decimal(data[mod+'_input'][x])) 
         
-        if mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 5 or mode.mode == 6 or mode.mode == 8 or mode.mode == 9: # or mode.mode == 12:
-            str_list.append(key.symbol_string(KEY_POSITION))
-            str_list.append(':')
-            str_list.append(str(position_right))
-            str_list.append('-')
-            str_list.append(str(position_wrong))
-            str_list.append(separator)
-            
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            str_list.append(key.symbol_string(KEY_VISVIS))
-            str_list.append(':')
-            str_list.append(str(visvis_right))
-            str_list.append('-')
-            str_list.append(str(visvis_wrong))
-            str_list.append(separator)
-
-            str_list.append(key.symbol_string(KEY_VISAUDIO))
-            str_list.append(':')
-            str_list.append(str(visaudio_right))
-            str_list.append('-')
-            str_list.append(str(visaudio_wrong))
-            str_list.append(separator)
-
-        if mode.mode == 3 or mode.mode == 6 or mode.mode == 9: # or mode.mode == 16:
-            str_list.append(key.symbol_string(KEY_COLOR))
-            str_list.append(':')
-            str_list.append(str(color_right))
-            str_list.append('-')
-            str_list.append(str(color_wrong))
-            str_list.append(separator)
-            
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            str_list.append(key.symbol_string(KEY_AUDIOVIS))
-            str_list.append(':')
-            str_list.append(str(audiovis_right))
-            str_list.append('-')
-            str_list.append(str(audiovis_wrong))
-            str_list.append(separator)
-            
-        if mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 12: # or mode.mode == 13 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            str_list.append(key.symbol_string(KEY_AUDIO))
-            str_list.append(':')
-            str_list.append(str(audio_right))
-            str_list.append('-')
-            str_list.append(str(audio_wrong))
-            str_list.append(separator)
+        str_list = ['Correct-Errors:   ']
+        sep = '   '
+        keys = {'position':KEY_POSITION, 'visvis':KEY_VISVIS, 'visaudio':KEY_VISAUDIO, 
+                'color':KEY_COLOR, 'audiovis':KEY_AUDIOVIS, 'audio':KEY_AUDIO}
         
-        if mode.mode == 7 or mode.mode == 8 or mode.mode == 9:
-            str_list.append('Arithmetic:')
-            str_list.append(str(arithmetic_right))
-            str_list.append('-')
-            str_list.append(str(arithmetic_wrong))
-            str_list.append(separator)
+        for mod in ['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio']:
+            if mod in mods:
+                str_list += ["%s:%i-%i%s" % (key.symbol_string(keys[mod]), rights[mod], wrongs[mod], sep)]
 
-        right = 0
-        wrong = 0
-        if mode.mode == 10:
-            right += position_right
-            wrong += position_wrong
-        elif mode.mode == 11:
-            right += audio_right
-            wrong += audio_wrong
-        elif mode.mode == 2:
-            right += position_right
-            wrong += position_wrong
-            right += audio_right
-            wrong += audio_wrong
-        elif mode.mode == 3:
-            right += position_right
-            wrong += position_wrong
-            right += color_right
-            wrong += color_wrong
-            right += audio_right
-            wrong += audio_wrong
-        elif mode.mode == 4:
-            right += visvis_right
-            wrong += visvis_wrong
-            right += visaudio_right
-            wrong += visaudio_wrong
-            right += audiovis_right
-            wrong += audiovis_wrong
-            right += audio_right
-            wrong += audio_wrong
-        elif mode.mode == 5:
-            right += position_right
-            wrong += position_wrong
-            right += visvis_right
-            wrong += visvis_wrong
-            right += visaudio_right
-            wrong += visaudio_wrong
-            right += audiovis_right
-            wrong += audiovis_wrong
-            right += audio_right
-            wrong += audio_wrong
-        elif mode.mode == 6:
-            right += position_right
-            wrong += position_wrong
-            right += visvis_right
-            wrong += visvis_wrong
-            right += visaudio_right
-            wrong += visaudio_wrong
-            right += color_right
-            wrong += color_wrong
-            right += audiovis_right
-            wrong += audiovis_wrong
-            right += audio_right
-            wrong += audio_wrong
-        elif mode.mode == 7:
-            right += arithmetic_right
-            wrong += arithmetic_wrong
-        elif mode.mode == 8:
-            right += position_right
-            wrong += position_wrong
-            right += arithmetic_right
-            wrong += arithmetic_wrong
-        elif mode.mode == 9:
-            right += position_right
-            wrong += position_wrong
-            right += color_right
-            wrong += color_wrong
-            right += arithmetic_right
-            wrong += arithmetic_wrong
-        #elif mode.mode == 12:
-            #right += position_right
-            #wrong += position_wrong
-            #right += audio_right
-            #wrong += audio_wrong
-        #elif mode.mode == 13:
-            #right += audio_right
-            #wrong += audio_wrong
-        #elif mode.mode == 14:
-            #right += visvis_right
-            #wrong += visvis_wrong
-            #right += visaudio_right
-            #wrong += visaudio_wrong
-            #right += audiovis_right
-            #wrong += audiovis_wrong
-            #right += audio_right
-            #wrong += audio_wrong
-        #elif mode.mode == 15:
-            #right += position_right
-            #wrong += position_wrong
-            #right += visvis_right
-            #wrong += visvis_wrong
-            #right += visaudio_right
-            #wrong += visaudio_wrong
-            #right += audiovis_right
-            #wrong += audiovis_wrong
-            #right += audio_right
-            #wrong += audio_wrong
-        #elif mode.mode == 16:
-            #right += position_right
-            #wrong += position_wrong
-            #right += visvis_right
-            #wrong += visvis_wrong
-            #right += visaudio_right
-            #wrong += visaudio_wrong
-            #right += color_right
-            #wrong += color_wrong
-            #right += audiovis_right
-            #wrong += audiovis_wrong
-            #right += audio_right
-            #wrong += audio_wrong
+        if 'arithmetic' in mods:
+            str_list += ["%s:%i-%i%s" % ("Arithmetic", rights['arithmetic'], wrongs['arithmetic'], sep)]
+             
+        def calc_percent(r, w):
+            if r+w: return int(r*100 / float(r+w))
+            else: return 0
             
-        total = right + wrong
-        if total == 0:
-            percent = 0
+        right = sum([rights[mod] for mod in mods])
+        wrong = sum([wrongs[mod] for mod in mods])
+        
+        for mod in mods:
+            category_percents[mod] = calc_percent(rights[mod], wrongs[mod])
+
+        if not JAEGGI_MODE:
+            percent = calc_percent(right, wrong)
+            str_list += ['Score: %i%%' % percent]
         else:
-            percent = int(right * 100 / float(right + wrong))
-        
-        category_percents = {}
-        if mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 5 or mode.mode == 6 or mode.mode == 8 or mode.mode == 9: # or mode.mode == 12:
-            if position_right + position_wrong == 0:
-                category_percents['position'] = 0
-            else:
-                category_percents['position'] = int(position_right * 100 / float(position_right + position_wrong))
-        else: category_percents['position'] = 0
-        
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            if visvis_right + visvis_wrong == 0:
-                category_percents['visvis'] = 0
-            else:
-                category_percents['visvis'] = int(visvis_right * 100 / float(visvis_right + visvis_wrong))
-        else: category_percents['visvis'] = 0
-        
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            if visaudio_right + visaudio_wrong == 0:
-                category_percents['visaudio'] = 0
-            else:
-                category_percents['visaudio'] = int(visaudio_right * 100 / float(visaudio_right + visaudio_wrong))
-        else: category_percents['visaudio'] = 0
-        
-        if mode.mode == 3 or mode.mode == 6 or mode.mode == 9: # or mode.mode == 16:
-            if color_right + color_wrong == 0:
-                category_percents['color'] = 0
-            else:
-                category_percents['color'] = int(color_right * 100 / float(color_right + color_wrong))
-        else: category_percents['color'] = 0
-        if mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            if audiovis_right + audiovis_wrong == 0:
-                category_percents['audiovis'] = 0
-            else:
-                category_percents['audiovis'] = int(audiovis_right * 100 / float(audiovis_right + audiovis_wrong))
-        else: category_percents['audiovis'] = 0
-        
-        if mode.mode == 11 or mode.mode == 2 or mode.mode == 3 or mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 12: # or mode.mode == 13 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            if audio_right + audio_wrong == 0:
-                category_percents['audio'] = 0
-            else:
-                category_percents['audio'] = int(audio_right * 100 / float(audio_right + audio_wrong))
-        else: category_percents['audio'] = 0
-        
-        if mode.mode == 7 or mode.mode == 8 or mode.mode == 9:
-            if arithmetic_right + arithmetic_wrong == 0:
-                category_percents['arithmetic'] = 0
-            else:
-                category_percents['arithmetic'] = int(arithmetic_right * 100 / float(arithmetic_right + arithmetic_wrong))
-        else: category_percents['arithmetic'] = 0
-        
-        if JAEGGI_MODE:
             percent = min(category_percents['position'], category_percents['audio'])
-        
-        if JAEGGI_MODE:
-            str_list.append('Lowest score: ')
-        else:
-            str_list.append('Score: ')
-        str_list.append(str(percent))
-        str_list.append('%')
+            str_list += ['Lowest score: %i%%' % percent]
         
         self.label.text = ''.join(str_list)
         stats.submit_session(percent, category_percents)
@@ -3189,6 +2935,7 @@ class ChartLabel:
                         
         if os.path.isfile(os.path.join(get_data_dir(), STATSFILE)):
             try:
+                last_session = []
                 last_session_number = 0
                 last_mode = 0
                 last_back = 0
@@ -3222,19 +2969,12 @@ class ChartLabel:
                         continue
                     newback = int(newline[4])
                     newpercent = int(newline[2])
-                    newmanual = 0
-                    try:
-                        newmanual = bool(int(newline[7]))
-                    except:
-                        newmanual = False
+                    newmanual = bool(int(newline[7]))
                     newsession_number = -1
                     if newmanual:
                         use_last_session = False
                     else:
-                        try:
-                            newsession_number = int(newline[8])
-                        except:
-                            pass
+                        newsession_number = int(newline[8])
                         use_last_session = True
                         last_session_number = newsession_number
                         last_mode = newmode
@@ -3242,18 +2982,18 @@ class ChartLabel:
                             last_back = newback + 1
                         else:
                             last_back = newback
-
                     stats.history.append([newsession_number, newmode, newback, newpercent, newmanual])
-                
+                    if use_last_session:
+                        last_session = stats.history[-1]
                 statsfile.close()
-                    
-                if use_last_session:
-                    mode.mode = last_mode
+                
+                if last_session:
+                    mode.mode = last_session[1]
                     if JAEGGI_MODE:
                         mode.mode = 2
                     mode.enforce_standard_mode()
-                    mode.back = last_back
-                    mode.session_number = last_session_number
+                    mode.back = last_session[2]
+                    mode.session_number = last_session[0]
     
             except:
                 str_list = []
@@ -3276,53 +3016,21 @@ class ChartLabel:
         index = 0
         for x in range(len(stats.history) - 20, len(stats.history)):
             if x < 0: continue
-            self.column1[index].color = self.color_normal
-            self.column2[index].color = self.color_normal
-            self.column3[index].color = self.color_normal
-            manual = False
-            try:
-                if stats.history[x][4]:
-                    manual = True
-            except:
-                pass
+            manual = stats.history[x][4]
+            color = self.color_normal
             if not manual and stats.history[x][3] >= get_threshold_advance():
-                self.column1[index].color = self.color_advance
-                self.column2[index].color = self.color_advance
-                self.column3[index].color = self.color_advance
+                color = self.color_advance
             elif not manual and stats.history[x][3] < get_threshold_fallback():
-                self.column1[index].color = self.color_fallback
-                self.column2[index].color = self.color_fallback
-                self.column3[index].color = self.color_fallback
-            str_list = []
+                color = self.color_fallback
+            self.column1[index].color = color
+            self.column2[index].color = color
+            self.column3[index].color = color
             if manual:
-                str_list.append('M')
+                self.column1[index].text = 'M'
             elif stats.history[x][0] > -1:
-                str_list.append('#')
-                str_list.append(str(stats.history[x][0]))
-            self.column1[index].text = ''.join(str_list)
-            str_list = []
-            if stats.history[x][1] == 10: str_list.append('Po')
-            elif stats.history[x][1] == 11: str_list.append('Au')
-            elif stats.history[x][1] == 2: str_list.append('D')
-            elif stats.history[x][1] == 3: str_list.append('T')
-            elif stats.history[x][1] == 4: str_list.append('DC')
-            elif stats.history[x][1] == 5: str_list.append('TC')
-            elif stats.history[x][1] == 6: str_list.append('QC')
-            elif stats.history[x][1] == 7: str_list.append('A')
-            elif stats.history[x][1] == 8: str_list.append('DA')
-            elif stats.history[x][1] == 9: str_list.append('TA')
-            #elif stats.history[x][1] == 12: str_list.append('DV')
-            #elif stats.history[x][1] == 13: str_list.append('M')
-            #elif stats.history[x][1] == 14: str_list.append('DM')
-            #elif stats.history[x][1] == 15: str_list.append('TM')
-            #elif stats.history[x][1] == 16: str_list.append('QM')
-            str_list.append(str(stats.history[x][2]))
-            str_list.append('B')
-            self.column2[index].text = ''.join(str_list)
-            str_list = []
-            str_list.append(str(stats.history[x][3]))
-            str_list.append('%')
-            self.column3[index].text = ''.join(str_list)
+                self.column1[index].text = '#%i' % stats.history[x][0]
+            self.column2[index].text = mode.short_name(mode=stats.history[x][1], back=stats.history[x][2])
+            self.column3[index].text = '%i%%' % stats.history[x][3]
             index += 1
             
 # this controls the title of the session history chart.
@@ -3339,32 +3047,13 @@ class AverageLabel:
         if mode.started:
             self.label.text = ''
         else:
-            average = 0.
-            total_sessions = 0
-            for x in range(len(stats.history) - 20, len(stats.history)):
-                if x < 0:
-                    continue
-                if stats.history[x][1] != mode.mode:
-                    continue
-                total_sessions += 1
-                average += stats.history[x][2]
-            if total_sessions > 0:
-                average /= total_sessions
-            else: average = 0.
-            str_list = []
-            if mode.mode == 10: str_list.append('PoNB')
-            elif mode.mode == 11: str_list.append('AuNB')
-            elif mode.mode == 2: str_list.append('DNB')
-            elif mode.mode == 3: str_list.append('TNB')
-            elif mode.mode == 4: str_list.append('DCNB')
-            elif mode.mode == 5: str_list.append('TCNB')
-            elif mode.mode == 6: str_list.append('QCNB')
-            elif mode.mode == 7: str_list.append('ANB')
-            elif mode.mode == 8: str_list.append('DANB')
-            elif mode.mode == 9: str_list.append('TANB')
-            str_list.append(' average: ')
-            str_list.append(str(round(average, 2)))
-            self.label.text = ''.join(str_list)
+            sessions = [sess for sess in stats.history if sess[1] == mode.mode][-20:]
+            if sessions:
+                average = sum([sess[2] for sess in sessions]) / float(len(sessions))
+            else:
+                average = 0.
+            self.label.text = "%sNB average: %1.2f" % (mode.short_mode_names[mode.mode], average)
+
 
 class TodayLabel:
     def __init__(self):
@@ -3455,61 +3144,26 @@ class Stats:
         
         if ATTEMPT_TO_SAVE_STATS:
             try:
-                separator = STATS_SEPARATOR
+                sep = STATS_SEPARATOR
                 statsfile_path = os.path.join(get_data_dir(), STATSFILE)
                 statsfile = open(statsfile_path, 'a')
-                str_list = []
-                str_list.append(strftime("%Y-%m-%d %H:%M:%S"))
-                str_list.append(separator)
-                if mode.mode == 10: str_list.append('Po')
-                elif mode.mode == 11: str_list.append('Au')
-                elif mode.mode == 2: str_list.append('D')
-                elif mode.mode == 3: str_list.append('T')
-                elif mode.mode == 4: str_list.append('DC')
-                elif mode.mode == 5: str_list.append('TC')
-                elif mode.mode == 6: str_list.append('QC')
-                elif mode.mode == 7: str_list.append('A')
-                elif mode.mode == 8: str_list.append('DA')
-                elif mode.mode == 9: str_list.append('TA')
-                #elif mode.mode == 12: str_blist.append('DV')
-                #elif mode.mode == 13: str_list.append('M')
-                #elif mode.mode == 14: str_list.append('DM')
-                #elif mode.mode == 15: str_list.append('TM')
-                #elif mode.mode == 16: str_list.append('QM')
-                str_list.append(str(mode.back))
-                str_list.append('B')
-                str_list.append(separator)
-                str_list.append(str(percent))
-                str_list.append(separator)
-                str_list.append(str(mode.mode))
-                str_list.append(separator)
-                str_list.append(str(mode.back))
-                str_list.append(separator)
-                str_list.append(str(mode.ticks_per_trial))
-                str_list.append(separator)
-                str_list.append(str(mode.num_trials + mode.back))
-                str_list.append(separator)
-                if mode.manual:
-                    str_list.append('1')
-                else: str_list.append('0')
-                str_list.append(separator)
-                str_list.append(str(mode.session_number))
-                str_list.append(separator)
-                str_list.append(str(category_percents['position']))
-                str_list.append(separator)
-                str_list.append(str(category_percents['audio']))
-                str_list.append(separator)
-                str_list.append(str(category_percents['color']))
-                str_list.append(separator)
-                str_list.append(str(category_percents['visvis']))
-                str_list.append(separator)
-                str_list.append(str(category_percents['visaudio']))
-                str_list.append(separator)
-                str_list.append(str(category_percents['audiovis']))
-                str_list.append(separator)
-                str_list.append(str(category_percents['arithmetic']))
-                str_list.append('\n')
-                statsfile.write(''.join(str_list))
+                outlist = [strftime("%Y-%m-%d %H:%M:%S"),
+                           mode.short_name(),
+                           str(percent),
+                           str(mode.mode),
+                           str(mode.back),
+                           str(mode.ticks_per_trial),
+                           str(mode.num_trials + mode.back),
+                           str(int(mode.manual)),
+                           str(mode.session_number),
+                           str(category_percents['position']),
+                           str(category_percents['audio']),
+                           str(category_percents['color']),
+                           str(category_percents['visvis']),
+                           str(category_percents['audiovis']),
+                           str(category_percents['arithmetic'])]
+                statsfile.write(sep.join(outlist)) # adds sep between each element
+                statsfile.write('\n')  # but we don't want a sep before '\n'
                 statsfile.close()
             except:
                 str_list = []
@@ -3789,7 +3443,6 @@ def generate_stimulus():
                     possibilities.append(x)
                     continue
                 frac = Decimal(abs(number_nback)) / Decimal(abs(x))
-                print "x=", x, "n=", number_nback, "frac%1 = ", frac % 1
                 if (frac % 1) in map(Decimal, ARITHMETIC_ACCEPTABLE_DECIMALS):
                     possibilities.append(x)
             mode.current_number = random.choice(possibilities)
@@ -4063,27 +3716,16 @@ def on_key_press(symbol, modifiers):
             mode.sound_select = False
             
         elif symbol == key._1 or symbol == key.NUM_1:
-            if USE_LETTERS:
-                USE_LETTERS = False
-            else: USE_LETTERS = True
+            USE_LETTERS = not USE_LETTERS
         elif symbol == key._2 or symbol == key.NUM_2:
-            if USE_NUMBERS:
-                USE_NUMBERS = False
-            else: USE_NUMBERS = True
+            USE_NUMBERS = not USE_NUMBERS
         elif symbol == key._3 or symbol == key.NUM_3:
-            if USE_NATO:
-                USE_NATO = False
-            else: USE_NATO = True
+            USE_NATO = not USE_NATO
         elif symbol == key._4 or symbol == key.NUM_4:
-            if USE_PIANO:
-                USE_PIANO = False
-            else: USE_PIANO = True
+            USE_PIANO = not USE_PIANO
         elif symbol == key._5 or symbol == key.NUM_5:
-            if USE_MORSE:
-                USE_MORSE = False
-            else: USE_MORSE = True
-            keysListLabel.update()
-    
+            USE_MORSE = not USE_MORSE
+            
     elif not mode.started:
         
         if symbol == key.ESCAPE or symbol == key.X:
