@@ -1106,11 +1106,14 @@ class Graph:
             for dictionary in self.dictionaries:
                 for datestamp in dictionary.keys():
                     average = 0.0
+                    max = 0.0
                     numentries = 0
                     for entry in dictionary[datestamp]:
                         average += entry
+                        if entry > max:
+                            max = entry
                         numentries += 1
-                    dictionary[datestamp] = average / numentries
+                    dictionary[datestamp] = (average / numentries, max)
                     
             for game in range(0, len(self.percents)):
                 for category in range(0, len(self.percents[game])):
@@ -1155,7 +1158,7 @@ class Graph:
             keyslist.sort()
             if len(keyslist) == 0: continue
             for datestamp in keyslist:
-                if dictionary[datestamp] == -1:
+                if dictionary[datestamp] == (-1, -1):
                     continue
                 output.append(str(datestamp))
                 output.append('\t')
@@ -1179,13 +1182,13 @@ class Graph:
                 sys.exit(1)
                 
     def draw(self):
+        linecolor = (0, 0, 255)
+        linecolor2 = (255, 0, 0)
         if BLACK_BACKGROUND:
             axiscolor = (96, 96, 96)
-            linecolor = (0, 0, 255)
             minorcolor = (64, 64, 64)
         else: 
             axiscolor = (160, 160, 160)
-            linecolor = (0, 0, 255)
             minorcolor = (224, 224, 224)
         
         x_label_width = 20
@@ -1250,9 +1253,21 @@ class Graph:
                                   anchor_x = 'center', anchor_y = 'center')
         xaxistitle.draw()
 
-        yaxistitle = pyglet.text.Label('Average\nN-Back', multiline=True, width=1,
+        yaxistitle_max = pyglet.text.Label('Maximum', width=1,
+                                  font_size = 12, bold=True, color=linecolor2+(255,),
+                                  x = left - 60, y = center_y + 50,
+                                  anchor_x = 'right', anchor_y = 'center')
+        yaxistitle_max.draw()
+
+        yaxistitle_avg = pyglet.text.Label('Average', width=1,
+                                  font_size = 12, bold=True, color=linecolor+(255,),
+                                  x = left - 60, y = center_y + 25,
+                                  anchor_x = 'right', anchor_y = 'center')
+        yaxistitle_avg.draw()
+
+        yaxistitle = pyglet.text.Label('N-Back', width=1,
                                   font_size = 12, bold=True, color=COLOR_TEXT,
-                                  x = left - 130, y = center_y,
+                                  x = left - 60, y = center_y,
                                   anchor_x = 'right', anchor_y = 'center')
         yaxistitle.draw()
                 
@@ -1270,12 +1285,12 @@ class Graph:
         ymin = 100000.0
         ymax = 0.0
         for entry in dates:
-            if dictionary[entry] == -1:
+            if dictionary[entry] == (-1, -1):
                 continue
-            if dictionary[entry] < ymin:
-                ymin = dictionary[entry]
-            if dictionary[entry] > ymax:
-                ymax = dictionary[entry]
+            if dictionary[entry][0] < ymin:
+                ymin = dictionary[entry][0]
+            if dictionary[entry][1] > ymax:
+                ymax = dictionary[entry][1]
         if ymin == ymax:
             ymin = 0
         
@@ -1292,10 +1307,11 @@ class Graph:
             if dates[z+1].toordinal() > dates[z].toordinal() + 1:
                 newdate = date.fromordinal(dates[z].toordinal() + 1)
                 dates.insert(z+1, newdate)
-                dictionary[newdate] = -1
+                dictionary[newdate] = (-1, -1)
             z += 1
         
-        points = []
+        avgpoints = []
+        maxpoints = []
         xaxislabels = []
         yaxislabels = []
         
@@ -1318,10 +1334,11 @@ class Graph:
         
         for index in range(len(dates)):
             x = int(xinterval * index + left)
-            y = int((dictionary[dates[index]] - ymin)/(ymax - ymin) * height + bottom)
-            if dictionary[dates[index]] != -1:
-                points.append(x)
-                points.append(y)
+            if dictionary[dates[index]][0] != -1:
+                avgpoints.append(x)
+                avgpoints.append(int((dictionary[dates[index]][0] - ymin)/(ymax - ymin) * height + bottom))
+                maxpoints.append(x)
+                maxpoints.append(int((dictionary[dates[index]][1] - ymin)/(ymax - ymin) * height + bottom))
             datestring = str(dates[index])[2:]
             datestring = datestring.replace('-', '\n')
             if not skip():
@@ -1358,19 +1375,33 @@ class Graph:
         for label in yaxislabels:
             label.draw()
             
-        pyglet.graphics.draw(len(points) // 2, pyglet.gl.GL_LINE_STRIP, ('v2i',
-            points),
-            ('c3B', linecolor * (len(points) // 2)))                                                                        
-
+        pyglet.graphics.draw(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP, ('v2i',
+            avgpoints),
+            ('c3B', linecolor * (len(avgpoints) // 2)))
+        pyglet.graphics.draw(len(maxpoints) // 2, pyglet.gl.GL_LINE_STRIP, ('v2i',
+            maxpoints),
+            ('c3B', linecolor2 * (len(maxpoints) // 2)))
+  
         radius = 2
-        for index in range(0, len(points) // 2):
+        for index in range(0, len(avgpoints) // 2):
+            x = avgpoints[index * 2]
+            avg = avgpoints[index * 2 + 1]
+            max = maxpoints[index * 2 + 1]
+            # draw average
             pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i',
-                (points[index * 2] - radius, points[index * 2 + 1] - radius,
-                points[index * 2] - radius, points[index * 2 + 1] + radius,
-                points[index * 2] + radius, points[index * 2 + 1] + radius,
-                points[index * 2] + radius, points[index * 2 + 1] - radius)),
-                ('c3B', linecolor * 4))
-            
+                (x - radius, avg - radius,
+                 x - radius, avg + radius,
+                 x + radius, avg + radius,
+                 x + radius, avg - radius)),
+                ('c3b', linecolor * 4))
+            # draw maximum
+            pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i',
+                (x - radius, max - radius,
+                 x - radius, max + radius,
+                 x + radius, max + radius,
+                 x + radius, max - radius)),
+                ('c3b', linecolor2 * 4))
+
         str_list = []
         str_list.append('Last 50 rounds:   ')
         if self.graph == 2:
