@@ -807,6 +807,17 @@ class Mode:
 
         self.short_mode_names = {2:'D', 3:'T', 4:'DC', 5:'TC', 6:'QC', 7:'A', 
                                  8:'DA', 9:'TA', 10:'Po', 11:'Au'} # DV, M, DM, TM, QM
+        self.modalities = { 2:['position', 'audio'],
+                            3:['position', 'color', 'audio'],
+                            4:['visvis', 'visaudio', 'audiovis', 'audio'],
+                            5:['position', 'visvis', 'visaudio', 'audiovis', 'audio'],
+                            6:['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio'],
+                            7:['arithmetic'],
+                            8:['position', 'arithmetic'],
+                            9:['position', 'color', 'arithmetic'],
+                            10:['position'],
+                            11:['audio']}
+        
         self.variable_list = []
         
         self.manual = MANUAL
@@ -2815,17 +2826,7 @@ class AnalysisLabel:
         wrongs = {'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'audio':0, 'arithmetic':0}
         category_percents = {'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'audio':0, 'arithmetic':0}
 
-        modalities = { 2:['position', 'audio'],
-                       3:['position', 'color', 'audio'],
-                       4:['visvis', 'visaudio', 'audiovis', 'audio'],
-                       5:['position', 'visvis', 'visaudio', 'audiovis', 'audio'],
-                       6:['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio'],
-                       7:['arithmetic'],
-                       8:['position', 'arithmetic'],
-                       9:['position', 'color', 'arithmetic'],
-                       10:['position'],
-                       11:['audio']}
-        mods = modalities[mode.mode]
+        mods = mode.modalities[mode.mode]
         data = stats.session
 
         for mod in mods:
@@ -2837,16 +2838,16 @@ class AnalysisLabel:
                                 
                 # data is a dictionary of lists.
                 if mod in ['position', 'audio', 'color']:
-                    rights[mod] += int(data[mod][x] == data[mod][x-back] and data[mod+'_input'][x])
-                    wrongs[mod] += int(data[mod][x] == data[mod][x-back]  ^  data[mod+'_input'][x]) # XOR
+                    rights[mod] += int((data[mod][x] == data[mod][x-back]) and data[mod+'_input'][x])
+                    wrongs[mod] += int((data[mod][x] == data[mod][x-back])  ^  data[mod+'_input'][x]) # XOR
                     if JAEGGI_MODE: 
                         rights[mod] += int(data[mod][x] != data[mod][x-back]  and not data[mod+'_input'][x])
                 
                 if mod in ['visvis', 'visaudio', 'audiovis']:
                     modnow = mod.startswith('vis') and 'vis' or 'audio' # these are the python<2.5 compatible versions
                     modthn = mod.endswith('vis')   and 'vis' or 'audio' # of 'vis' if mod.startswith('vis') else 'audio'
-                    rights[mod] += int(data[modnow][x] == data[modthn][x-back] and data[mod+'_input'][x])
-                    wrongs[mod] += int(data[modnow][x] == data[modthn][x-back]  ^  data[mod+'_input'][x]) 
+                    rights[mod] += int((data[modnow][x] == data[modthn][x-back]) and data[mod+'_input'][x])
+                    wrongs[mod] += int((data[modnow][x] == data[modthn][x-back])  ^  data[mod+'_input'][x]) 
                     if JAEGGI_MODE: 
                         rights[mod] += int(data[modnow][x] != data[modthn][x-back]  and not data[mod+'_input'][x])
                     
@@ -3456,46 +3457,8 @@ def generate_stimulus():
     # force a match?
     if mode.mode != 7 and mode.trial_number > mode.back and random.random() < CHANCE_OF_GUARANTEED_MATCH:
         # A match of a randomly chosen input type is guaranteed this trial.
-        # input type list:
         
-        input_types = []
-        if mode.mode == 10:
-            input_types.append('position')
-        elif mode.mode == 11: # or mode.mode == 13:
-            input_types.append('audio')
-        elif mode.mode == 2:
-            input_types.append('position')
-            input_types.append('audio')
-        elif mode.mode == 3:
-            input_types.append('position')
-            input_types.append('color')
-            input_types.append('audio')
-        elif mode.mode == 4: # or mode.mode == 14:
-            input_types.append('visvis')
-            input_types.append('visaudio')
-            input_types.append('audiovis')
-            input_types.append('audio')
-        elif mode.mode == 5: # or mode.mode == 15:
-            input_types.append('position')
-            input_types.append('visvis')
-            input_types.append('visaudio')
-            input_types.append('audiovis')
-            input_types.append('audio')
-        elif mode.mode == 6: # or mode.mode == 16:
-            input_types.append('position')
-            input_types.append('color')
-            input_types.append('visvis')
-            input_types.append('visaudio')
-            input_types.append('audiovis')
-            input_types.append('audio')
-        elif mode.mode == 8:
-            input_types.append('position')
-        elif mode.mode == 9:
-            input_types.append('position')
-            input_types.append('color')
-        #elif mode.mode == 12:
-            #input_types.append('position')
-            #input_types.append('audio')
+        input_types = mode.modalities[mode.mode]
 
         choice = random.choice(input_types)
         if VARIABLE_NBACK == 1:
@@ -3570,7 +3533,7 @@ def generate_stimulus():
     elif (mode.mode >= 2 and mode.mode <= 6) or (mode.mode >= 11 and mode.mode <= 11):
         if mode.sound_mode == 'letters':
             sound[mode.current_audio].play()
-        elif mode.sound_mode == 'numbers' or mode.sound_mode == 'nato' or mode.sound_mode == 'piano' or mode.sound_mode == 'morse':
+        elif mode.sound_mode in ['numbers', 'nato', 'piano', 'morse']:
             mode.soundlist[mode.current_audio - 1].play()
             
     if VARIABLE_NBACK == 1 and mode.trial_number > mode.back:
