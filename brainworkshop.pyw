@@ -62,6 +62,11 @@ def get_res_dir():
         return sys.argv[sys.argv.index('--resdir') + 1]
     except:
         return os.path.join(get_main_dir(), FOLDER_RES)
+def quit_with_error(message='', postmessage='', quit=True, trace=True):
+    if message:     print >> sys.stderr, message + '\n'
+    if trace:       print >> sys.stderr, "Full text of error:\n" + str(sys.exc_info())
+    if postmessage: print >> sys.stderr, '\n\n' + postmessage
+    if quit:        sys.exit(1)
 
 CONFIGFILE_DEFAULT_CONTENTS = """
 ######################################################################
@@ -154,10 +159,10 @@ CROSSHAIRS = True
 
 # Set the color of the square in Dual N-Back mode.
 # This also affects Dual Combination N-Back and Arithmetic N-Back.
-# 1 = red, 2 = white/black, 3 = blue, 4 = yellow,
-# 5 = magenta, 6 = cyan, 7 = green, 8 = grey
-# Default: 3
-VISUAL_COLOR = 3
+# 1 = blue, 2 = cyan, 3 = green, 4 = grey,
+# 5 = magenta, 6 = red, 7 = white, 8 = yellow
+# Default: 1
+VISUAL_COLOR = 1
 
 # Animate squares in Dual/Triple N-Back mode?
 ANIMATE_SQUARES = True
@@ -287,16 +292,16 @@ ARITHMETIC_ACCEPTABLE_DECIMALS = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6',
 # Note: Changing these colors will have no effect in Dual or
 #   Triple N-Back unless OLD_STYLE_SQUARES is set to True. 
 # the _BLK colors are used when BLACK_BACKGROUND is set to True.
-COLOR_1 = (255, 0, 0, 255)
-COLOR_2 = (48, 48, 48, 255)
-COLOR_2_BLK = (255, 255, 255, 255)
-COLOR_3 = (0, 0, 255, 255)
-COLOR_4 = (255, 255, 0, 255)
+COLOR_1 = (0, 0, 255, 255)
+COLOR_2 = (0, 255, 255, 255)
+COLOR_3 = (0, 255, 0, 255)
+COLOR_4 = (48, 48, 48, 255)
+COLOR_4_BLK = (255, 255, 255, 255)
 COLOR_5 = (255, 0, 255, 255)
-COLOR_6 = (0, 255, 255, 255)
-COLOR_7 = (0, 255, 0, 255)
-COLOR_8 = (208, 208, 208, 255)
-COLOR_8_BLK = (64, 64, 64, 255)
+COLOR_6 = (255, 0, 0, 255)
+COLOR_7 = (208, 208, 208, 255)
+COLOR_7_BLK = (64, 64, 64, 255)
+COLOR_8 = (255, 255, 0, 255)
 
 # text color
 COLOR_TEXT = (0, 0, 0, 255)
@@ -364,13 +369,8 @@ try:
     config.read(os.path.join(get_data_dir(), CONFIGFILE))
 except:
     if CONFIGFILE != 'config.ini':
-        str_list = []
-        str_list.append('\nUnable to load config file:\n')
-        str_list.append(os.path.join(get_data_dir(), CONFIGFILE))
-        str_list.append('\nFull text of error:\n')
-        str_list.append(str(sys.exc_info()))
-        print >> sys.stderr, ''.join(str_list)
-        sys.exit(1)
+        quit_with_error('Unable to load config file: %s' %
+                         os.path.join(get_data_dir(), CONFIGFILE))
 
 defaultconfig = ConfigParser.ConfigParser() 
 defaultconfig.read(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
@@ -445,40 +445,26 @@ try:
     if NOVBO: pyglet.options['graphics_vbo'] = False
     from pyglet.window import key
 except:
-    str_list = []
-    str_list.append('\nError: unable to load pyglet.\n')
-    str_list.append('If you already installed pyglet, please ensure ctypes is installed.\n\n')
-    str_list.append('Full text of error:\n')
-    str_list.append(str(sys.exc_info()))
-    str_list.append('\n\nPlease visit ')
-    str_list.append(WEB_PYGLET_DOWNLOAD)
-    print >> sys.stderr, ''.join(str_list)
-    sys.exit(1)
-
+    quit_with_error('Error: unable to load pyglet.' +
+                    'If you already installed pyglet, please ensure ctypes is installed.',
+                    'Please visit %s' % WEB_PYGLET_DOWNLOAD)
 try:
     pyglet.options['audio'] = ('directsound', 'openal', 'alsa', )
     # use in pyglet 1.2: pyglet.options['audio'] = ('directsound', 'pulse', 'openal', )
     import pyglet.media
 except:
-    str_list = []
-    str_list.append('\nNo suitable audio driver could be loaded.\n')
-    str_list.append('Full text of error:\n')
-    str_list.append(str(sys.exc_info()))
-    print >> sys.stderr, ''.join(str_list)
-    sys.exit(1)
+    quit_with_error('No suitable audio driver could be loaded.')
 
 if USE_MUSIC:
     try:
         from pyglet.media import avbin
     except:
         USE_MUSIC = False
-        str_list = []
-        str_list.append('\nAVBin not detected. Music disabled.\n')
-        str_list.append('Download AVBin from: http://code.google.com/p/avbin/\n\n')
+        print 'AVBin not detected. Music disabled.'
+        print 'Download AVBin from: http://code.google.com/p/avbin/'
         #str_list.append(str(sys.exc_info()))
         #print >> sys.stderr, ''.join(str_list)
-        print ''.join(str_list)
-    
+        
 # Initialize resources (sounds and images)
 #
 # --- BEGIN RESOURCE INITIALIZATION SECTION ----------------------------------
@@ -486,147 +472,48 @@ if USE_MUSIC:
 
 res_path = get_res_dir()
 if not os.access(res_path, os.F_OK):
-    str_list = []
-    str_list.append('\nError: the resource folder\n')
-    str_list.append(res_path)
-    str_list.append('\ndoes not exist or is not readable. Exiting.')
-    print >> sys.stderr, ''.join(str_list)
-    sys.exit(1)
+    quit_with_error('Error: the resource folder\n%s' % res_path + 
+                    'does not exist or is not readable.  Exiting', trace=False)
 
 try:
     pyglet.resource.path = [res_path] # Look only the FOLDER_RES directory
     pyglet.resource.reindex()
 except:
-    str_list = []
-    str_list.append('\nError: pyglet 1.1 or greater is required.\n')
-    str_list.append('You probably have an older version of pyglet installed.\n\n')
-    str_list.append('Please visit ')
-    str_list.append(WEB_PYGLET_DOWNLOAD)
-    print >> sys.stderr, ''.join(str_list)
-    sys.exit(1)
+    quit_with_error('Error: pyglet 1.1 or greater is required.\n' + 
+                    'You probably have an older version of pyglet installed.\n' +
+                    'Please visit %s' % WEB_PYGLET_DOWNLOAD, trace=False)
     
-# Make sure DEFAULT_LETTERS corresponds to the letter sounds above, in the
-# same order.
-DEFAULT_LETTERS = ['C', 'H', 'K', 'L', 'Q', 'R', 'S', 'T']
+supportedtypes = {'sounds' :['wav'],
+                  'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3'], # what else?
+                  'sprites':['png', 'jpg', 'bmp']}
 
-SOUNDS = ['c.wav'] + \
-         ['%s.wav' % letter.lower() for letter in DEFAULT_LETTERS] + \
-         ['operation_%s.wav' % op for op in ('plus', 'minus', 'times', 'divide')]
+if USE_MUSIC: supportedtypes['sounds'] = supportedtypes['music']
+else: del supportedtypes['music']
+supportedtypes['misc'] = supportedtypes['sounds'] + supportedtypes['sprites']
 
-APPLAUSE_SOUNDS = ['applause.wav']
-#APPLAUSE_SOUNDS.append('applause_1.wav')
-#APPLAUSE_SOUNDS.append('applause_2.wav')
+resourcepaths = {}
+for restype in supportedtypes.keys():
+    res_sets = {}
+    for folder in os.listdir(os.path.join(res_path, restype)):
+        contents = []
+        if os.path.isdir(os.path.join(res_path, restype, folder)):
+            contents = [os.path.join(res_path, restype, folder, obj)
+                          for obj in os.listdir(os.path.join(res_path, restype, folder))
+                                  if obj[-3:] in supportedtypes[restype]]
+        if contents: res_sets[folder] = contents
+    if res_sets: resourcepaths[restype] = res_sets
 
-PIANO_SOUNDS  = ['piano-%i.wav'  % i for i in range(1,9)]
-NUMBER_SOUNDS = ['number-%i.wav' % i for i in range(0,14)]
+sounds = {}
+for k in resourcepaths['sounds'].keys():
+    sounds[k] = {}
+    for f in resourcepaths['sounds'][k]:
+         sounds[k][os.path.basename(f).split('.')[0]] = pyglet.media.load(f, streaming=False)
 
-NATO_SOUNDS  = ['nato_%s.wav'  % chr(i) for i in range(ord('a'), ord('a')+26)] # a-z
-MORSE_SOUNDS = ['morse_%i.wav' % i for i in range(0,10)] + \
-               ['morse_%s.wav' % chr(i) for i in range(ord('a'), ord('a')+26)] 
-
-IMAGES = []
-IMAGES.append('brain.png')
-IMAGES.append('spr_square_red.png')
-IMAGES.append('spr_square_white.png')
-IMAGES.append('spr_square_blue.png')
-IMAGES.append('spr_square_yellow.png')
-IMAGES.append('spr_square_magenta.png')
-IMAGES.append('spr_square_cyan.png')
-IMAGES.append('spr_square_green.png')
-IMAGES.append('spr_square_grey.png')
-IMAGES.append('brain_graphic.png')
-
-
-for resource in (SOUNDS + APPLAUSE_SOUNDS + PIANO_SOUNDS + NUMBER_SOUNDS + NATO_SOUNDS + MORSE_SOUNDS + IMAGES):
-    path = os.path.join(res_path, resource)
-    if not os.access(path, os.F_OK):
-        str_list = []
-        str_list.append('\nThe resource ')
-        str_list.append(path)
-        str_list.append('\ndoes not exist or is not readable. Exiting.')
-        print >> sys.stderr, ''.join(str_list)
-        sys.exit(1)
-        
-sound = []
-for soundfile in SOUNDS:
-    sound.append(pyglet.resource.media(soundfile, streaming=False))
+sound = sounds['letters'] # is this obsolete yet?
     
 if USE_APPLAUSE:
-    applausesound = [pyglet.resource.media(soundfile, streaming=False)
-                     for soundfile in APPLAUSE_SOUNDS]
-    
-numbersound  = dict( [(str(i), 
-                       pyglet.resource.media(NUMBER_SOUNDS[i], streaming=False)) 
-                      for i in range(14)] )
-
-pianosound   = dict( [(note, 
-                       pyglet.resource.media(PIANO_SOUNDS[i], streaming=False))
-                      for note, i in zip(('C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'),
-                                          range(8))])
-
-natosound    = dict( [(chr(ord('A')+i),
-                       pyglet.resource.media(NATO_SOUNDS[i], streaming=False))
-                      for i in range(26)])
-                    
-morsesound   = dict( [(str(i),
-                       pyglet.resource.media(MORSE_SOUNDS[i], streaming=False))
-                      for i in range(10)] + \
-                     [(chr(ord('A')+i),
-                       pyglet.resource.media(MORSE_SOUNDS[i+10], streaming=False))
-                      for i in range(26)])
-    
-if USE_MUSIC:
-    MUSIC_ADVANCE = []
-    MUSIC_ADVANCE.append('areyouawake.ogg')
-    MUSIC_ADVANCE.append('cematinla.ogg')
-    MUSIC_ADVANCE.append('glassworks.ogg')
-    MUSIC_ADVANCE.append('joyfulnoise.ogg')
-    MUSIC_ADVANCE.append('mamaguela.ogg')
-    MUSIC_ADVANCE.append('onamistynight.ogg')
-    MUSIC_ADVANCE.append('quartetno1.ogg')
-    MUSIC_ADVANCE.append('timbacubana.ogg')
-    
-    MUSIC_GREAT = []
-    MUSIC_GREAT.append('biggeorge.ogg')
-    MUSIC_GREAT.append('bluerondo.ogg')
-    MUSIC_GREAT.append('brandenburg.ogg')
-    MUSIC_GREAT.append('caribe.ogg')
-    MUSIC_GREAT.append('cornerpocket.ogg')
-    MUSIC_GREAT.append('elubechango.ogg')
-    MUSIC_GREAT.append('femmedargent.ogg')
-    MUSIC_GREAT.append('frevorasgado.ogg')
-    MUSIC_GREAT.append('linusandlucy.ogg')
-    MUSIC_GREAT.append('quieroserpoeta.ogg')
-    MUSIC_GREAT.append('spellbound.ogg')
-    MUSIC_GREAT.append('streetlife.ogg')
-    MUSIC_GREAT.append('suspensionbridge.ogg')
-    
-    MUSIC_GOOD = []
-    MUSIC_GOOD.append('lithia.ogg')
-    MUSIC_GOOD.append('autumnleaves.ogg')
-    MUSIC_GOOD.append('bbydhyonchord.ogg')
-    MUSIC_GOOD.append('blueberryrhyme.ogg')
-    MUSIC_GOOD.append('dinah.ogg')
-    MUSIC_GOOD.append('harvestbreed.ogg')
-    MUSIC_GOOD.append('perisscope.ogg')
-    MUSIC_GOOD.append('queenbee.ogg')
-    MUSIC_GOOD.append('sarahmencken.ogg')
-    MUSIC_GOOD.append('stlouisblues.ogg')
-    
-    for x in range(len(MUSIC_ADVANCE) - 1, -1, -1):
-        path = os.path.join(res_path, MUSIC_ADVANCE[x])
-        if not os.access(path, os.F_OK):
-            MUSIC_ADVANCE.remove(MUSIC_ADVANCE[x])
-
-    for x in range(len(MUSIC_GREAT) - 1, -1, -1):
-        path = os.path.join(res_path, MUSIC_GREAT[x])
-        if not os.access(path, os.F_OK):
-            MUSIC_GREAT.remove(MUSIC_GREAT[x])
-
-    for x in range(len(MUSIC_GOOD) - 1, -1, -1):
-        path = os.path.join(res_path, MUSIC_GOOD[x])
-        if not os.access(path, os.F_OK):
-            MUSIC_GOOD.remove(MUSIC_GOOD[x])
+    applausesounds = [pyglet.media.load(soundfile, streaming=False)
+                     for soundfile in resourcepaths['misc']['applause']]
 
 applauseplayer = pyglet.media.ManagedSoundPlayer()
 musicplayer = pyglet.media.ManagedSoundPlayer()
@@ -666,28 +553,9 @@ def fade_out(dt):
 # The colors of the squares in Triple N-Back mode are defined here.
 # Color 1 is used in Dual N-Back mode.
 def get_color(color):
-    if color == 1:
-        return COLOR_1   # red
-    elif color == 2:
-        if BLACK_BACKGROUND:
-            return COLOR_2_BLK # white
-        else:
-            return COLOR_2    # black
-    elif color == 3:
-        return COLOR_3  # blue
-    elif color == 4:
-        return COLOR_4  # yellow
-    elif color == 5:
-        return COLOR_5  # magenta
-    elif color == 6:
-        return COLOR_6  # cyan
-    elif color == 7:
-        return COLOR_7   # green
-    elif color == 8:
-        if BLACK_BACKGROUND:
-            return COLOR_8_BLK # dark gray
-        else:
-            return COLOR_8 # light gray
+    if color in (4, 7) and BLACK_BACKGROUND:
+        return eval('COLOR_%i_BLK' % color)
+    return eval('COLOR_%i' % color)
 
 # set the input text label size
 def input_label_size():
@@ -787,7 +655,7 @@ class MyWindow(pyglet.window.Window):
     
 window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style)
 if sys.platform == 'linux2':
-    window.set_icon(pyglet.resource.image(IMAGES[0]))
+    window.set_icon(pyglet.image.load(resourcepaths['misc']['brain'][0]))
 
 # set the background color of the window
 if BLACK_BACKGROUND:
@@ -1093,15 +961,9 @@ class Graph:
                         
                 statsfile.close()
             except:
-                str_list = []
-                str_list.append('\nError parsing stats file\n')
-                str_list.append(os.path.join(get_data_dir(), STATSFILE))
-                str_list.append('\n\n')
-                str_list.append('Full text of error:\n\n')
-                str_list.append(str(sys.exc_info()))
-                str_list.append('\n\nPlease fix, delete or rename the stats file.')
-                print >> sys.stderr, ''.join(str_list)
-                sys.exit(1)
+                quit_with_error('Error parsing stats file\n %s' % 
+                                os.path.join(get_data_dir(), STATSFILE),
+                                'Please fix, delete or rename the stats file.')
 
             for dictionary in self.dictionaries:
                 for datestamp in dictionary.keys():
@@ -1172,14 +1034,8 @@ class Graph:
                 chartfile.close()
                             
             except:
-                str_list = []
-                str_list.append('\nError writing chart file\n')
-                str_list.append(os.path.join(get_data_dir(), chartfile_name))
-                str_list.append('\n\n')
-                str_list.append('Full text of error:\n\n')
-                str_list.append(str(sys.exc_info()))
-                print >> sys.stderr, ''.join(str_list)
-                sys.exit(1)
+                quit_with_error('Error writing chart file:\n%s' %
+                                os.path.join(get_data_dir(), chartfile_name))
                 
     def draw(self):
         linecolor = (0, 0, 255)
@@ -1744,9 +1600,8 @@ class Visual:
             '',
             font_size=field.size//6, bold=True,
             anchor_x='center', anchor_y='center', batch=batch)
-        self.spr_square = []
-        for index in range(1, 9):
-            self.spr_square.append(pyglet.sprite.Sprite(pyglet.resource.image(IMAGES[index])))
+        self.spr_square = [pyglet.sprite.Sprite(pyglet.image.load(path)) # fixme: all sprite sets
+                              for path in resourcepaths['sprites']['colored_squares']]
         self.spr_square_size = self.spr_square[0].width
 
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
@@ -1962,7 +1817,7 @@ class Visual:
             if mode.mode == 7 or mode.mode == 8 or mode.mode == 9:
                 self.label.text = str(number)
             else:
-                self.label.text = self.letters[vis - 1]
+                self.label.text = self.letters[vis - 1].upper()
             self.label.x = self.center_x
             self.label.y = self.center_y + 4
             self.label.color = self.color
@@ -2001,9 +1856,6 @@ class Visual:
             opacity_factor = 1.0 - (size_ratio - opacity_begin) / (opacity_end - opacity_begin)
             if opacity_factor < 0: opacity_factor = 0
             self.square.opacity = int(255 * opacity_factor)
-
-    def set_letters(self, letters):
-        self.letters = letters
     
     def hide(self):
         if self.visible:
@@ -2396,9 +2248,8 @@ class PositionLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 10 or mode.mode == 2 or mode.mode == 3 or mode.mode == 8 or mode.mode == 9: # or mode.mode == 12:
-            str_list = []
-            str_list.append(key.symbol_string(KEY_POSITION))
+        elif mode.mode in (2, 3, 8, 9, 10): # or mode.mode == 12:
+            str_list = [key.symbol_string(KEY_POSITION)]
             str_list.append(': position match')
             self.label.text = ''.join(str_list)
         elif mode.mode == 4:
@@ -2525,8 +2376,7 @@ class VisaudioLabel:
 # this controls the "F: color match" below the field.
 class ColorLabel:
     def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
+        self.label = pyglet.text.Label('',
             y=30,
             anchor_y='center', batch=batch)
         self.update()
@@ -2535,10 +2385,7 @@ class ColorLabel:
         if mode.started and mode.hide_text:
             self.label.text = ''
         elif mode.mode == 3:
-            str_list = []
-            str_list.append(key.symbol_string(KEY_COLOR))
-            str_list.append(': color match')
-            self.label.text = ''.join(str_list)
+            self.label.text = '%s: color match' % key.symbol_string(KEY_COLOR)
             self.label.anchor_x = 'center'
             self.label.x = window.width // 2
         elif mode.mode == 6: # or mode.mode == 16:
@@ -2580,8 +2427,7 @@ class ColorLabel:
 # this controls the "J: audio & n-visual" below the field.
 class AudiovisLabel:
     def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
+        self.label = pyglet.text.Label('',
             x=window.width - window.width//5, y=30,
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
@@ -2589,11 +2435,8 @@ class AudiovisLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            str_list = []
-            str_list.append(key.symbol_string(KEY_AUDIOVIS))
-            str_list.append(': sound & n-vis')
-            self.label.text = ''.join(str_list)
+        elif mode.mode in (4, 5, 6): # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
+            self.label.text = '%s: sound & n-vis' % key.symbol_string(KEY_AUDIOVIS)
             if mode.mode == 4: # or mode.mode == 14:
                 self.label.x = window.width // 3 * 2
             elif mode.mode == 5: # or mode.mode == 15:
@@ -2634,16 +2477,10 @@ class AudioLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 11 or mode.mode == 2 or mode.mode == 3: # or mode.mode == 12 or mode.mode == 13:
-            str_list = []
-            str_list.append(key.symbol_string(KEY_AUDIO))
-            str_list.append(': sound match')
-            self.label.text = ''.join(str_list)
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            str_list = []
-            str_list.append(key.symbol_string(KEY_AUDIO))
-            str_list.append(': sound')
-            self.label.text = ''.join(str_list)
+        elif mode.mode in (2, 3, 11): # or mode.mode == 12 or mode.mode == 13:
+            self.label.text = '%s: sound match' % key.symbol_string(KEY_AUDIO)
+        elif mode.mode in (4, 5, 6): # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
+            self.label.text = '%s: sound' % key.symbol_string(KEY_AUDIO)
         else:
             self.label.text = ''
         if SHOW_FEEDBACK and mode.audio_input:
@@ -2682,17 +2519,9 @@ class SessionInfoLabel:
         if mode.started:
             self.label.text = ''
         else:
-            str_list = []
-            str_list.append('Session:\n')
-            str_list.append(str(mode.ticks_per_trial / 4.0))
-            str_list.append(' sec/trial\n')
-            str_list.append(str(mode.num_trials))
-            str_list.append('+')
-            str_list.append(str(mode.back))
-            str_list.append(' trials\n')
-            str_list.append(str(int((mode.ticks_per_trial / 4.0) * (mode.num_trials + mode.back))))
-            str_list.append(' seconds')
-            self.label.text = ''.join(str_list)            
+            self.label.text = 'Session:\n%1.1f sec/trial\n%i+%i trials\n%i seconds' % \
+                              (mode.ticks_per_trial / 4.0, mode.num_trials, mode.back, 
+                               int((mode.ticks_per_trial / 4.0) * (mode.num_trials + mode.back)))
     def flash(self):
         pyglet.clock.unschedule(sessionInfoLabel.unflash)
         self.label.bold = True
@@ -2717,15 +2546,8 @@ class ThresholdLabel:
         if mode.started or mode.manual:
             self.label.text = ''
         else:
-            str_list = []
-            str_list.append('Thresholds:\n')
-            str_list.append('Raise level: >= ')
-            str_list.append(str(get_threshold_advance()))
-            str_list.append('%\n')
-            str_list.append('Lower level: < ')
-            str_list.append(str(get_threshold_fallback()))
-            str_list.append('%')
-            self.label.text = ''.join(str_list)            
+            self.label.text = 'Thresholds:\nRaise level: >= %i%%\nLower level: < %i%%' % \
+            (get_threshold_advance(), get_threshold_fallback())
         
 # this controls the "press space to begin session #" text.
 class SpaceLabel:
@@ -2814,7 +2636,7 @@ def check_match(input_type, check_missed = False):
         back_data = 'audio'
     elif input_type == 'arithmetic':
         current = mode.current_number
-        back_data = stats.session['number'][nback_trial]
+        back_data = stats.session['numbers'][nback_trial]
         operation = mode.current_operation
         
     if input_type == 'arithmetic':
@@ -2884,7 +2706,7 @@ class AnalysisLabel:
                     
                 if mod in ['arithmetic']:
                     ops = {'add':'+', 'subtract':'-', 'multiply':'*', 'divide':'/'}
-                    answer = eval("Decimal(data['number'][x-back]) %s Decimal(data['number'][x])" % ops[data['operation'][x]])
+                    answer = eval("Decimal(data['numbers'][x-back]) %s Decimal(data['numbers'][x])" % ops[data['operation'][x]])
                     rights[mod] += int(answer == Decimal(data[mod+'_input'][x])) # data[...][x] is only Decimal if op == /
                     wrongs[mod] += int(answer != Decimal(data[mod+'_input'][x])) 
         
@@ -2902,7 +2724,7 @@ class AnalysisLabel:
              
         def calc_percent(r, w):
             if r+w: return int(r*100 / float(r+w))
-            else: return 0
+            else:   return 0
             
         right = sum([rights[mod] for mod in mods])
         wrong = sum([wrongs[mod] for mod in mods])
@@ -3028,17 +2850,12 @@ class ChartLabel:
                     mode.session_number = last_session[0]
     
             except:
-                str_list = []
-                str_list.append('\nError parsing stats file\n')
-                str_list.append(os.path.join(get_data_dir(), STATSFILE))
-                str_list.append('\n\n')
-                str_list.append('Full text of error:\n\n')
-                str_list.append(str(sys.exc_info()))
-                str_list.append('\n\nPlease fix, delete or rename the stats file.')
-                #print >> sys.stderr, ''.join(str_list)
-                print ''.join(str_list)
-        
+                quit_with_error('Error parsing stats file\n%s' %
+                                os.path.join(get_data_dir(), STATSFILE),
+                                '\nPlease fix, delete or rename the stats file.',
+                                quit=False)
         self.update()
+        
     def update(self):
         for x in range(0, 20):
             self.column1[x].text = ''
@@ -3100,10 +2917,7 @@ class TodayLabel:
         if mode.started:
             self.label.text = ''
         else:
-            str_list = []
-            str_list.append('Sessions today: ')
-            str_list.append(str(stats.sessions_today))
-            self.label.text = ''.join(str_list)
+            self.label.text = 'Sessions today: %i' % stats.sessions_today
 
 class TrialsRemainingLabel:
     def __init__(self):
@@ -3118,10 +2932,7 @@ class TrialsRemainingLabel:
         if (not mode.started) or mode.hide_text:
             self.label.text = ''
         else:
-            str_list = []
-            str_list.append(str(mode.num_trials + mode.back - mode.trial_number))
-            str_list.append(' remaining')
-            self.label.text = ''.join(str_list)
+            self.label.text = '%i remaining' % (mode.num_trials + mode.back - mode.trial_number)
            
 #
 # --- END GRAPHICS SECTION ----------------------------------------------
@@ -3142,7 +2953,7 @@ class Stats:
         self.session['color'] = []
         self.session['audio'] = []
         self.session['vis'] = []
-        self.session['number'] = []
+        self.session['numbers'] = []
         self.session['operation'] = []
         
         self.session['position_input'] = []
@@ -3158,7 +2969,7 @@ class Stats:
         self.session['color'].append(mode.current_color)
         self.session['audio'].append(mode.current_audio)
         self.session['vis'].append(mode.current_vis)
-        self.session['number'].append(mode.current_number)
+        self.session['numbers'].append(mode.current_number)
         self.session['operation'].append(mode.current_operation)
 
         self.session['position_input'].append(mode.position_input)
@@ -3198,15 +3009,9 @@ class Stats:
                 statsfile.write('\n')  # but we don't want a sep before '\n'
                 statsfile.close()
             except:
-                str_list = []
-                str_list.append('\nError writing to stats file\n')
-                str_list.append(os.path.join(get_data_dir(), STATSFILE))
-                str_list.append('\n\n')
-                str_list.append('Full text of error:\n\n')
-                str_list.append(str(sys.exc_info()))
-                str_list.append('\n\nPlease check file and directory permissions.\n')
-                print >> sys.stderr, ''.join(str_list)
-                sys.exit(1)
+                quit_with_error('Error writing to stats file\n%s' % 
+                                os.path.join(get_data_dir(), STATSFILE),
+                                '\nPlease check file and directory permissions.')
 
         perfect = False        
         awesome = False
@@ -3221,9 +3026,10 @@ class Stats:
                 mode.progress = 0
                 circles.update()
                 if USE_APPLAUSE:
-                    #applauseplayer = sound[0].play()
-                    applauseplayer = random.choice(applausesound).play()
+                    applauseplayer = pyglet.media.ManagedSoundPlayer()
+                    applauseplayer.queue(random.choice(applausesounds))
                     applauseplayer.volume = SFX_VOLUME
+                    applauseplayer.play()
                 advance = True
             elif mode.back > 1 and percent < get_threshold_fallback():
                 if JAEGGI_MODE:
@@ -3249,28 +3055,21 @@ class Stats:
             return
         
         if USE_MUSIC:
-            if percent >= get_threshold_advance() and len(MUSIC_ADVANCE) > 0:
-                musicplayer = pyglet.resource.media(random.choice(MUSIC_ADVANCE), streaming = True).play()
-                musicplayer.volume = MUSIC_VOLUME
-            elif percent >= (get_threshold_advance() + get_threshold_fallback()) // 2 and len(MUSIC_GREAT) > 0:
-                musicplayer = pyglet.resource.media(random.choice(MUSIC_GREAT), streaming = True).play()
-                musicplayer.volume = MUSIC_VOLUME
-            elif percent >= get_threshold_fallback() and len(MUSIC_GOOD) > 0:
-                musicplayer = pyglet.resource.media(random.choice(MUSIC_GOOD), streaming = True).play()
-                musicplayer.volume = MUSIC_VOLUME
+            musicplayer = pyglet.media.ManagedSoundPlayer()
+            if percent >= get_threshold_advance() and resourcepaths['music']['advance']:
+                musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['advance']), streaming = True))
+            elif percent >= (get_threshold_advance() + get_threshold_fallback()) // 2 and resourcepaths['music']['great']:
+                musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['great']), streaming = True))
+            elif percent >= get_threshold_fallback() and resourcepaths['music']['good']:
+                musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['good']), streaming = True))
+            else: 
+                return
+            musicplayer.volume = MUSIC_VOLUME
+            musicplayer.play()
         
     def clear(self):
         self.history = []
         self.sessions_today = 0
-        
-def test_sounds():
-    global applauseplayer
-    global musicplayer
-    
-    musicplayer = pyglet.resource.media(random.choice(MUSIC_GOOD), streaming = True).play()
-    musicplayer.volume = MUSIC_VOLUME
-    applauseplayer = sound[0].play()
-    applauseplayer.volume = SFX_VOLUME
         
 def update_all_labels(do_analysis = False):
     updateLabel.update()
@@ -3326,35 +3125,11 @@ def new_session():
         choices.append('piano')
     if USE_MORSE:
         choices.append('morse')
-    if len(choices) == 0:
+    if not choices:
         choices.append('letters')
     mode.sound_mode = random.choice(choices)
-    if mode.sound_mode == 'letters':
-        visual.set_letters(DEFAULT_LETTERS)
-    elif mode.sound_mode == 'numbers':
-        numbers = random.sample(numbersound.keys(), 8)
-        visual.set_letters(numbers)
-        mode.soundlist = []
-        for number in numbers:
-            mode.soundlist.append(numbersound[number])
-    elif mode.sound_mode == 'piano':
-        pianos = random.sample(pianosound.keys(), 8)
-        visual.set_letters(pianos)
-        mode.soundlist = []
-        for piano in pianos:
-            mode.soundlist.append(pianosound[piano])
-    elif mode.sound_mode == 'nato':
-        letters = random.sample(natosound.keys(), 8)
-        visual.set_letters(letters)
-        mode.soundlist = []
-        for letter in letters:
-            mode.soundlist.append(natosound[letter])
-    elif mode.sound_mode == 'morse':
-        morses = random.sample(morsesound.keys(), 8)
-        visual.set_letters(morses)
-        mode.soundlist = []
-        for morse in morses:
-            mode.soundlist.append(morsesound[morse])
+    visual.letters = random.sample(sounds[mode.sound_mode].keys(), 8)
+    mode.soundlist = [sounds[mode.sound_mode][l] for l in visual.letters]
             
     if JAEGGI_MODE:
         compute_bt_sequence()
@@ -3464,9 +3239,9 @@ def generate_stimulus():
         min_number = 0
     max_number = ARITHMETIC_MAX_NUMBER
     
-    if mode.current_operation == 'divide' and (mode.mode == 7 or mode.mode == 8 or mode.mode == 9):
+    if mode.current_operation == 'divide' and mode.mode in (7, 8, 9):
         if len(stats.session['position']) >= mode.back:
-            number_nback = stats.session['number'][mode.trial_number - mode.back - 1]
+            number_nback = stats.session['numbers'][mode.trial_number - mode.back - 1]
             possibilities = []
             for x in range(min_number, max_number + 1):
                 if x == 0:
@@ -3552,20 +3327,14 @@ def generate_stimulus():
     
     # initiate the chosen stimuli.
     # mode.current_audio is a number from 1 to 8.
-    if (mode.mode == 7 or mode.mode == 8 or mode.mode == 9) and mode.trial_number > mode.back:
-        if mode.current_operation == 'add':
-            sound[9].play()
-        elif mode.current_operation == 'subtract':
-            sound[10].play()
-        elif mode.current_operation == 'multiply':
-            sound[11].play()
-        elif mode.current_operation == 'divide':
-            sound[12].play()
-    elif (mode.mode >= 2 and mode.mode <= 6) or (mode.mode >= 11 and mode.mode <= 11):
-        if mode.sound_mode == 'letters':
-            sound[mode.current_audio].play()
-        elif mode.sound_mode in ['numbers', 'nato', 'piano', 'morse']:
-            mode.soundlist[mode.current_audio - 1].play()
+    if mode.mode in (7, 8, 9) and mode.trial_number > mode.back:
+        player = pyglet.media.ManagedSoundPlayer()
+        player.queue(sounds['operations'][mode.current_operation])
+        player.play()
+    elif mode.mode in (2, 3, 4, 5, 6, 11):
+        player = pyglet.media.ManagedSoundPlayer()
+        player.queue(mode.soundlist[mode.current_audio-1])
+        player.play()
             
     if VARIABLE_NBACK == 1 and mode.trial_number > mode.back:
         variable = mode.variable_list[mode.trial_number - 1 - mode.back]
@@ -3800,7 +3569,7 @@ def on_key_press(symbol, modifiers):
             webbrowser.open_new_tab(WEB_MORSE)
                             
         elif symbol == key.G:
-            sound_stop()
+#            sound_stop()
             graph.parse_stats()
             graph.graph = mode.mode
             mode.draw_graph = True
@@ -3811,19 +3580,12 @@ def on_key_press(symbol, modifiers):
             end_session(cancelled = True)
             
         elif symbol == key.P:
-            if mode.paused: 
-                mode.paused = False
-                pausedLabel.update()
-                field.crosshair_update()
-            else:
-                mode.paused = True
-                pausedLabel.update()
-                field.crosshair_update()
+            mode.paused = not mode.paused
+            pausedLabel.update()
+            field.crosshair_update()
                 
         elif symbol == key.F8:
-            if mode.hide_text:
-                mode.hide_text = False
-            else: mode.hide_text = True
+            mode.hide_text = not mode.hide_text
             update_all_labels()
                 
         elif mode.tick != 0 and mode.trial_number > 0:
@@ -3961,11 +3723,7 @@ try:
               ('c3B', (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     test_polygon.delete()
 except:
-    str_list = []
-    str_list.append('\nError creating test polygon. Full text of error:\n')
-    str_list.append(str(sys.exc_info()))
-    print >> sys.stderr, ''.join(str_list)
-    sys.exit(1)
+    quit_with_error('Error creating test polygon. Full text of error:\n')
 
 # Instantiate the classes
 mode = Mode()
@@ -4008,10 +3766,10 @@ audiovisLabel = AudiovisLabel()
 update_all_labels()
 
 # Initialize brain sprite
-brain_icon = pyglet.sprite.Sprite(pyglet.resource.image(IMAGES[0]))
+brain_icon = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
 brain_icon.set_position(field.center_x - brain_icon.width//2,
                            field.center_y - brain_icon.height//2)
-brain_graphic = pyglet.sprite.Sprite(pyglet.resource.image(IMAGES[9]))
+brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash'])))
 brain_graphic.set_position(field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
 
