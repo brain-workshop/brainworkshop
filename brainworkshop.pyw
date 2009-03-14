@@ -16,7 +16,7 @@
 
 VERSION = '4.41'
 
-import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO
+import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 from decimal import Decimal
 from time import strftime
 from datetime import date
@@ -64,7 +64,9 @@ def get_res_dir():
         return os.path.join(get_main_dir(), FOLDER_RES)
 def quit_with_error(message='', postmessage='', quit=True, trace=True):
     if message:     print >> sys.stderr, message + '\n'
-    if trace:       print >> sys.stderr, "Full text of error:\n" + str(sys.exc_info())
+    if trace:       
+        print >> sys.stderr, "Full text of error:\n" 
+        traceback.print_exc()
     if postmessage: print >> sys.stderr, '\n\n' + postmessage
     if quit:        sys.exit(1)
 
@@ -675,6 +677,11 @@ class Mode:
 
         self.short_mode_names = {2:'D', 3:'T', 4:'DC', 5:'TC', 6:'QC', 7:'A', 
                                  8:'DA', 9:'TA', 10:'Po', 11:'Au'} # DV, M, DM, TM, QM
+        self.long_mode_names =  {2:'Dual', 3:'Triple', 4:'Dual Combination', 
+                                 5:'Tri Combination', 6:'Quad Combination', 
+                                 7:'Arithmetic', 8:'Dual Arithmetic',
+                                 9:'Triple Arithmetic', 10:'Position',
+                                 11:'Audio'}
         self.modalities = { 2:['position', 'audio'],
                             3:['position', 'color', 'audio'],
                             4:['visvis', 'visaudio', 'audiovis', 'audio'],
@@ -753,116 +760,24 @@ class Graph:
         self.reset_percents()
 
     def reset_dictionaries(self):
-        self.dnb = {}
-        self.tnb = {}
-        self.dlnb = {}
-        self.tlnb = {}
-        self.qlnb = {}
-        self.anb = {}
-        self.danb = {}
-        self.tanb = {}
-        self.ponb = {}
-        self.aunb = {}
-        #self.dvnb = {}
-        #self.mnb = {}
-        #self.dmnb = {}
-        #self.tmnb = {}
-        #self.qmnb = {}
-        self.dictionaries = [self.dnb, self.tnb, self.dlnb, self.tlnb, self.qlnb, self.anb,
-                             self.danb, self.tanb, self.ponb, self.aunb,]
-                             #self.dvnb, self.mnb, self.dmnb, self.tmnb, self.qmnb]
-        for dictionary in self.dictionaries:
-            dictionary.clear()
+        self.dictionaries = dict([(i, {}) for i in mode.modalities])
         
     def reset_percents(self):
-        self.percents = []        
-        self.percents.append([]) # dnb
-        self.percents.append([]) # tnb
-        self.percents.append([]) # dlnb
-        self.percents.append([]) # tlnb
-        self.percents.append([]) # qlnb
-        self.percents.append([]) # anb
-        self.percents.append([]) # danb
-        self.percents.append([]) # tanb
-        self.percents.append([]) # ponb
-        self.percents.append([]) # aunb
-        
-        #self.percents.append([]) # dvnb
-        
-        #self.percents.append([]) # mnb
-        #self.percents.append([]) # dmnb
-        #self.percents.append([]) # tmnb
-        #self.percents.append([]) # qmnb
-        
-        self.percents[0].append([])
-        self.percents[0].append([])
+        self.percents = dict([(k, dict([(i, []) for i in v])) for k,v in mode.modalities.items()])
 
-        self.percents[1].append([])
-        self.percents[1].append([])
-        self.percents[1].append([])
-
-        self.percents[2].append([])
-        self.percents[2].append([])
-        self.percents[2].append([])
-        self.percents[2].append([])
-
-        self.percents[3].append([])
-        self.percents[3].append([])
-        self.percents[3].append([])
-        self.percents[3].append([])
-        self.percents[3].append([])
-
-        self.percents[4].append([])
-        self.percents[4].append([])
-        self.percents[4].append([])
-        self.percents[4].append([])
-        self.percents[4].append([])
-        self.percents[4].append([])
-
-        self.percents[5].append([])
-        
-        self.percents[6].append([])
-        self.percents[6].append([])
-
-        self.percents[7].append([])
-        self.percents[7].append([])
-        self.percents[7].append([])
-        
-        self.percents[8].append([])
-        
-        self.percents[9].append([])
-        
-        #self.percents[10].append([])
-        #self.percents[10].append([])
-        
-        #self.percents[11].append([])
-        
-        #self.percents[12].append([])
-        #self.percents[12].append([])
-        #self.percents[12].append([])
-        #self.percents[12].append([])
-        
-        #self.percents[13].append([])
-        #self.percents[13].append([])
-        #self.percents[13].append([])
-        #self.percents[13].append([])
-        #self.percents[13].append([])
-
-        #self.percents[14].append([])
-        #self.percents[14].append([])
-        #self.percents[14].append([])
-        #self.percents[14].append([])
-        #self.percents[14].append([])
-        #self.percents[14].append([])
-        
     def next_mode(self):
         if self.graph == 11:
             self.graph = 2
         else: self.graph += 1
         
+    def draw2(self):
+        self.drawaxes()
     def parse_stats(self):
         self.reset_dictionaries()
         self.reset_percents()
+        ind = {'date':0, 'modename':1, 'percent':2, 'mode':3, 'n':4, 'ticks':5,
+               'trials':6, 'manual':7, 'session':8, 'position':9, 'audio':10,
+               'color':11, 'visvis':12, 'visaudio':13, 'audiovis':14, 'arithmetic':15}
         
         if os.path.isfile(os.path.join(get_data_dir(), STATSFILE)):
             try:
@@ -889,75 +804,14 @@ class Graph:
                         continue
                     newback = int(newline[4])
                     newpercent = int(newline[2])
-                    dictionary = self.dictionaries[newmode - 2]
+                    dictionary = self.dictionaries[newmode]
                     if datestamp not in dictionary:
                         dictionary[datestamp] = []
-                    contribution = newback
-                    dictionary[datestamp].append(contribution)
+                    dictionary[datestamp].append(newback)
                     
                     if len(newline) >= 16:
-                        if newmode == 2:
-                            self.percents[0][0].append(int(newline[9]))
-                            self.percents[0][1].append(int(newline[10]))
-                        elif newmode == 3:
-                            self.percents[1][0].append(int(newline[9]))
-                            self.percents[1][1].append(int(newline[11]))
-                            self.percents[1][2].append(int(newline[10]))
-                        elif newmode == 4:
-                            self.percents[2][0].append(int(newline[12]))
-                            self.percents[2][1].append(int(newline[13]))
-                            self.percents[2][2].append(int(newline[14]))
-                            self.percents[2][3].append(int(newline[10]))
-                        elif newmode == 5:
-                            self.percents[3][0].append(int(newline[9]))
-                            self.percents[3][1].append(int(newline[12]))
-                            self.percents[3][2].append(int(newline[13]))
-                            self.percents[3][3].append(int(newline[14]))
-                            self.percents[3][4].append(int(newline[10]))
-                        elif newmode == 6:
-                            self.percents[4][0].append(int(newline[9]))
-                            self.percents[4][1].append(int(newline[12]))
-                            self.percents[4][2].append(int(newline[13]))
-                            self.percents[4][3].append(int(newline[11]))
-                            self.percents[4][4].append(int(newline[14]))
-                            self.percents[4][5].append(int(newline[10]))
-                        elif newmode == 7:
-                            self.percents[5][0].append(int(newline[15]))
-                        elif newmode == 8:
-                            self.percents[6][0].append(int(newline[9]))
-                            self.percents[6][1].append(int(newline[15]))
-                        elif newmode == 9:
-                            self.percents[7][0].append(int(newline[9]))
-                            self.percents[7][1].append(int(newline[15]))
-                            self.percents[7][2].append(int(newline[11]))
-                        elif newmode == 10:
-                            self.percents[8][0].append(int(newline[9]))
-                        elif newmode == 11:
-                            self.percents[9][0].append(int(newline[10]))
-                        #elif newmode == 12:
-                            #self.percents[10][0].append(int(newline[9]))
-                            #self.percents[10][1].append(int(newline[10]))
-                        #elif newmode == 13:
-                            #self.percents[11][0].append(int(newline[10]))
-                        #elif newmode == 14:
-                            #self.percents[12][0].append(int(newline[12]))
-                            #self.percents[12][1].append(int(newline[13]))
-                            #self.percents[12][2].append(int(newline[14]))
-                            #self.percents[12][3].append(int(newline[10]))
-                        #elif newmode == 15:
-                            #self.percents[13][0].append(int(newline[9]))
-                            #self.percents[13][1].append(int(newline[12]))
-                            #self.percents[13][2].append(int(newline[13]))
-                            #self.percents[13][3].append(int(newline[14]))
-                            #self.percents[13][4].append(int(newline[10]))
-                        #elif newmode == 16:
-                            #self.percents[14][0].append(int(newline[9]))
-                            #self.percents[14][1].append(int(newline[12]))
-                            #self.percents[14][2].append(int(newline[13]))
-                            #self.percents[14][3].append(int(newline[11]))
-                            #self.percents[14][4].append(int(newline[14]))
-                            #self.percents[14][5].append(int(newline[10]))
-
+                        for m in mode.modalities[newmode]:
+                            self.percents[newmode][m].append(int(newline[ind[m]]))
                         
                 statsfile.close()
             except:
@@ -965,7 +819,7 @@ class Graph:
                                 os.path.join(get_data_dir(), STATSFILE),
                                 'Please fix, delete or rename the stats file.')
 
-            for dictionary in self.dictionaries:
+            for dictionary in self.dictionaries.values():
                 for datestamp in dictionary.keys():
                     average = 0.0
                     max = 0.0
@@ -977,8 +831,8 @@ class Graph:
                         numentries += 1
                     dictionary[datestamp] = (average / numentries, max)
                     
-            for game in range(0, len(self.percents)):
-                for category in range(0, len(self.percents[game])):
+            for game in self.percents:
+                for category in self.percents[game]:
                     summation = 0
                     count = 0
                     for index in range(0, len(self.percents[game][category])):
@@ -1059,22 +913,8 @@ class Graph:
         top = center_y + height // 2
         bottom = center_y - height // 2
         
-        dictionary = self.dictionaries[self.graph - 2]
-        if self.graph == 2: graph_title = 'Dual N-Back'
-        elif self.graph == 3: graph_title = 'Triple N-Back'
-        elif self.graph == 4: graph_title = 'Dual Combination N-Back'
-        elif self.graph == 5: graph_title = 'Tri Combination N-Back'
-        elif self.graph == 6: graph_title = 'Quad Combination N-Back'
-        elif self.graph == 7: graph_title = 'Arithmetic N-Back'
-        elif self.graph == 8: graph_title = 'Dual Arithmetic N-Back'
-        elif self.graph == 9: graph_title = 'Triple Arithmetic N-Back'
-        elif self.graph == 10: graph_title = 'Position N-Back'
-        elif self.graph == 11: graph_title = 'Audio N-Back'
-        #elif self.graph == 12: graph_title = 'Dual Variable N-Back'
-        #elif self.graph == 13: graph_title = 'Morse Code N-Back'
-        #elif self.graph == 14: graph_title = 'Dual Morse Code N-Back'
-        #elif self.graph == 15: graph_title = 'Tri Morse Code N-Back'
-        #elif self.graph == 16: graph_title = 'Quad Morse Code N-Back'
+        dictionary = self.dictionaries[self.graph]
+        graph_title = mode.long_mode_names[self.graph] + ' N-Back'
         
         def drawaxes():
             pyglet.graphics.draw(3, pyglet.gl.GL_LINE_STRIP, ('v2i', (
@@ -1083,13 +923,8 @@ class Graph:
             right, bottom)), ('c3B', axiscolor * 3))
         drawaxes()
         
-        str_list = []
-        str_list.append('G: Return to Main Screen\n')
-        str_list.append('Ctrl-E: Export Data\n')
-        str_list.append('\n')
-        str_list.append('N: Next Game Type')
         keyslabel = pyglet.text.Label(
-            ''.join(str_list),
+            'G: Return to Main Screen\nCtrl-E: Export Data\n\nN: Next Game Type',
             multiline = True, width = 300,
             font_size=9,
             color=COLOR_TEXT,
@@ -1257,163 +1092,16 @@ class Graph:
                  x + radius, max + radius,
                  x + radius, max - radius)),
                 ('c3b', linecolor2 * 4))
-
-        str_list = []
-        str_list.append('Last 50 rounds:   ')
-        if self.graph == 2:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[0][0][len(self.percents[0][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound: ')
-            str_list.append(str(self.percents[0][1][len(self.percents[0][1])-1]))
-            str_list.append('%   ')
-        elif self.graph == 3:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[1][0][len(self.percents[1][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Color: ')
-            str_list.append(str(self.percents[1][1][len(self.percents[1][1])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound: ')
-            str_list.append(str(self.percents[1][2][len(self.percents[1][2])-1]))
-            str_list.append('%   ')
-        elif self.graph == 4:
-            str_list.append('Vis & n-vis: ')
-            str_list.append(str(self.percents[2][0][len(self.percents[2][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Vis & n-sound: ')
-            str_list.append(str(self.percents[2][1][len(self.percents[2][1])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound & n-vis: ')
-            str_list.append(str(self.percents[2][2][len(self.percents[2][2])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound: ')
-            str_list.append(str(self.percents[2][3][len(self.percents[2][3])-1]))
-            str_list.append('%   ')
-        elif self.graph == 5:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[3][0][len(self.percents[3][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Vis & n-vis: ')
-            str_list.append(str(self.percents[3][1][len(self.percents[3][1])-1]))
-            str_list.append('%   ')
-            str_list.append('Vis & n-sound: ')
-            str_list.append(str(self.percents[3][2][len(self.percents[3][2])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound & n-vis: ')
-            str_list.append(str(self.percents[3][3][len(self.percents[3][3])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound: ')
-            str_list.append(str(self.percents[3][4][len(self.percents[3][4])-1]))
-            str_list.append('%   ')
-        elif self.graph == 6:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[4][0][len(self.percents[4][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Vis & n-vis: ')
-            str_list.append(str(self.percents[4][1][len(self.percents[4][1])-1]))
-            str_list.append('%   ')
-            str_list.append('Vis & n-sound: ')
-            str_list.append(str(self.percents[4][2][len(self.percents[4][2])-1]))
-            str_list.append('%   ')
-            str_list.append('Color: ')
-            str_list.append(str(self.percents[4][3][len(self.percents[4][3])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound & n-vis: ')
-            str_list.append(str(self.percents[4][4][len(self.percents[4][4])-1]))
-            str_list.append('%   ')
-            str_list.append('Sound: ')
-            str_list.append(str(self.percents[4][5][len(self.percents[4][5])-1]))
-            str_list.append('%   ')
-        elif self.graph == 7:
-            str_list.append('Arithmetic: ')
-            str_list.append(str(self.percents[5][0][len(self.percents[5][0])-1]))
-            str_list.append('%   ')
-        elif self.graph == 8:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[6][0][len(self.percents[6][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Arithmetic: ')
-            str_list.append(str(self.percents[6][1][len(self.percents[6][1])-1]))
-            str_list.append('%   ')
-        elif self.graph == 9:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[7][0][len(self.percents[7][0])-1]))
-            str_list.append('%   ')
-            str_list.append('Arithmetic: ')
-            str_list.append(str(self.percents[7][1][len(self.percents[7][1])-1]))
-            str_list.append('%   ')
-            str_list.append('Color: ')
-            str_list.append(str(self.percents[7][2][len(self.percents[7][2])-1]))
-            str_list.append('%   ')
-        elif self.graph == 10:
-            str_list.append('Position: ')
-            str_list.append(str(self.percents[8][0][len(self.percents[8][0])-1]))
-            str_list.append('%   ')
-        elif self.graph == 11:
-            str_list.append('Sound: ')
-            str_list.append(str(self.percents[9][0][len(self.percents[9][0])-1]))
-            str_list.append('%   ')
-        #elif self.graph == 12:
-            #str_list.append('Position: ')
-            #str_list.append(str(self.percents[10][0][len(self.percents[10][0])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Sound: ')
-            #str_list.append(str(self.percents[10][1][len(self.percents[10][1])-1]))
-            #str_list.append('%   ')
-        #elif self.graph == 13:
-            #str_list.append('Sound: ')
-            #str_list.append(str(self.percents[11][0][len(self.percents[11][0])-1]))
-            #str_list.append('%   ')
-        #elif self.graph == 14:
-            #str_list.append('Vis & n-vis: ')
-            #str_list.append(str(self.percents[12][0][len(self.percents[12][0])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Vis & n-sound: ')
-            #str_list.append(str(self.percents[12][1][len(self.percents[12][1])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Sound & n-vis: ')
-            #str_list.append(str(self.percents[12][2][len(self.percents[12][2])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Sound: ')
-            #str_list.append(str(self.percents[12][3][len(self.percents[12][3])-1]))
-            #str_list.append('%   ')
-        #elif self.graph == 15:
-            #str_list.append('Position: ')
-            #str_list.append(str(self.percents[13][0][len(self.percents[13][0])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Vis & n-vis: ')
-            #str_list.append(str(self.percents[13][1][len(self.percents[13][1])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Vis & n-sound: ')
-            #str_list.append(str(self.percents[13][2][len(self.percents[13][2])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Sound & n-vis: ')
-            #str_list.append(str(self.percents[13][3][len(self.percents[13][3])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Sound: ')
-            #str_list.append(str(self.percents[13][4][len(self.percents[13][4])-1]))
-            #str_list.append('%   ')
-        #elif self.graph == 16:
-            #str_list.append('Position: ')
-            #str_list.append(str(self.percents[14][0][len(self.percents[14][0])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Vis & n-vis: ')
-            #str_list.append(str(self.percents[14][1][len(self.percents[14][1])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Vis & n-sound: ')
-            #str_list.append(str(self.percents[14][2][len(self.percents[14][2])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Color: ')
-            #str_list.append(str(self.percents[14][3][len(self.percents[14][3])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Sound & n-vis: ')
-            #str_list.append(str(self.percents[14][4][len(self.percents[14][4])-1]))
-            #str_list.append('%   ')
-            #str_list.append('Sound: ')
-            #str_list.append(str(self.percents[14][5][len(self.percents[14][5])-1]))
-            #str_list.append('%   ')
-           
+                
+        labelstrings = {'position':'Position: ','visvis':'Vis & nvis: ', 
+                        'visaudio':'Vis & n-sound: ', 'color':'Color: ', 
+                        'audiovis':'Sound & n-vis: ', 'audio':'Sound: ',
+                        'arithmetic':'Arithmetic: '}       
+        str_list = ['Last 50 rounds:   ']
+        for m in mode.modalities[self.graph]:
+            str_list.append(labelstrings[m] + '%i%% ' % self.percents[self.graph][m][-1]
+                            + ' ' * (7-len(mode.modalities[self.graph])))            
+          
         percentagesLabel = pyglet.text.Label(''.join(str_list),
             font_size = 11, bold = False, color = COLOR_TEXT,
             x = window.width // 2, y = 20,
@@ -1951,36 +1639,7 @@ class GameModeLabel:
                 str_list.append('Jaeggi mode: ')
             if mode.manual:
                 str_list.append('Manual mode: ')
-            if mode.mode == 10:
-                str_list.append('Position ')
-            elif mode.mode == 11:
-                str_list.append('Audio ')
-            elif mode.mode == 2:
-                str_list.append('Dual ')
-            elif mode.mode == 3:
-                str_list.append('Triple ')
-            elif mode.mode == 4:
-                str_list.append('Dual Combination ')
-            elif mode.mode == 5:
-                str_list.append('Tri Combination ')
-            elif mode.mode == 6:
-                str_list.append('Quad Combination ')
-            elif mode.mode == 7:
-                str_list.append('Arithmetic ')
-            elif mode.mode == 8:
-                str_list.append('Dual Arithmetic ')
-            elif mode.mode == 9:
-                str_list.append('Triple Arithmetic ')
-            #elif mode.mode == 12:
-                #str_list.append('Dual Variable ')
-            #elif mode.mode == 13:
-                #str_list.append('Morse Code ')
-            #elif mode.mode == 14:
-                #str_list.append('Dual Morse Code ')
-            #elif mode.mode == 15:
-                #str_list.append('Tri Morse Code ')
-            #elif mode.mode == 16:
-                #str_list.append('Quad Morse Code ')
+            str_list.append(mode.long_mode_names[mode.mode] + ' ')
             if VARIABLE_NBACK == 1:
                 str_list.append('V. ')
             str_list.append(str(mode.back))
@@ -2254,7 +1913,7 @@ class PositionLabel:
             self.label.text = ''.join(str_list)
         elif mode.mode == 4:
             self.label.text = ''
-        elif mode.mode == 5 or mode.mode == 6: # or mode.mode == 15 or mode.mode == 16:
+        elif mode.mode in (5, 6): # or mode.mode == 15 or mode.mode == 16:
             str_list = []
             str_list.append(key.symbol_string(KEY_POSITION))
             str_list.append(': position')
@@ -2293,8 +1952,8 @@ class VisvisLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            if mode.mode == 4 or mode.mode == 14: self.label.anchor_x = 'left'
+        elif mode.mode in (4, 5, 6): # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
+            if mode.mode == 4: self.label.anchor_x = 'left'
             else: self.label.anchor_x = 'center'
             str_list = []
             str_list.append(key.symbol_string(KEY_VISVIS))
@@ -2519,7 +2178,7 @@ class SessionInfoLabel:
         if mode.started:
             self.label.text = ''
         else:
-            self.label.text = 'Session:\n%1.1f sec/trial\n%i+%i trials\n%i seconds' % \
+            self.label.text = 'Session:\n%1.2f sec/trial\n%i+%i trials\n%i seconds' % \
                               (mode.ticks_per_trial / 4.0, mode.num_trials, mode.back, 
                                int((mode.ticks_per_trial / 4.0) * (mode.num_trials + mode.back)))
     def flash(self):
@@ -2568,36 +2227,7 @@ class SpaceLabel:
             str_list.append('Press SPACE to begin session #')
             str_list.append(str(mode.session_number + 1))
             str_list.append(': ')
-            if mode.mode == 10:
-                str_list.append('Position ')
-            elif mode.mode == 11:
-                str_list.append('Audio ')
-            elif mode.mode == 2:
-                str_list.append('Dual ')
-            elif mode.mode == 3:
-                str_list.append('Triple ')
-            elif mode.mode == 4:
-                str_list.append('Dual Combination ')
-            elif mode.mode == 5:
-                str_list.append('Tri Combination ')
-            elif mode.mode == 6:
-                str_list.append('Quad Combination ')
-            elif mode.mode == 7:
-                str_list.append('Arithmetic ')
-            elif mode.mode == 8:
-                str_list.append('Dual Arithmetic ')
-            elif mode.mode == 9:
-                str_list.append('Triple Arithmetic ')
-            #elif mode.mode == 12:
-                #str_list.append('Dual Variable ')
-            #elif mode.mode == 13:
-                #str_list.append('Morse Code ')
-            #elif mode.mode == 14:
-                #str_list.append('Dual Morse Code ')
-            #elif mode.mode == 15:
-                #str_list.append('Tri Morse Code ')
-            #elif mode.mode == 16:
-                #str_list.append('Quad Morse Code ')
+            str_list.append(mode.long_mode_names[mode.mode] + ' ')
                 
             if VARIABLE_NBACK == 1:
                 str_list.append('V. ')
@@ -2846,7 +2476,7 @@ class ChartLabel:
                     if JAEGGI_MODE:
                         mode.mode = 2
                     mode.enforce_standard_mode()
-                    mode.back = last_session[2]
+                    mode.back = last_back
                     mode.session_number = last_session[0]
     
             except:
@@ -3569,7 +3199,7 @@ def on_key_press(symbol, modifiers):
             webbrowser.open_new_tab(WEB_MORSE)
                             
         elif symbol == key.G:
-#            sound_stop()
+            sound_stop()
             graph.parse_stats()
             graph.graph = mode.mode
             mode.draw_graph = True
