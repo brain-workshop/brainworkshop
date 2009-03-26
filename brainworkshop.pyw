@@ -17,6 +17,7 @@
 VERSION = '4.41'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
+import cPickle as pickle
 from decimal import Decimal
 from time import strftime
 from datetime import date
@@ -116,6 +117,11 @@ JAEGGI_FORCE_OPTIONS = True
 #    HIDE_TEXT = True, FIELD_EXPAND = True
 # Default: False
 JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
+
+# Clinical mode?  Clinical mode hasn't been implemented yet, but it will
+# eventually enforce a minimal user interface and save results into a binary
+# file which should be more difficult to tamper with.
+CLINICAL_MODE = True
 
 # This selects which sounds to use for audio n-back tasks.
 # Select any combination of letters, numbers, the NATO Phonetic Alphabet
@@ -375,13 +381,13 @@ except:
                          os.path.join(get_data_dir(), CONFIGFILE))
 
 defaultconfig = ConfigParser.ConfigParser() 
-defaultconfig.read(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
+defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
 
 def try_eval(text):  # this is a one-use function for config parsing
     try:  return eval(text)
     except: return text
 for cfg in (defaultconfig, config): # load defaultconfig first, in case of incomplete user's config.ini
-    config_items = [(key.upper(), try_eval(value)) for key, value in cfg.items('DEFAULT')]
+    config_items = [(k.upper(), try_eval(v)) for k, v in cfg.items('DEFAULT')]
     for item in config_items:
         exec "%s = item[1]" % item[0]
 del config_items, defaultconfig, config, try_eval
@@ -770,8 +776,6 @@ class Graph:
             self.graph = 2
         else: self.graph += 1
         
-    def draw2(self):
-        self.drawaxes()
     def parse_stats(self):
         self.reset_dictionaries()
         self.reset_percents()
@@ -2648,6 +2652,17 @@ class Stats:
                 statsfile.write(sep.join(outlist)) # adds sep between each element
                 statsfile.write('\n')  # but we don't want a sep before '\n'
                 statsfile.close()
+                if CLINICAL_MODE:
+                    picklefile = open(statsfile_path.replace('.txt', '.dat'), 'ab')
+                    pickle.dump([strftime("%Y-%m-%d %H:%M:%S"), mode.short_name(), 
+                                 percent, mode.mode, mode.back, mode.ticks_per_trial,
+                                 mode.num_trials+mode.back, int(mode.manual),
+                                 mode.session_number, category_percents['position'],
+                                 category_percents['audio'], category_percents['color'],
+                                 category_percents['visvis'], category_percents['audiovis'],
+                                 category_percents['arithmetic']],
+                                picklefile, protocol=2)
+                    picklefile.close()
             except:
                 quit_with_error('Error writing to stats file\n%s' % 
                                 os.path.join(get_data_dir(), STATSFILE),
