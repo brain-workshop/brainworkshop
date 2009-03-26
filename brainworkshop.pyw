@@ -2416,74 +2416,7 @@ class ChartLabel:
                 '', font_size = self.font_size,
                 x = self.start_x + self.column_spacing_12 + self.column_spacing_23, y = self.start_y - zap * self.line_spacing,
                 anchor_x = 'left', anchor_y = 'top', batch=batch))
-                        
-        if os.path.isfile(os.path.join(get_data_dir(), STATSFILE)):
-            try:
-                last_session = []
-                last_session_number = 0
-                last_mode = 0
-                last_back = 0
-                use_last_session = False
-                statsfile_path = os.path.join(get_data_dir(), STATSFILE)
-                statsfile = open(statsfile_path, 'r')
-                today = date.today()
-                yesterday = date.fromordinal(today.toordinal() - 1)
-                tomorrow = date.fromordinal(today.toordinal() + 1)
-                for line in statsfile:
-                    if line == '': continue
-                    if line == '\n': continue
-                    datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
-                    hour = int(line[11:13])
-                    if int(strftime('%H')) < ROLLOVER_HOUR:
-                        if datestamp == today:
-                            pass
-                        elif datestamp == yesterday and hour >= ROLLOVER_HOUR:
-                            pass
-                        else: continue
-                    elif datestamp == today and hour >= ROLLOVER_HOUR:
-                        pass
-                    else: continue
-                    if line.find('\t') >= 0:
-                        separator = '\t'
-                    else: separator = ','
-                    stats.sessions_today += 1
-                    newline = line.split(separator)
-                    newmode = int(newline[3])
-                    if newmode > 11:
-                        continue
-                    newback = int(newline[4])
-                    newpercent = int(newline[2])
-                    newmanual = bool(int(newline[7]))
-                    newsession_number = -1
-                    if newmanual:
-                        use_last_session = False
-                    else:
-                        newsession_number = int(newline[8])
-                        use_last_session = True
-                        last_session_number = newsession_number
-                        last_mode = newmode
-                        if newpercent >= get_threshold_advance():
-                            last_back = newback + 1
-                        else:
-                            last_back = newback
-                    stats.history.append([newsession_number, newmode, newback, newpercent, newmanual])
-                    if use_last_session:
-                        last_session = stats.history[-1]
-                statsfile.close()
-                
-                if last_session:
-                    mode.mode = last_session[1]
-                    if JAEGGI_MODE:
-                        mode.mode = 2
-                    mode.enforce_standard_mode()
-                    mode.back = last_back
-                    mode.session_number = last_session[0]
-    
-            except:
-                quit_with_error('Error parsing stats file\n%s' %
-                                os.path.join(get_data_dir(), STATSFILE),
-                                '\nPlease fix, delete or rename the stats file.',
-                                quit=False)
+        stats.parse_statsfile()
         self.update()
         
     def update(self):
@@ -2577,6 +2510,83 @@ class Stats:
         self.history = []
         self.sessions_today = 0
         
+    def parse_statsfile(self):
+        if os.path.isfile(os.path.join(get_data_dir(), STATSFILE)):
+            try:
+                last_session = []
+                last_session_number = 0
+                last_mode = 0
+                last_back = 0
+                statsfile_path = os.path.join(get_data_dir(), STATSFILE)
+                statsfile = open(statsfile_path, 'r')
+                today = date.today()
+                yesterday = date.fromordinal(today.toordinal() - 1)
+                tomorrow = date.fromordinal(today.toordinal() + 1)
+                for line in statsfile:
+                    if line == '': continue
+                    if line == '\n': continue
+                    datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
+                    hour = int(line[11:13])
+                    if int(strftime('%H')) < ROLLOVER_HOUR:
+                        if datestamp == today:
+                            pass
+                        elif datestamp == yesterday and hour >= ROLLOVER_HOUR:
+                            pass
+                        else: continue
+                    elif datestamp == today and hour >= ROLLOVER_HOUR:
+                        pass
+                    else: continue
+                    if '\t' in line:
+                        separator = '\t'
+                    else: separator = ','
+                    stats.sessions_today += 1
+                    newline = line.split(separator)
+                    newmode = int(newline[3])
+                    if newmode > 11:
+                        continue
+                    newback = int(newline[4])
+                    newpercent = int(newline[2])
+                    newmanual = bool(int(newline[7]))
+                    newsession_number = int(newline[8])
+                    if newmanual:
+                        newsession_number = -1
+                    self.history.append([newsession_number, newmode, newback, newpercent, newmanual])
+                    if not newmanual:
+                        last_session = self.history[-1]
+                statsfile.close()
+                self.retrieve_progress(newmode=last_session[1])
+            except:
+                quit_with_error('Error parsing stats file\n%s' %
+                                os.path.join(get_data_dir(), STATSFILE),
+                                '\nPlease fix, delete or rename the stats file.',
+                                quit=False)
+    
+    def retrieve_progress(self, newmode=None):
+        if newmode:
+            mode.mode = newmode
+        else:
+            newmode = mode.mode
+        sessions = [s for s in self.history if s[1] == newmode]
+        mode.enforce_standard_mode()
+        if sessions:
+            ls = sessions[-1]
+            mode.mode = ls[1]
+            if JAEGGI_MODE:
+                mode.mode = 2
+            mode.back = ls[2]
+            if ls[3] >= get_threshold_advance():
+                mode.back += 1
+            mode.session_number = ls[0]
+            mode.progress = 0
+            for s in sessions:
+                if s[2] == mode.back and s[3] < get_threshold_fallback():
+                    mode.progress += 1
+                elif s[2] != mode.back:
+                    mode.progress = 0
+            if mode.progress >= THRESHOLD_FALLBACK_SESSIONS:
+                mode.progress = 0
+                mode.back -= 1
+
     def initialize_session(self):
         self.session = {}
         self.session['position'] = []
@@ -3047,8 +3057,8 @@ def on_key_press(symbol, modifiers):
         def execute_mode_change():
             if not mode.manual:
                 mode.enforce_standard_mode()
+                stats.retrieve_progress()
             update_all_labels()
-            mode.progress = 0
             circles.update()
             mode.game_select = False
         
