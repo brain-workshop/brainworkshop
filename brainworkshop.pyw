@@ -492,7 +492,7 @@ except:
                     'Please visit %s' % WEB_PYGLET_DOWNLOAD, trace=False)
     
 supportedtypes = {'sounds' :['wav'],
-                  'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3'], # what else?
+                  'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a', 'mp2'], # what else?
                   'sprites':['png', 'jpg', 'bmp']}
 
 if USE_MUSIC: supportedtypes['sounds'] = supportedtypes['music']
@@ -1012,31 +1012,15 @@ class Graph:
         
         xinterval = width / (float(len(dates) - 1))
         skip_x = int(math.floor(x_label_width / xinterval))
-        
-        self.last = 0
-        def skip():
-            if skip_x == 0: return False
-            if self.last == 0:
-                self.last += 1
-                return False
-            elif self.last < skip_x:
-                self.last += 1
-                return True
-            elif self.last == skip_x:
-                self.last = 0
-                return True
-            sys.exit(1)
-        
+
         for index in range(len(dates)):
             x = int(xinterval * index + left)
             if dictionary[dates[index]][0] != -1:
-                avgpoints.append(x)
-                avgpoints.append(int((dictionary[dates[index]][0] - ymin)/(ymax - ymin) * height + bottom))
-                maxpoints.append(x)
-                maxpoints.append(int((dictionary[dates[index]][1] - ymin)/(ymax - ymin) * height + bottom))
+                avgpoints.extend([x, int((dictionary[dates[index]][0] - ymin)/(ymax - ymin) * height + bottom)])
+                maxpoints.extend([x, int((dictionary[dates[index]][1] - ymin)/(ymax - ymin) * height + bottom)])
             datestring = str(dates[index])[2:]
             datestring = datestring.replace('-', '\n')
-            if not skip():
+            if not index % (skip_x + 1):
                 xaxislabels.append(pyglet.text.Label(datestring, multiline=True, width=12,
                                       font_size = 8, bold=False, color=COLOR_TEXT,
                                       x = x, y = bottom - 15,
@@ -1065,9 +1049,7 @@ class Graph:
         
         drawaxes()
             
-        for label in xaxislabels:
-            label.draw()
-        for label in yaxislabels:
+        for label in xaxislabels + yaxislabels:
             label.draw()
             
         pyglet.graphics.draw(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP, ('v2i',
@@ -2558,7 +2540,8 @@ class Stats:
                     if not newmanual:
                         last_session = self.history[-1]
                 statsfile.close()
-                self.retrieve_progress(newmode=last_session[1])
+                if last_session:
+                    self.retrieve_progress(newmode=last_session[1])
             except:
                 quit_with_error('Error parsing stats file\n%s' %
                                 os.path.join(get_data_dir(), STATSFILE),
