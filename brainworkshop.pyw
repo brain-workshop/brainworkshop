@@ -764,6 +764,7 @@ class Graph:
         self.graph = 2
         self.reset_dictionaries()
         self.reset_percents()
+        self.batch = None
 
     def reset_dictionaries(self):
         self.dictionaries = dict([(i, {}) for i in mode.modalities])
@@ -775,6 +776,7 @@ class Graph:
         if self.graph == 11:
             self.graph = 2
         else: self.graph += 1
+        self.batch = None
         
     def parse_stats(self):
         self.reset_dictionaries()
@@ -895,7 +897,16 @@ class Graph:
                 quit_with_error('Error writing chart file:\n%s' %
                                 os.path.join(get_data_dir(), chartfile_name))
                 
+    
     def draw(self):
+        if not self.batch:
+            self.create_batch()
+        else:
+            self.batch.draw()
+
+    def create_batch(self):
+        self.batch = pyglet.graphics.Batch()
+        
         linecolor = (0, 0, 255)
         linecolor2 = (255, 0, 0)
         if BLACK_BACKGROUND:
@@ -920,61 +931,59 @@ class Graph:
         dictionary = self.dictionaries[self.graph]
         graph_title = mode.long_mode_names[self.graph] + ' N-Back'
         
-        def drawaxes():
-            pyglet.graphics.draw(3, pyglet.gl.GL_LINE_STRIP, ('v2i', (
+        self.batch.add(3, pyglet.gl.GL_LINE_STRIP, 
+            pyglet.graphics.OrderedGroup(order=1), ('v2i', (
             left, top,
             left, bottom,
             right, bottom)), ('c3B', axiscolor * 3))
-        drawaxes()
         
-        keyslabel = pyglet.text.Label(
+        pyglet.text.Label(
             'G: Return to Main Screen\nCtrl-E: Export Data\n\nN: Next Game Type',
+            batch=self.batch,
             multiline = True, width = 300,
             font_size=9,
             color=COLOR_TEXT,
             x=10, y=window.height - 10,
             anchor_x='left', anchor_y='top')
-        keyslabel.draw()
 
-        titlelabel = pyglet.text.Label(graph_title,
-                                  font_size = 18, bold=True, color=COLOR_TEXT,
-                                  x = center_x, y = top + 60,
-                                  anchor_x = 'center', anchor_y = 'center')
-        titlelabel.draw()
+        pyglet.text.Label(graph_title,
+            batch=self.batch,
+            font_size = 18, bold=True, color=COLOR_TEXT,
+            x = center_x, y = top + 60,
+            anchor_x = 'center', anchor_y = 'center')
         
-        xaxistitle = pyglet.text.Label('Date',
-                                  font_size = 12, bold=True, color=COLOR_TEXT,
-                                  x = center_x, y = bottom - 80,
-                                  anchor_x = 'center', anchor_y = 'center')
-        xaxistitle.draw()
+        pyglet.text.Label('Date',
+            batch=self.batch,
+            font_size = 12, bold=True, color=COLOR_TEXT,
+            x = center_x, y = bottom - 80,
+            anchor_x = 'center', anchor_y = 'center')
 
-        yaxistitle_max = pyglet.text.Label('Maximum', width=1,
-                                  font_size = 12, bold=True, color=linecolor2+(255,),
-                                  x = left - 60, y = center_y + 50,
-                                  anchor_x = 'right', anchor_y = 'center')
-        yaxistitle_max.draw()
+        pyglet.text.Label('Maximum', width=1,
+            batch=self.batch,
+            font_size = 12, bold=True, color=linecolor2+(255,),
+            x = left - 60, y = center_y + 50,
+            anchor_x = 'right', anchor_y = 'center')
+        
+        pyglet.text.Label('Average', width=1,
+            batch=self.batch,
+            font_size = 12, bold=True, color=linecolor+(255,),
+            x = left - 60, y = center_y + 25,
+            anchor_x = 'right', anchor_y = 'center')
 
-        yaxistitle_avg = pyglet.text.Label('Average', width=1,
-                                  font_size = 12, bold=True, color=linecolor+(255,),
-                                  x = left - 60, y = center_y + 25,
-                                  anchor_x = 'right', anchor_y = 'center')
-        yaxistitle_avg.draw()
-
-        yaxistitle = pyglet.text.Label('N-Back', width=1,
-                                  font_size = 12, bold=True, color=COLOR_TEXT,
-                                  x = left - 60, y = center_y,
-                                  anchor_x = 'right', anchor_y = 'center')
-        yaxistitle.draw()
+        pyglet.text.Label('N-Back', width=1,
+        batch=self.batch,
+        font_size = 12, bold=True, color=COLOR_TEXT,
+        x = left - 60, y = center_y,
+        anchor_x = 'right', anchor_y = 'center')
                 
         dates = dictionary.keys()
         dates.sort()
         if len(dates) < 2:
-            insufficient_label = pyglet.text.Label(
-                'Insufficient data: two days needed',
+            pyglet.text.Label('Insufficient data: two days needed',
+                batch=self.batch,
                 font_size = 12, bold = True, color = axiscolor + (255,),
                 x = center_x, y = center_y,
                 anchor_x = 'center', anchor_y = 'center')
-            insufficient_label.draw()
             return
         
         ymin = 100000.0
@@ -1007,8 +1016,6 @@ class Graph:
         
         avgpoints = []
         maxpoints = []
-        xaxislabels = []
-        yaxislabels = []
         
         xinterval = width / (float(len(dates) - 1))
         skip_x = int(math.floor(x_label_width / xinterval))
@@ -1021,63 +1028,70 @@ class Graph:
             datestring = str(dates[index])[2:]
             datestring = datestring.replace('-', '\n')
             if not index % (skip_x + 1):
-                xaxislabels.append(pyglet.text.Label(datestring, multiline=True, width=12,
-                                      font_size = 8, bold=False, color=COLOR_TEXT,
-                                      x = x, y = bottom - 15,
-                                      anchor_x = 'center', anchor_y = 'top'))
-                pyglet.graphics.draw(2, pyglet.gl.GL_LINE_STRIP, ('v2i', (
+                pyglet.text.Label(datestring, multiline=True, width=12,
+                    batch=self.batch,
+                    font_size=8, bold=False, color=COLOR_TEXT,
+                    x=x, y=bottom - 15,
+                    anchor_x='center', anchor_y='top')
+                self.batch.add(2, pyglet.gl.GL_LINES, 
+                    pyglet.graphics.OrderedGroup(order=0), ('v2i', (
                     x, bottom,
                     x, top)), ('c3B', minorcolor * 2))
-                pyglet.graphics.draw(2, pyglet.gl.GL_LINE_STRIP, ('v2i', (
+                self.batch.add(2, pyglet.gl.GL_LINES, 
+                    pyglet.graphics.OrderedGroup(order=1), ('v2i', (
                     x, bottom - 10,
                     x, bottom)), ('c3B', axiscolor * 2))
-        
         y_marking = ymin
         while y_marking <= ymax:
             y = int((y_marking - ymin)/(ymax - ymin) * height + bottom)
-            yaxislabels.append(pyglet.text.Label(str(round(y_marking, 2)),
-                  font_size = 10, bold=False, color=COLOR_TEXT,
-                  x = left - 30, y = y + 1,
-                  anchor_x = 'center', anchor_y = 'center'))
-            pyglet.graphics.draw(2, pyglet.gl.GL_LINE_STRIP, ('v2i', (
+            pyglet.text.Label(str(round(y_marking, 2)),
+                batch=self.batch,
+                font_size = 10, bold=False, color=COLOR_TEXT,
+                x = left - 30, y = y + 1,
+                anchor_x = 'center', anchor_y = 'center')
+            self.batch.add(2, pyglet.gl.GL_LINES, 
+                pyglet.graphics.OrderedGroup(order=0), ('v2i', (
                 left, y,
                 right, y)), ('c3B', minorcolor * 2))
-            pyglet.graphics.draw(2, pyglet.gl.GL_LINE_STRIP, ('v2i', (
+            self.batch.add(2, pyglet.gl.GL_LINES, 
+                pyglet.graphics.OrderedGroup(order=1), ('v2i', (
                 left - 10, y,
                 left, y)), ('c3B', axiscolor * 2))
             y_marking += y_marking_interval
         
-        drawaxes()
-            
-        for label in xaxislabels + yaxislabels:
-            label.draw()
-            
-        pyglet.graphics.draw(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP, ('v2i',
+        self.batch.add(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP, 
+            pyglet.graphics.OrderedGroup(order=2), ('v2i',
             avgpoints),
             ('c3B', linecolor * (len(avgpoints) // 2)))
-        pyglet.graphics.draw(len(maxpoints) // 2, pyglet.gl.GL_LINE_STRIP, ('v2i',
+        self.batch.add(len(maxpoints) // 2, pyglet.gl.GL_LINE_STRIP, 
+            pyglet.graphics.OrderedGroup(order=3), ('v2i',
             maxpoints),
             ('c3B', linecolor2 * (len(maxpoints) // 2)))
   
-        radius = 2
+        radius = 1
+        o = 4
         for index in range(0, len(avgpoints) // 2):
             x = avgpoints[index * 2]
             avg = avgpoints[index * 2 + 1]
             max = maxpoints[index * 2 + 1]
             # draw average
-            pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i',
+            self.batch.add(4, pyglet.gl.GL_POLYGON, 
+                pyglet.graphics.OrderedGroup(order=o), ('v2i',
                 (x - radius, avg - radius,
                  x - radius, avg + radius,
                  x + radius, avg + radius,
                  x + radius, avg - radius)),
                 ('c3b', linecolor * 4))
+            o += 1
             # draw maximum
-            pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i',
+            self.batch.add(4, pyglet.gl.GL_POLYGON, 
+                pyglet.graphics.OrderedGroup(order=o), ('v2i',
                 (x - radius, max - radius,
                  x - radius, max + radius,
                  x + radius, max + radius,
                  x + radius, max - radius)),
                 ('c3b', linecolor2 * 4))
+            o += 1
                 
         labelstrings = {'position':'Position: ','visvis':'Vis & nvis: ', 
                         'visaudio':'Vis & n-sound: ', 'color':'Color: ', 
@@ -1088,13 +1102,11 @@ class Graph:
             str_list.append(labelstrings[m] + '%i%% ' % self.percents[self.graph][m][-1]
                             + ' ' * (7-len(mode.modalities[self.graph])))            
           
-        percentagesLabel = pyglet.text.Label(''.join(str_list),
+        pyglet.text.Label(''.join(str_list),
+            batch=self.batch,
             font_size = 11, bold = False, color = COLOR_TEXT,
             x = window.width // 2, y = 20,
-            anchor_x = 'center', anchor_y = 'center')
-        
-        percentagesLabel.draw()
-        
+            anchor_x = 'center', anchor_y = 'center')                
 
 class GameSelect:
     def __init__(self):
@@ -3030,7 +3042,7 @@ def on_key_press(symbol, modifiers):
             webbrowser.open_new_tab(WEB_TUTORIAL)
                 
         elif symbol == key.G:
-            sound_stop()
+#            sound_stop()
             graph.parse_stats()
             graph.graph = mode.mode
             mode.draw_graph = True
@@ -3207,7 +3219,7 @@ def on_key_press(symbol, modifiers):
             webbrowser.open_new_tab(WEB_MORSE)
                             
         elif symbol == key.G:
-            sound_stop()
+#            sound_stop()
             graph.parse_stats()
             graph.graph = mode.mode
             mode.draw_graph = True
