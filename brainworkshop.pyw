@@ -35,6 +35,7 @@ ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
 WEB_SITE = 'http://brainworkshop.sourceforge.net/'
 WEB_TUTORIAL = 'http://brainworkshop.sourceforge.net/#tutorial'
+CLINICAL_TUTORIAL = WEB_TUTORIAL # FIXME: Add tutorial catered to clinical trials
 WEB_VERSION_CHECK = 'http://brainworkshop.sourceforge.net/version.txt'
 WEB_PYGLET_DOWNLOAD = 'http://pyglet.org/download.html'
 WEB_FORUM = 'http://groups.google.com/group/brain-training'
@@ -121,7 +122,7 @@ JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
 # Clinical mode?  Clinical mode hasn't been implemented yet, but it will
 # eventually enforce a minimal user interface and save results into a binary
 # file which should be more difficult to tamper with.
-CLINICAL_MODE = True
+CLINICAL_MODE = False
 
 # This selects which sounds to use for audio n-back tasks.
 # Select any combination of letters, numbers, the NATO Phonetic Alphabet
@@ -392,6 +393,11 @@ for cfg in (defaultconfig, config): # load defaultconfig first, in case of incom
         exec "%s = item[1]" % item[0]
 del config_items, defaultconfig, config, try_eval
 
+if CLINICAL_MODE:
+    JAEGGI_MODE = True
+    JAEGGI_FORCE_OPTIONS = True
+    JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
+    HIDE_TEXT = True
 if JAEGGI_MODE:
     GAME_MODE = 2
     VARIABLE_NBACK = 0
@@ -779,6 +785,7 @@ class Graph:
         self.batch = None
         
     def parse_stats(self):
+        self.batch = None
         self.reset_dictionaries()
         self.reset_percents()
         ind = {'date':0, 'modename':1, 'percent':2, 'mode':3, 'n':4, 'ticks':5,
@@ -1633,7 +1640,7 @@ class GameModeLabel:
             self.label.text = ''
         else:
             str_list = []
-            if JAEGGI_MODE:
+            if JAEGGI_MODE and not CLINICAL_MODE:
                 str_list.append('Jaeggi mode: ')
             if mode.manual:
                 str_list.append('Manual mode: ')
@@ -1690,6 +1697,9 @@ class KeysListLabel:
                 str_list.append('F8: Hide / Reveal Text\n')
                 str_list.append('\n')                
                 str_list.append('ESC: Cancel Session\n')
+        elif CLINICAL_MODE:
+            self.label.y = window.height - 10
+            str_list.append('H:Help / Tutorial\n\nG: Daily Progress Graph\n\nESC: Exit')
         else:
             if mode.manual or JAEGGI_MODE:
                 self.label.y = window.height - 10
@@ -1740,12 +1750,13 @@ class TitleMessageLabel:
 class TitleKeysLabel:
     def __init__(self):
         str_list = []
-        if not JAEGGI_MODE:
+        if not (JAEGGI_MODE or CLINICAL_MODE):
             str_list.append('C: Choose Game Mode\n')
             str_list.append('S: Choose Sounds\n\n')
         str_list.append('G: Daily Progress Graph\n')
         str_list.append('H: Help / Tutorial\n')
-        str_list.append('F: Go to Forum / Mailing List')
+        if not CLINICAL_MODE:
+            str_list.append('F: Go to Forum / Mailing List')
         
         self.keys = pyglet.text.Label(
             ''.join(str_list),
@@ -3150,6 +3161,18 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.SPACE:
             new_session()
                         
+        elif symbol == key.G:
+#            sound_stop()
+            graph.parse_stats()
+            graph.graph = mode.mode
+            mode.draw_graph = True
+
+        elif CLINICAL_MODE:
+            if symbol == key.H:
+                webbrowser.open_new_tab(CLINICAL_TUTORIAL)
+        # No elifs below this line at this indentation will be 
+        # executed in CLINICAL_MODE
+        
         elif symbol == key.F1 and mode.manual:
             if mode.back > 1:
                 mode.back -= 1
@@ -3195,6 +3218,7 @@ def on_key_press(symbol, modifiers):
                 jaeggiWarningLabel.show()
                 return
             mode.game_select = True
+        
         elif symbol == key.S:
             if JAEGGI_MODE:
                 jaeggiWarningLabel.show()
@@ -3218,11 +3242,6 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.J and USE_MORSE:
             webbrowser.open_new_tab(WEB_MORSE)
                             
-        elif symbol == key.G:
-#            sound_stop()
-            graph.parse_stats()
-            graph.graph = mode.mode
-            mode.draw_graph = True
                         
     # these are the keys during a running session.
     elif mode.started:            
@@ -3234,7 +3253,7 @@ def on_key_press(symbol, modifiers):
             pausedLabel.update()
             field.crosshair_update()
                 
-        elif symbol == key.F8:
+        elif symbol == key.F8 and not CLINICAL_MODE:
             mode.hide_text = not mode.hide_text
             update_all_labels()
                 
