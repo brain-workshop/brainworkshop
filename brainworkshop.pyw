@@ -667,6 +667,8 @@ class MyWindow(pyglet.window.Window):
         pass
     
 window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style)
+if sys.platform == 'darwin': # and WINDOW_FULLSCREEN:
+    window.set_exclusive_keyboard()
 if sys.platform == 'linux2':
     window.set_icon(pyglet.image.load(resourcepaths['misc']['brain'][0]))
 
