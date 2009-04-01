@@ -30,7 +30,6 @@ CONFIGFILE = 'config.ini'
 CHARTFILE = ['chart-02-dnb.txt', 'chart-03-tnb.txt', 'chart-04-dlnb.txt', 'chart-05-tlnb.txt',
              'chart-06-qlnb.txt','chart-07-anb.txt', 'chart-08-danb.txt', 'chart-09-tanb.txt',
              'chart-10-ponb.txt', 'chart-11-aunb.txt',]
-             #'chart12-dvnb.txt', 'chart13-mnb.txt', 'chart14-dmnb.txt', 'chart15-tmnb.txt', 'chart16-qmnb.txt']
 ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
 WEB_SITE = 'http://brainworkshop.sourceforge.net/'
@@ -397,7 +396,7 @@ if CLINICAL_MODE:
     JAEGGI_MODE = True
     JAEGGI_FORCE_OPTIONS = True
     JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
-    HIDE_TEXT = True
+    SKIP_TITLE_SCREEN = True
 if JAEGGI_MODE:
     GAME_MODE = 2
     VARIABLE_NBACK = 0
@@ -521,7 +520,7 @@ sounds = {}
 for k in resourcepaths['sounds'].keys():
     sounds[k] = {}
     for f in resourcepaths['sounds'][k]:
-         sounds[k][os.path.basename(f).split('.')[0]] = pyglet.media.load(f, streaming=False)
+        sounds[k][os.path.basename(f).split('.')[0]] = pyglet.media.load(f, streaming=False)
 
 sound = sounds['letters'] # is this obsolete yet?
     
@@ -1699,7 +1698,7 @@ class KeysListLabel:
                 str_list.append('ESC: Cancel Session\n')
         elif CLINICAL_MODE:
             self.label.y = window.height - 10
-            str_list.append('H:Help / Tutorial\n\nG: Daily Progress Graph\n\nESC: Exit')
+            str_list.append('H:Help / Tutorial\n\nESC: Exit')
         else:
             if mode.manual or JAEGGI_MODE:
                 self.label.y = window.height - 10
@@ -1753,7 +1752,8 @@ class TitleKeysLabel:
         if not (JAEGGI_MODE or CLINICAL_MODE):
             str_list.append('C: Choose Game Mode\n')
             str_list.append('S: Choose Sounds\n\n')
-        str_list.append('G: Daily Progress Graph\n')
+        if not CLINICAL_MODE:
+            str_list.append('G: Daily Progress Graph\n')
         str_list.append('H: Help / Tutorial\n')
         if not CLINICAL_MODE:
             str_list.append('F: Go to Forum / Mailing List')
@@ -2184,7 +2184,7 @@ class SessionInfoLabel:
             anchor_x='left', anchor_y='top', batch=batch)
         self.update()
     def update(self):
-        if mode.started:
+        if mode.started or CLINICAL_MODE:
             self.label.text = ''
         else:
             self.label.text = 'Session:\n%1.2f sec/trial\n%i+%i trials\n%i seconds' % \
@@ -2211,7 +2211,7 @@ class ThresholdLabel:
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
-        if mode.started or mode.manual:
+        if mode.started or mode.manual or CLINICAL_MODE:
             self.label.text = ''
         else:
             self.label.text = 'Thresholds:\nRaise level: >= %i%%\nLower level: < %i%%' % \
@@ -2392,7 +2392,7 @@ class ChartTitleLabel:
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
-        if mode.started:
+        if mode.started or CLINICAL_MODE:
             self.label.text = ''
         else:
             self.label.text = 'Today\'s Last 20:'
@@ -2433,7 +2433,7 @@ class ChartLabel:
             self.column1[x].text = ''
             self.column2[x].text = ''
             self.column3[x].text = ''
-        if mode.started: return
+        if mode.started or CLINICAL_MODE: return
         index = 0
         for x in range(len(stats.history) - 20, len(stats.history)):
             if x < 0: continue
@@ -2465,7 +2465,7 @@ class AverageLabel:
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
-        if mode.started:
+        if mode.started or CLINICAL_MODE:
             self.label.text = ''
         else:
             sessions = [sess for sess in stats.history if sess[1] == mode.mode][-20:]
@@ -3161,18 +3161,18 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.SPACE:
             new_session()
                         
-        elif symbol == key.G:
-#            sound_stop()
-            graph.parse_stats()
-            graph.graph = mode.mode
-            mode.draw_graph = True
-
         elif CLINICAL_MODE:
             if symbol == key.H:
                 webbrowser.open_new_tab(CLINICAL_TUTORIAL)
         # No elifs below this line at this indentation will be 
         # executed in CLINICAL_MODE
         
+        elif symbol == key.G:
+#            sound_stop()
+            graph.parse_stats()
+            graph.graph = mode.mode
+            mode.draw_graph = True
+
         elif symbol == key.F1 and mode.manual:
             if mode.back > 1:
                 mode.back -= 1
@@ -3328,7 +3328,7 @@ def on_draw():
         titleKeysLabel.draw()
     else:
         batch.draw()
-        if not mode.started:
+        if not mode.started and not CLINICAL_MODE:
             brain_icon.draw()
             logoUpperLabel.draw()
             logoLowerLabel.draw()
