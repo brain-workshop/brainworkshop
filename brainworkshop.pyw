@@ -803,7 +803,7 @@ class Graph:
                     if line == '\n': continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
-                    if hour <= ROLLOVER_HOUR:
+                    if hour < ROLLOVER_HOUR:
                         datestamp = date.fromordinal(datestamp.toordinal() - 1)
                     if line.find('\t') >= 0:
                         separator = '\t'
