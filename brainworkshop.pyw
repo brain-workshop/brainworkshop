@@ -803,7 +803,7 @@ class Graph:
                     if line == '\n': continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
-                    if hour <= 3:
+                    if hour <= ROLLOVER_HOUR:
                         datestamp = date.fromordinal(datestamp.toordinal() - 1)
                     if line.find('\t') >= 0:
                         separator = '\t'
@@ -2217,8 +2217,8 @@ class ThresholdLabel:
         if mode.started or mode.manual or CLINICAL_MODE:
             self.label.text = ''
         else:
-            self.label.text = 'Thresholds:\nRaise level: >= %i%%\nLower level: < %i%%' % \
-            (get_threshold_advance(), get_threshold_fallback())
+            self.label.text = u'Thresholds:\nRaise level: \u2265 %i%%\nLower level: < %i%%' % \
+            (get_threshold_advance(), get_threshold_fallback())   # '\u2265' = '>='
         
 # this controls the "press space to begin session #" text.
 class SpaceLabel:
