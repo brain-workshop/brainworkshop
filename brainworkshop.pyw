@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.41'
+VERSION = '4.5'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -24,6 +24,7 @@ from datetime import date
 
 # Internal static options not available in config file.
 NOVBO = True
+VSYNC = False
 FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
@@ -447,7 +448,7 @@ def update_check():
         update_available = True
         update_version = version
 
-if VERSION_CHECK_ON_STARTUP:
+if VERSION_CHECK_ON_STARTUP and not CLINICAL_MODE:
     update_check()
 
 try:
@@ -666,7 +667,7 @@ class MyWindow(pyglet.window.Window):
     def on_key_release(self, symbol, modifiers):
         pass
     
-window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style)
+window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
 if sys.platform == 'darwin': # and WINDOW_FULLSCREEN:
     window.set_exclusive_keyboard()
 if sys.platform == 'linux2':
