@@ -28,6 +28,7 @@ VSYNC = False
 FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
+STATS_BINARY = 'datafile.dat'
 CHARTFILE = {2:'chart-02-dnb.txt', 3:'chart-03-tnb.txt', 4:'chart-04-dlnb.txt', 5:'chart-05-tlnb.txt',
              6:'chart-06-qlnb.txt',7:'chart-07-anb.txt', 8:'chart-08-danb.txt', 9:'chart-09-tanb.txt',
              10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
@@ -2603,7 +2604,8 @@ class Stats:
                 statsfile.write('\n')  # but we don't want a sep before '\n'
                 statsfile.close()
                 if CLINICAL_MODE:
-                    picklefile = open(statsfile_path.replace('.txt', '.dat'), 'ab')
+                    #picklefile = open(statsfile_path.replace('.txt', '.dat'), 'ab')
+                    picklefile = open(os.path.join(get_data_dir(), STATS_BINARY), 'ab')
                     pickle.dump([strftime("%Y-%m-%d %H:%M:%S"), mode.short_name(), 
                                  percent, mode.mode, mode.back, mode.ticks_per_trial,
                                  mode.num_trials+mode.back, int(mode.manual),
