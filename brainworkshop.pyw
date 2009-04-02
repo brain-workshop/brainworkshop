@@ -121,9 +121,8 @@ JAEGGI_FORCE_OPTIONS = True
 # Default: False
 JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
 
-# Clinical mode?  Clinical mode hasn't been implemented yet, but it will
-# eventually enforce a minimal user interface and save results into a binary
-# file which should be more difficult to tamper with.
+# Clinical mode?  Clinical mode enforces a minimal user interface and saves
+# results into a binary file which should be more difficult to tamper with.
 CLINICAL_MODE = False
 
 # This selects which sounds to use for audio n-back tasks.
@@ -3015,10 +3014,10 @@ def on_key_press(symbol, modifiers):
                         
     # these are the keys during a running session.
     elif mode.started:            
-        if symbol == key.ESCAPE or symbol == key.X:
+        if (symbol == key.ESCAPE or symbol == key.X) and not CLINICAL_MODE:
             end_session(cancelled = True)
             
-        elif symbol == key.P:
+        elif symbol == key.P and not CLINICAL_MODE:
             mode.paused = not mode.paused
             pausedLabel.update()
             field.crosshair_update()
