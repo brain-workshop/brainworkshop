@@ -624,6 +624,7 @@ else:
     pyglet.gl.glClearColor(1, 1, 1, 1)
 if WINDOW_FULLSCREEN:
     window.maximize()
+    window.set_mouse_visible(False)
 
 # All changeable game state variables are located in an instance of the Mode class
 class Mode:
