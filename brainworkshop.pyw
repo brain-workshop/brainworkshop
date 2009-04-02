@@ -28,7 +28,7 @@ VSYNC = False
 FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
-STATS_BINARY = 'datafile.dat'
+STATS_BINARY = 'logfile.dat'
 CHARTFILE = {2:'chart-02-dnb.txt', 3:'chart-03-tnb.txt', 4:'chart-04-dlnb.txt', 5:'chart-05-tlnb.txt',
              6:'chart-06-qlnb.txt',7:'chart-07-anb.txt', 8:'chart-08-danb.txt', 9:'chart-09-tanb.txt',
              10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
@@ -73,6 +73,7 @@ def quit_with_error(message='', postmessage='', quit=True, trace=True):
     if postmessage: print >> sys.stderr, '\n\n' + postmessage
     if quit:        sys.exit(1)
 
+# NOTE: Clinical mode should be enabled here for final research version.
 CONFIGFILE_DEFAULT_CONTENTS = """
 ######################################################################
 # Brain Workshop configuration file
@@ -388,6 +389,7 @@ defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
 def try_eval(text):  # this is a one-use function for config parsing
     try:  return eval(text)
     except: return text
+# NOTE: remove 'config' from following line in final research version to disable reading of config file.
 for cfg in (defaultconfig, config): # load defaultconfig first, in case of incomplete user's config.ini
     config_items = [(k.upper(), try_eval(v)) for k, v in cfg.items('DEFAULT')]
     for item in config_items:
