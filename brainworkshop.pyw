@@ -414,7 +414,6 @@ if JAEGGI_MODE:
         GRIDLINES = False
         CROSSHAIRS = True
         SHOW_FEEDBACK = False
-        VISUAL_COLOR = 4
     if JAEGGI_FORCE_OPTIONS_ADDITIONAL:
         BLACK_BACKGROUND = True
         WINDOW_FULLSCREEN = True
@@ -1766,7 +1765,7 @@ class CongratsLabel:
         self.update()
     def update(self, show=False, advance=False, fallback=False, awesome=False, great=False, good=False, perfect = False):
         str_list = []
-        if show:
+        if show and not CLINICAL_MODE:
             if perfect: str_list.append('Perfect score! ')
             elif awesome: str_list.append('Awesome score! ')
             elif great: str_list.append('Great score! ')
@@ -2288,17 +2287,19 @@ class AnalysisLabel:
                     rights[mod] += int(answer == Decimal(data[mod+'_input'][x])) # data[...][x] is only Decimal if op == /
                     wrongs[mod] += int(answer != Decimal(data[mod+'_input'][x])) 
         
-        str_list = ['Correct-Errors:   ']
-        sep = '   '
-        keys = {'position':KEY_POSITION, 'visvis':KEY_VISVIS, 'visaudio':KEY_VISAUDIO, 
-                'color':KEY_COLOR, 'audiovis':KEY_AUDIOVIS, 'audio':KEY_AUDIO}
-        
-        for mod in ['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio']:
-            if mod in mods:
-                str_list += ["%s:%i-%i%s" % (key.symbol_string(keys[mod]), rights[mod], wrongs[mod], sep)]
-
-        if 'arithmetic' in mods:
-            str_list += ["%s:%i-%i%s" % ("Arithmetic", rights['arithmetic'], wrongs['arithmetic'], sep)]
+        str_list = []
+        if not CLINICAL_MODE:
+            str_list += ['Correct-Errors:   ']
+            sep = '   '
+            keys = {'position':KEY_POSITION, 'visvis':KEY_VISVIS, 'visaudio':KEY_VISAUDIO, 
+                    'color':KEY_COLOR, 'audiovis':KEY_AUDIOVIS, 'audio':KEY_AUDIO}
+            
+            for mod in ['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio']:
+                if mod in mods:
+                    str_list += ["%s:%i-%i%s" % (key.symbol_string(keys[mod]), rights[mod], wrongs[mod], sep)]
+    
+            if 'arithmetic' in mods:
+                str_list += ["%s:%i-%i%s" % ("Arithmetic", rights['arithmetic'], wrongs['arithmetic'], sep)]
              
         def calc_percent(r, w):
             if r+w: return int(r*100 / float(r+w))
@@ -2315,7 +2316,11 @@ class AnalysisLabel:
             str_list += ['Score: %i%%' % percent]
         else:
             percent = min(category_percents['position'], category_percents['audio'])
-            str_list += ['Lowest score: %i%%' % percent]
+            if CLINICAL_MODE:
+                str_list += [' Position score: %i%%' % category_percents['position']]
+                str_list += ['       Sound score: %i%%' % category_percents['audio']]
+            else:
+                str_list += ['Lowest score: %i%%' % percent]
         
         self.label.text = ''.join(str_list)
         stats.submit_session(percent, category_percents)
