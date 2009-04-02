@@ -28,9 +28,9 @@ VSYNC = False
 FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
-CHARTFILE = ['chart-02-dnb.txt', 'chart-03-tnb.txt', 'chart-04-dlnb.txt', 'chart-05-tlnb.txt',
-             'chart-06-qlnb.txt','chart-07-anb.txt', 'chart-08-danb.txt', 'chart-09-tanb.txt',
-             'chart-10-ponb.txt', 'chart-11-aunb.txt',]
+CHARTFILE = {2:'chart-02-dnb.txt', 3:'chart-03-tnb.txt', 4:'chart-04-dlnb.txt', 5:'chart-05-tlnb.txt',
+             6:'chart-06-qlnb.txt',7:'chart-07-anb.txt', 8:'chart-08-danb.txt', 9:'chart-09-tanb.txt',
+             10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
 ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
 WEB_SITE = 'http://brainworkshop.sourceforge.net/'
@@ -398,6 +398,7 @@ if CLINICAL_MODE:
     JAEGGI_FORCE_OPTIONS = True
     JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
     SKIP_TITLE_SCREEN = True
+    USE_MUSIC = False
 if JAEGGI_MODE:
     GAME_MODE = 2
     VARIABLE_NBACK = 0
@@ -413,6 +414,7 @@ if JAEGGI_MODE:
         GRIDLINES = False
         CROSSHAIRS = True
         SHOW_FEEDBACK = False
+        VISUAL_COLOR = 4
     if JAEGGI_FORCE_OPTIONS_ADDITIONAL:
         BLACK_BACKGROUND = True
         WINDOW_FULLSCREEN = True
@@ -574,7 +576,7 @@ def get_color(color):
 # set the input text label size
 def input_label_size():
     m = mode.mode
-    if m == 2 or m == 3 or m == 7 or m == 8 or m == 9 or m == 10 or m == 11: # or m == 12 or m == 13:
+    if m in (2, 3, 7, 8, 9, 10, 11):
         return 16
     if mode.mode == 4: # or m == 14:
         return 14
@@ -585,69 +587,10 @@ def input_label_size():
     sys.exit(1)
 
 def default_nback_mode(mode):
-    if mode == 2:
-        return BACK_2
-    if mode == 3:
-        return BACK_3
-    if mode == 4:
-        return BACK_4
-    if mode == 5:
-        return BACK_5
-    if mode == 6:
-        return BACK_6
-    if mode == 7:
-        return BACK_7
-    if mode == 8:
-        return BACK_8
-    if mode == 9:
-        return BACK_9
-    if mode == 10:
-        return BACK_10
-    if mode == 11:
-        return BACK_11
-    #if mode == 12:
-        #return BACK_12
-    #if mode == 13:
-        #return BACK_13
-    #if mode == 14:
-        #return BACK_14
-    #if mode == 15:
-        #return BACK_15
-    #if mode == 16:
-        #return BACK_16
+    return eval('BACK_%i' % mode)
 
 def default_ticks(mode):
-    if mode == 2:
-        return TICKS_2
-    if mode == 3:
-        return TICKS_3
-    if mode == 4:
-        return TICKS_4
-    if mode == 5:
-        return TICKS_5
-    if mode == 6:
-        return TICKS_6
-    if mode == 7:
-        return TICKS_7
-    if mode == 8:
-        return TICKS_8
-    if mode == 9:
-        return TICKS_9
-    if mode == 10:
-        return TICKS_10
-    if mode == 11:
-        return TICKS_11
-    #if mode == 12:
-        #return TICKS_12
-    #if mode == 13:
-        #return TICKS_13
-    #if mode == 14:
-        #return TICKS_14
-    #if mode == 15:
-        #return TICKS_15
-    #if mode == 16:
-        #return TICKS_16
-        
+    return eval('TICKS_%i' % mode)        
 
 #Create the game window
 caption = []
@@ -864,26 +807,10 @@ class Graph:
                         
     def export_data(self):       
         dictionary = {}
-        for x in range(len(self.dictionaries)): # cycle through game modes
+        for x in self.dictionaries: # cycle through game modes
             chartfile_name = CHARTFILE[x]
             dictionary = self.dictionaries[x]
-            
-            output = []
-            if x == 0: output.append('Date\tDual N-Back Average\n')
-            elif x == 1: output.append('Date\tTriple N-Back Average\n')
-            elif x == 2: output.append('Date\tDual Combination N-Back Average\n')
-            elif x == 3: output.append('Date\tTri Combination N-Back Average\n')
-            elif x == 4: output.append('Date\tQuad Combination N-Back Average\n')
-            elif x == 5: output.append('Date\tArithmetic N-Back Average\n')
-            elif x == 6: output.append('Date\tDual Arithmetic N-Back Average\n')
-            elif x == 7: output.append('Date\tTriple Arithmetic N-Back Average\n')
-            elif x == 8: output.append('Date\tPosition N-Back Average\n')
-            elif x == 9: output.append('Date\tAudio N-Back Average\n')
-            #elif x == 10: output.append('Date\tDual Variable N-Back Average\n')
-            #elif x == 11: output.append('Date\tMorse Code N-Back Average\n')
-            #elif x == 12: output.append('Date\tDual Morse Code N-Back Average\n')
-            #elif x == 13: output.append('Date\tTri Morse Code N-Back Average\n')
-            #elif x == 14: output.append('Date\tQuad Morse Code N-Back Average\n')
+            output = ['Date\t%s N-Back Average\n' % mode.long_mode_names[x]]
             
             keyslist = dictionary.keys()
             keyslist.sort()
@@ -1007,6 +934,8 @@ class Graph:
         if ymin == ymax:
             ymin = 0
         
+        pyglet.clock.tick(poll=True) # Prevent music skipping 1
+
         ymin = int(math.floor(ymin * 4))/4.
         ymax = int(math.ceil(ymax * 4))/4.
         
@@ -1050,6 +979,9 @@ class Graph:
                     pyglet.graphics.OrderedGroup(order=1), ('v2i', (
                     x, bottom - 10,
                     x, bottom)), ('c3B', axiscolor * 2))
+        
+        pyglet.clock.tick(poll=True) # Prevent music skipping 2
+        
         y_marking = ymin
         while y_marking <= ymax:
             y = int((y_marking - ymin)/(ymax - ymin) * height + bottom)
@@ -1077,6 +1009,8 @@ class Graph:
             maxpoints),
             ('c3B', linecolor2 * (len(maxpoints) // 2)))
   
+        pyglet.clock.tick(poll=True) # Prevent music skipping 3
+
         radius = 1
         o = 4
         for index in range(0, len(avgpoints) // 2):
@@ -1101,7 +1035,9 @@ class Graph:
                  x + radius, max - radius)),
                 ('c3b', linecolor2 * 4))
             o += 1
-                
+        
+        pyglet.clock.tick(poll=True) # Prevent music skipping 4
+
         labelstrings = {'position':'Position: ','visvis':'Vis & nvis: ', 
                         'visaudio':'Vis & n-sound: ', 'color':'Color: ', 
                         'audiovis':'Sound & n-vis: ', 'audio':'Sound: ',
