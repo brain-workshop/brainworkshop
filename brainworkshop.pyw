@@ -1245,33 +1245,9 @@ class Visual:
         self.position = position
         self.color = get_color(color)
         self.vis = vis
-        if self.position == 0:
-            self.center_x = field.center_x
-            self.center_y = field.center_y
-        elif self.position == 1:
-            self.center_x = field.center_x - field.size//3
-            self.center_y = field.center_y - field.size//3
-        elif self.position == 2:
-            self.center_x = field.center_x
-            self.center_y = field.center_y - field.size//3
-        elif self.position == 3:
-            self.center_x = field.center_x + field.size//3
-            self.center_y = field.center_y - field.size//3
-        elif self.position == 4:
-            self.center_x = field.center_x - field.size//3
-            self.center_y = field.center_y
-        elif self.position == 5:
-            self.center_x = field.center_x + field.size//3
-            self.center_y = field.center_y
-        elif self.position == 6:
-            self.center_x = field.center_x - field.size//3
-            self.center_y = field.center_y + field.size//3
-        elif self.position == 7:
-            self.center_x = field.center_x
-            self.center_y = field.center_y + field.size//3
-        elif self.position == 8:
-            self.center_x = field.center_x + field.size//3
-            self.center_y = field.center_y + field.size//3
+        
+        self.center_x = field.center_x + (field.size/3)*((position+1)%3 - 1)
+        self.center_y = field.center_y + (field.size/3)*((position/3+1)%3 - 1)
         
         if self.vis == 0:
             if OLD_STYLE_SQUARES:
@@ -1289,149 +1265,19 @@ class Visual:
                         lx, ty,)),
                         ('c4B', self.color * 4))
                 else:
-                
-                    # decreases fast
-                    df1 = 1-math.sin(math.radians(10))
-                    df2 = 1-math.sin(math.radians(20))
-                    df3 = 1-math.sin(math.radians(30))
-                    df4 = 1-math.sin(math.radians(40))
-                    df5 = 1-math.sin(math.radians(50))
-                    df6 = 1-math.sin(math.radians(60))
-                    df7 = 1-math.sin(math.radians(70))
-                    df8 = 1-math.sin(math.radians(80))
-                    # decreases slowly
-                    ds1 = 1-math.cos(math.radians(10))
-                    ds2 = 1-math.cos(math.radians(20))
-                    ds3 = 1-math.cos(math.radians(30))
-                    ds4 = 1-math.cos(math.radians(40))
-                    ds5 = 1-math.cos(math.radians(50))
-                    ds6 = 1-math.cos(math.radians(60))
-                    ds7 = 1-math.cos(math.radians(70))
-                    ds8 = 1-math.cos(math.radians(80))
+                    #rounded corners: bottom-left, bottom-right, top-right, top-left
+                    x = ([lx + int(cr*(1-math.cos(math.radians(i)))) for i in range(0, 91, 10)] +
+                         [rx - int(cr*(1-math.sin(math.radians(i)))) for i in range(0, 91, 10)] +
+                         [rx - int(cr*(1-math.sin(math.radians(i)))) for i in range(90, -1, -10)] +
+                         [lx + int(cr*(1-math.cos(math.radians(i)))) for i in range(90, -1, -10)])
+                        
+                    y = ([by + int(cr*(1-math.sin(math.radians(i)))) for i in range(0, 91, 10) + range(90, -1, -10)] +
+                         [ty - int(cr*(1-math.sin(math.radians(i)))) for i in range(0, 91, 10) + range(90, -1, -10)])
+                    xy = []
+                    for a,b in zip(x,y): xy.extend((a, b))
                     
-                    x01=lx+cr
-                    y01=by
-                    x02=rx-cr
-                    y02=by
-                    x03=int(rx-cr*df1)
-                    y03=int(by+cr*df8)
-                    x04=int(rx-cr*df2)
-                    y04=int(by+cr*df7)
-                    x05=int(rx-cr*df3)
-                    y05=int(by+cr*df6)
-                    x06=int(rx-cr*df4)
-                    y06=int(by+cr*df5)
-                    x07=int(rx-cr*df5)
-                    y07=int(by+cr*df4)
-                    x08=int(rx-cr*df6)
-                    y08=int(by+cr*df3)
-                    x09=int(rx-cr*df7)
-                    y09=int(by+cr*df2)
-                    x10=int(rx-cr*df8)
-                    y10=int(by+cr*df1)
-                    x11=rx
-                    y11=by+cr
-                    x12=rx
-                    y12=ty-cr
-                    x13=int(rx-cr*df8)
-                    y13=int(ty-cr*df1)
-                    x14=int(rx-cr*df7)
-                    y14=int(ty-cr*df2)
-                    x15=int(rx-cr*df6)
-                    y15=int(ty-cr*df3)
-                    x16=int(rx-cr*df5)
-                    y16=int(ty-cr*df4)
-                    x17=int(rx-cr*df4)
-                    y17=int(ty-cr*df5)
-                    x18=int(rx-cr*df3)
-                    y18=int(ty-cr*df6)
-                    x19=int(rx-cr*df2)
-                    y19=int(ty-cr*df7)
-                    x20=int(rx-cr*df1)
-                    y20=int(ty-cr*df8)
-                    x21=rx-cr
-                    y21=ty
-                    x22=lx+cr
-                    y22=ty
-                    x23=int(lx+cr*ds8)
-                    y23=int(ty-cr*ds1)
-                    x24=int(lx+cr*ds7)
-                    y24=int(ty-cr*ds2)
-                    x25=int(lx+cr*ds6)
-                    y25=int(ty-cr*ds3)
-                    x26=int(lx+cr*ds5)
-                    y26=int(ty-cr*ds4)
-                    x27=int(lx+cr*ds4)
-                    y27=int(ty-cr*ds5)
-                    x28=int(lx+cr*ds3)
-                    y28=int(ty-cr*ds6)
-                    x29=int(lx+cr*ds2)
-                    y29=int(ty-cr*ds7)
-                    x30=int(lx+cr*ds1)
-                    y30=int(ty-cr*ds8)
-                    x31=lx
-                    y31=ty-cr
-                    x32=lx
-                    y32=by+cr
-                    x33=int(lx+cr*ds1)
-                    y33=int(by+cr*df1)
-                    x34=int(lx+cr*ds2)
-                    y34=int(by+cr*df2)
-                    x35=int(lx+cr*ds3)
-                    y35=int(by+cr*df3)
-                    x36=int(lx+cr*ds4)
-                    y36=int(by+cr*df4)
-                    x37=int(lx+cr*ds5)
-                    y37=int(by+cr*df5)
-                    x38=int(lx+cr*ds6)
-                    y38=int(by+cr*df6)
-                    x39=int(lx+cr*ds7)
-                    y39=int(by+cr*df7)
-                    x40=int(lx+cr*ds8)
-                    y40=int(by+cr*df8)
-         
-                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None, ('v2i', (
-                        x01, y01,
-                        x02, y02,
-                        x03, y03,
-                        x04, y04,
-                        x05, y05,
-                        x06, y06,
-                        x07, y07,
-                        x08, y08,
-                        x09, y09,
-                        x10, y10,
-                        x11, y11,
-                        x12, y12,
-                        x13, y13,
-                        x14, y14,
-                        x15, y15,
-                        x16, y16,
-                        x17, y17,
-                        x18, y18,
-                        x19, y19,
-                        x20, y20,
-                        x21, y21,
-                        x22, y22,
-                        x23, y23,
-                        x24, y24,
-                        x25, y25,
-                        x26, y26,
-                        x27, y27,
-                        x28, y28,
-                        x29, y29,
-                        x30, y30,
-                        x31, y31,
-                        x32, y32,
-                        x33, y33,
-                        x34, y34,
-                        x35, y35,
-                        x36, y36,
-                        x37, y37,
-                        x38, y38,
-                        x39, y39,
-                        x40, y40)),
-                        ('c4B', self.color * 40))
+                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None, 
+                                            ('v2i', xy), ('c4B', self.color * 40))
                 
             else:
                 # use sprite squares   
@@ -1787,7 +1633,7 @@ class ArithmeticAnswerLabel:
         self.decimal = False
         self.label = pyglet.text.Label(
             '',
-            x=window.width // 5 * 2, y=30,
+            x=window.width/2 - 40, y=30,
             anchor_x='left', anchor_y='center', batch=batch)
         self.update()
     def update(self):
@@ -2899,35 +2745,10 @@ def generate_stimulus():
     # default color is 1 (red) or 2 (black)
     # default vis is 0 (square)
     # audio is never static so it doesn't have a default.
-    if mode.mode == 10:
-        mode.current_color = VISUAL_COLOR
-        mode.current_vis = 0
-    elif mode.mode == 11: # or mode.mode == 13:
-        mode.current_color = VISUAL_COLOR
-        mode.current_vis = 0
-        mode.current_position = 0
-    elif mode.mode == 2:
-        mode.current_color = VISUAL_COLOR
-        mode.current_vis = 0
-    elif mode.mode == 3:
-        mode.current_vis = 0
-    elif mode.mode == 4: # or mode.mode == 14:
-        mode.current_position = 0
-        mode.current_color = VISUAL_COLOR
-    elif mode.mode == 5: # or mode.mode == 15:
-        mode.current_color = VISUAL_COLOR
-    elif mode.mode == 6: # or mode.mode == 16:
-        pass
-    elif mode.mode == 7:
-        mode.current_position = 0
-        mode.current_color = VISUAL_COLOR
-    elif mode.mode == 8:
-        mode.current_color = VISUAL_COLOR
-    elif mode.mode == 9:
-        pass
-    #elif mode.mode == 12:
-        #mode.current_color = VISUAL_COLOR
-        #mode.current_vis = 0
+    if not 'color'    in mode.modalities[mode.mode]: mode.current_color = VISUAL_COLOR
+    if not 'position' in mode.modalities[mode.mode]: mode.current_position = 0
+    if not 'visvis'   in mode.modalities[mode.mode] and \
+     not 'arithmetic' in mode.modalities[mode.mode]: mode.current_vis = 0
 
     # in jaeggi mode, set using the predetermined sequence.
     if JAEGGI_MODE:
