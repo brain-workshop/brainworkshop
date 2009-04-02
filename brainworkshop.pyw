@@ -1639,7 +1639,7 @@ class KeysListLabel:
                 str_list.append('ESC: Cancel Session\n')
         elif CLINICAL_MODE:
             self.label.y = window.height - 10
-            str_list.append('H:Help / Tutorial\n\nESC: Exit')
+            str_list.append('ESC: Exit')
         else:
             if mode.manual or JAEGGI_MODE:
                 self.label.y = window.height - 10
@@ -3110,8 +3110,9 @@ def on_key_press(symbol, modifiers):
             new_session()
                         
         elif CLINICAL_MODE:
-            if symbol == key.H:
-                webbrowser.open_new_tab(CLINICAL_TUTORIAL)
+            pass
+            #if symbol == key.H:
+                #webbrowser.open_new_tab(CLINICAL_TUTORIAL)
         # No elifs below this line at this indentation will be 
         # executed in CLINICAL_MODE
         
