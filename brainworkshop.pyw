@@ -492,14 +492,11 @@ if not os.access(res_path, os.F_OK):
     quit_with_error('Error: the resource folder\n%s' % res_path + 
                     'does not exist or is not readable.  Exiting', trace=False)
 
-try:
-    pyglet.resource.path = [res_path] # Look only the FOLDER_RES directory
-    pyglet.resource.reindex()
-except:
+if pyglet.version < '1.1':
     quit_with_error('Error: pyglet 1.1 or greater is required.\n' + 
                     'You probably have an older version of pyglet installed.\n' +
                     'Please visit %s' % WEB_PYGLET_DOWNLOAD, trace=False)
-    
+
 supportedtypes = {'sounds' :['wav'],
                   'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a', 'mp2'], # what else?
                   'sprites':['png', 'jpg', 'bmp']}
