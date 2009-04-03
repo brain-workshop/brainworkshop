@@ -22,6 +22,10 @@ from decimal import Decimal
 from time import strftime
 from datetime import date
 
+# Clinical mode?  Clinical mode enforces a minimal user interface and saves
+# results into a binary file which should be more difficult to tamper with.
+CLINICAL_MODE = False
+
 # Internal static options not available in config file.
 NOVBO = True
 VSYNC = False
@@ -73,7 +77,6 @@ def quit_with_error(message='', postmessage='', quit=True, trace=True):
     if postmessage: print >> sys.stderr, '\n\n' + postmessage
     if quit:        sys.exit(1)
 
-# NOTE: Clinical mode should be enabled here for final research version.
 CONFIGFILE_DEFAULT_CONTENTS = """
 ######################################################################
 # Brain Workshop configuration file
@@ -120,10 +123,6 @@ JAEGGI_FORCE_OPTIONS = True
 #    HIDE_TEXT = True, FIELD_EXPAND = True
 # Default: False
 JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
-
-# Clinical mode?  Clinical mode enforces a minimal user interface and saves
-# results into a binary file which should be more difficult to tamper with.
-CLINICAL_MODE = False
 
 # This selects which sounds to use for audio n-back tasks.
 # Select any combination of letters, numbers, the NATO Phonetic Alphabet
@@ -369,18 +368,19 @@ try: CONFIGFILE = sys.argv[sys.argv.index('--configfile') + 1]
 except:
     pass
 
-if not os.path.isfile(os.path.join(get_data_dir(), CONFIGFILE)):
-    newconfigfile = open(os.path.join(os.path.join(get_data_dir(), CONFIGFILE)), 'w')
-    newconfigfile.write(CONFIGFILE_DEFAULT_CONTENTS)
-    newconfigfile.close()
-    
-try:
-    config = ConfigParser.ConfigParser()
-    config.read(os.path.join(get_data_dir(), CONFIGFILE))
-except:
-    if CONFIGFILE != 'config.ini':
-        quit_with_error('Unable to load config file: %s' %
-                         os.path.join(get_data_dir(), CONFIGFILE))
+if not CLINICAL_MODE:
+    if not os.path.isfile(os.path.join(get_data_dir(), CONFIGFILE)):
+        newconfigfile = open(os.path.join(os.path.join(get_data_dir(), CONFIGFILE)), 'w')
+        newconfigfile.write(CONFIGFILE_DEFAULT_CONTENTS)
+        newconfigfile.close()
+        
+    try:
+        config = ConfigParser.ConfigParser()
+        config.read(os.path.join(get_data_dir(), CONFIGFILE))
+    except:
+        if CONFIGFILE != 'config.ini':
+            quit_with_error('Unable to load config file: %s' %
+                             os.path.join(get_data_dir(), CONFIGFILE))
 
 defaultconfig = ConfigParser.ConfigParser() 
 defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
@@ -388,12 +388,16 @@ defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
 def try_eval(text):  # this is a one-use function for config parsing
     try:  return eval(text)
     except: return text
-# NOTE: remove 'config' from following line in final research version to disable reading of config file.
-for cfg in (defaultconfig, config): # load defaultconfig first, in case of incomplete user's config.ini
+    
+if CLINICAL_MODE: configs = (defaultconfig,)
+else: configs = (defaultconfig, config)
+
+for cfg in configs: # load defaultconfig first, in case of incomplete user's config.ini
     config_items = [(k.upper(), try_eval(v)) for k, v in cfg.items('DEFAULT')]
     for item in config_items:
         exec "%s = item[1]" % item[0]
-del config_items, defaultconfig, config, try_eval
+    del cfg
+del configs, config_items, try_eval
 
 if CLINICAL_MODE:
     JAEGGI_MODE = True
