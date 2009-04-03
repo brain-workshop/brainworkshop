@@ -9,7 +9,7 @@
 #
 # Also see Readme.txt.
 #
-# Copyright (C) 2009: Paul Hoskinson (plhosk@gmail.com)
+# Copyright (C) 2009: Paul Hoskinson (plhosk@gmail.com) 
 #
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
@@ -22,8 +22,9 @@ from decimal import Decimal
 from time import strftime
 from datetime import date
 
-# Clinical mode?  Clinical mode enforces a minimal user interface and saves
-# results into a binary file which should be more difficult to tamper with.
+# Clinical mode?  Clinical mode sets JAEGGI_MODE = True, enforces a minimal user
+# interface, and saves results into a binary file (default 'logfile.dat') which
+# should be more difficult to tamper with.
 CLINICAL_MODE = False
 
 # Internal static options not available in config file.
@@ -96,13 +97,31 @@ CONFIGFILE_DEFAULT_CONTENTS = """
 ######################################################################
 [DEFAULT]
 
+# Jaeggi-style interface with default scoring model? 
+# Choose either this option or JAEGGI_MODE but not both.
+# This mode allows access to Manual mode, the extra sound sets, and the
+# additional game modes of Brain Workshop while presenting the game in
+# the more challenging Jaeggi-style interface featured in the original study.
+# With the default BW scoring model, the visual and auditory sequences are
+# more randomized and unpredictable than they are in Jaeggi mode.
+# The only effect of this option is to set the following options:
+#   ANIMATE_SQUARES = False, OLD_STYLE_SQUARES = True,
+#   OLD_STYLE_SHARP_CORNERS = True, SHOW_FEEDBACK = False,
+#   GRIDLINES = False, CROSSHAIRS = True, BLACK_BACKGROUND = True,
+#   WINDOW_FULLSCREEN = True, HIDE_TEXT = True, FIELD_EXPAND = True
+# Default: False
+JAEGGI_INTERFACE_DEFAULT_SCORING = False
+
 # Jaeggi mode?
-# This mode emulates the original study protocol.
+# Choose either this option or JAEGGI_INTERFACE_DEFAULT_SCORING but not both.
+# This mode emulates the scoring model used in the original study protocol.
 # It counts non-matches with no inputs as correct (instead of ignoring them).
-# It also forces 6 visual and 6 position matches, significantly reducing
-# the difficulty & complexity of the n-back task.
+# It also forces 4 visual matches, 4 auditory matches, and 2 simultaneous
+# matches per session, resulting in less randomized and more predictable
+# sequences than in the default BW scoring model.
 # Different thresholds are used to reflect the modified scoring system.
-# Only Dual N-Back is available in Jaeggi Mode - the others are disabled.
+# Access to Manual mode, additional game modes and sound sets is disabled 
+# in Jaeggi mode.
 # Default: False
 JAEGGI_MODE = False
 
@@ -113,6 +132,7 @@ JAEGGI_MODE = False
 #    USE_PIANO = False, USE_MORSE = False, ANIMATE_SQUARES = False,
 #    OLD_STYLE_SQUARES = True, OLD_STYLE_SHARP_CORNERS = True,
 #    SHOW_FEEDBACK = False, GRIDLINES = False, CROSSHAIRS = True
+# (note: this option only takes effect if JAEGGI_MODE is set to True)
 # Default: True
 JAEGGI_FORCE_OPTIONS = True 
 
@@ -121,8 +141,9 @@ JAEGGI_FORCE_OPTIONS = True
 # If this is enabled, the following options will be set:
 #    BLACK_BACKGROUND = True, WINDOW_FULLSCREEN = True,
 #    HIDE_TEXT = True, FIELD_EXPAND = True
-# Default: False
-JAEGGI_FORCE_OPTIONS_ADDITIONAL = False
+# (note: this option only takes effect if JAEGGI_MODE is set to True)
+# Default: True
+JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
 
 # This selects which sounds to use for audio n-back tasks.
 # Select any combination of letters, numbers, the NATO Phonetic Alphabet
@@ -400,12 +421,25 @@ for cfg in configs: # load defaultconfig first, in case of incomplete user's con
 del configs, config_items, try_eval
 
 if CLINICAL_MODE:
+    JAEGGI_INTERFACE_DEFAULT_SCORING = False
     JAEGGI_MODE = True
     JAEGGI_FORCE_OPTIONS = True
     JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
     SKIP_TITLE_SCREEN = True
     USE_MUSIC = False
-if JAEGGI_MODE:
+elif JAEGGI_INTERFACE_DEFAULT_SCORING:
+    ANIMATE_SQUARES = False
+    OLD_STYLE_SQUARES = True
+    OLD_STYLE_SHARP_CORNERS = True
+    GRIDLINES = False
+    CROSSHAIRS = True
+    SHOW_FEEDBACK = False
+    BLACK_BACKGROUND = True
+    WINDOW_FULLSCREEN = True
+    HIDE_TEXT = True
+    FIELD_EXPAND = True
+    
+if JAEGGI_MODE and not JAEGGI_INTERFACE_DEFAULT_SCORING:
     GAME_MODE = 2
     VARIABLE_NBACK = 0
     if JAEGGI_FORCE_OPTIONS:
@@ -2537,6 +2571,9 @@ def update_all_labels(do_analysis = False):
         analysisLabel.update()
     else:
         analysisLabel.update(skip = True)
+            
+    pyglet.clock.tick(poll=True) # Prevent music/applause skipping 1
+
     gameModeLabel.update()
     keysListLabel.update()
     pausedLabel.update()
@@ -2545,6 +2582,9 @@ def update_all_labels(do_analysis = False):
     spaceLabel.update()
     chartTitleLabel.update()
     chartLabel.update()
+    
+    pyglet.clock.tick(poll=True) # Prevent music/applause skipping 2
+    
     averageLabel.update()
     todayLabel.update()
     trialsRemainingLabel.update()
@@ -2592,6 +2632,8 @@ def new_session():
             
     if JAEGGI_MODE:
         compute_bt_sequence()
+        
+    pyglet.clock.tick(poll=True) # Prevent music/applause skipping
         
     if VARIABLE_NBACK == 1:
         # compute variable n-back sequence using beta distribution
