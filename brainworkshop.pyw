@@ -494,7 +494,7 @@ if USE_MUSIC:
 res_path = get_res_dir()
 if not os.access(res_path, os.F_OK):
     quit_with_error('Error: the resource folder\n%s' % res_path + 
-                    'does not exist or is not readable.  Exiting', trace=False)
+                    ' does not exist or is not readable.  Exiting', trace=False)
 
 if pyglet.version < '1.1':
     quit_with_error('Error: pyglet 1.1 or greater is required.\n' + 
@@ -596,7 +596,10 @@ def default_ticks(mode):
 
 #Create the game window
 caption = []
-caption.append('Brain Workshop ')
+if CLINICAL_MODE:
+    caption.append('BW-Clinical ')
+else:
+    caption.append('Brain Workshop ')
 caption.append(VERSION)
 if STATSFILE != 'stats.txt':
     caption.append(' - ')
