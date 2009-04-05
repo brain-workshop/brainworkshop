@@ -510,15 +510,18 @@ try:
 except:
     quit_with_error('No suitable audio driver could be loaded.')
 
-if USE_MUSIC:
-    try:
-        from pyglet.media import avbin
-    except:
-        USE_MUSIC = False
-        print 'AVBin not detected. Music disabled.'
-        print 'Download AVBin from: http://code.google.com/p/avbin/'
-        #str_list.append(str(sys.exc_info()))
-        #print >> sys.stderr, ''.join(str_list)
+try:
+    from pyglet.media import avbin
+    if pyglet.version >= '1.2':  # temporary workaround for defect in pyglet svn 2445
+        pyglet.media.have_avbin = True
+except:
+    USE_MUSIC = False
+    if pyglet.version >= '1.2':  
+        pyglet.media.have_avbin = False
+    print 'AVBin not detected. Music disabled.'
+    print 'Download AVBin from: http://code.google.com/p/avbin/'
+    #str_list.append(str(sys.exc_info()))
+    #print >> sys.stderr, ''.join(str_list)
         
 # Initialize resources (sounds and images)
 #
@@ -539,8 +542,10 @@ supportedtypes = {'sounds' :['wav'],
                   'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a', 'mp2'], # what else?
                   'sprites':['png', 'jpg', 'bmp']}
 
-if USE_MUSIC: supportedtypes['sounds'] = supportedtypes['music']
-else: del supportedtypes['music']
+if pyglet.media.have_avbin: supportedtypes['sounds'] = supportedtypes['music']
+elif USE_MUSIC:             supportedtypes['music'] = supportedtypes['sounds']
+else:                       del supportedtypes['music']
+
 supportedtypes['misc'] = supportedtypes['sounds'] + supportedtypes['sprites']
 
 resourcepaths = {}
@@ -552,6 +557,7 @@ for restype in supportedtypes.keys():
             contents = [os.path.join(res_path, restype, folder, obj)
                           for obj in os.listdir(os.path.join(res_path, restype, folder))
                                   if obj[-3:] in supportedtypes[restype]]
+            contents.sort()
         if contents: res_sets[folder] = contents
     if res_sets: resourcepaths[restype] = res_sets
 
