@@ -1099,6 +1099,117 @@ class Graph:
             x = window.width // 2, y = 20,
             anchor_x = 'center', anchor_y = 'center')                
 
+class Menu:
+    """
+    Menu.__init__(self, options, title=''):
+        
+    A generic menu class.  The argument options is edited in-place.  Instancing
+    the Menu displays the menu.  Menu will install its own event handlers for
+    on_key_press, on_text, on_text_motion and on_draw, all of which 
+    do not pass events to later handlers on the stack.  When the user presses 
+    esc,  Menu pops its handlers off the stack.
+    
+    """
+    titlesize = 18
+    choicesize = 12
+    
+    def __init__(self, options, title=''):
+        self.bgcolor = (255 * int(not BLACK_BACKGROUND), )*3
+        self.textcolor = (0,0,0,255)#(255 * int(BLACK_BACKGROUND), )*3
+        self.markercolors = (255, 0, 0, 0, 255, 0, 0, 0, 255) # self.textcolor*3
+        self.pagesize = min(len(options), (window.height*7/10) / (self.choicesize*3/2))
+        self.options = options
+        self.disppos = 0  # which item in options is the first on the screen
+        self.selpos = 0 
+        self.batch = pyglet.graphics.Batch()
+        self.title = pyglet.text.Label(title, font_size=self.titlesize,
+            bold=True, color=self.textcolor, batch=self.batch,
+            x=window.width/2, y=(window.height*9)/10,
+            anchor_x='center', anchor_y='center')
+        
+        self.labels = [pyglet.text.Label('', font_size=self.choicesize,
+            bold=False, color=self.textcolor, batch=self.batch,
+            x=window.width/8, y=(window.height*8)/10 - i*(self.choicesize*3/2),
+            anchor_x='left', anchor_y='center') for i in range(self.pagesize)]
+        
+        self.marker = self.batch.add(3, pyglet.gl.GL_POLYGON, None, ('v2i', (0,)*6,),
+            ('c3b', self.markercolors))
+            
+        self.update_labels()
+
+        window.push_handlers(self.on_key_press, self.on_text, 
+                             self.on_text_motion, self.on_draw)
+        
+    def textify(self, x):
+        if type(x) == bool:
+            return x and 'Yes' or 'No'
+        return str(x)
+
+    def update_labels(self):
+        for l in self.labels:   l.text = 'meow'
+        
+        markerpos = self.selpos - self.disppos                
+        i = 0
+        if not self.disppos == 0:
+            self.labels[i].text = '...'
+            i += 1
+        ending = int(self.disppos + self.pagesize < len(self.options))
+        while i < self.pagesize-ending and i+self.disppos < len(self.options):
+            k,v = self.options.items()[i+self.disppos]
+            self.labels[i].text = '%s:\t%s' % (str(k), self.textify(v))
+            i += 1
+        if ending:
+            self.labels[i].text = '...'
+        w, h, cs = window.width, window.height, self.choicesize
+        self.marker.vertices = [w/10, (h*8)/10 - markerpos*(cs*3/2) + cs/2,
+                                w/9,  (h*8)/10 - markerpos*(cs*3/2),
+                                w/10, (h*8)/10 - markerpos*(cs*3/2) - cs/2]
+        
+    def move_selection(self, steps, relative=True):
+        if relative:
+            self.selpos += steps
+        else:
+            self.selpos = steps
+        self.selpos = min(len(self.options)-1, max(0, self.selpos))
+        if self.disppos >= self.selpos and not self.disppos == 0:
+            self.disppos = max(0, selpos-1)
+        if self.disppos <= self.selpos - self.pagesize \
+          and not self.disppos == len(self.options) - self.pagesize:
+            self.disppos = max(0, min(len(self.options), self.selpos+1) - self.pagesize)
+        self.update_labels()
+        
+    def on_key_press(self, sym, mod):
+        if sym == key.ESCAPE:
+            self.close()
+        elif sym in (key.RETURN, key.ENTER):
+            self.select()
+        return pyglet.event.EVENT_HANDLED
+    
+    def select(self):
+        k = self.options.keys()[self.selpos]
+        if type(self.options[k]) == bool:
+            self.options[k] = not self.options[k]  # todo: other data types
+        self.update_labels()
+        
+    def close(self):
+        return window.pop_handlers()
+    
+    def on_text_motion(self, evt):
+        if evt == key.MOTION_UP:            self.move_selection(steps=-1)
+        if evt == key.MOTION_DOWN:          self.move_selection(steps=1)
+        if evt == key.MOTION_NEXT_PAGE:     self.move_selection(steps=-self.pagesize)
+        if evt == key.MOTION_PREVIOUS_PAGE: self.move_selection(steps=self.pagesize)
+        return pyglet.event.EVENT_HANDLED
+    
+    def on_text(self, evt):
+        return pyglet.event.EVENT_HANDLED # todo: entering values after select()
+    
+    def on_draw(self):
+        window.clear()
+        self.batch.draw()
+        return pyglet.event.EVENT_HANDLED
+        
+
 class GameSelect:
     def __init__(self):
         
@@ -1110,9 +1221,9 @@ class GameSelect:
         #str_list2.append('  G: Quad Morse Code N-Back\n')
         
         self.label = pyglet.text.Label(
-            '', multiline = True, width = 450,
-            font_size=14, bold=False, color = COLOR_TEXT,
-            x = window.width // 2, y = window.height - 50,
+            '', multiline=True, width=450,
+            font_size=14, bold=False, color=COLOR_TEXT,
+            x=window.width // 2, y=window.height - 50,
             anchor_x='center', anchor_y='top')
         #self.label2 = pyglet.text.Label(
             #''.join(str_list2), multiline = True, width = 450,
@@ -1249,7 +1360,7 @@ class Field:
     def crosshair_update(self):
         if not CROSSHAIRS:
             return
-        if (not mode.paused) and mode.mode != 4 and mode.mode != 7 and mode.mode != 11 and VARIABLE_NBACK == 0: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
+        if (not mode.paused) and 'position' in mode.modalities[mode.mode] and not VARIABLE_NBACK: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
             if self.crosshair_visible: return
             else:
                 self.v_crosshair = batch.add(4, pyglet.gl.GL_LINES, None, ('v2i', (
@@ -2845,6 +2956,8 @@ def toggle_manual_mode():
 # --- BEGIN EVENT LOOP SECTION ----------------------------------------------
 #
 
+#soundchoices = dict((k, True) for k in sounds.keys()) # debugging
+#del soundchoices['operations']
 # this is where the keyboard keys are defined.
 @window.event
 def on_key_press(symbol, modifiers):
@@ -2854,6 +2967,7 @@ def on_key_press(symbol, modifiers):
     global USE_PIANO
     global USE_MORSE
     global VARIABLE_NBACK
+    global soundchoices
     
     if symbol == key.D and (modifiers & key.MOD_CTRL):
         dump_pyglet_info()
@@ -2879,6 +2993,11 @@ def on_key_press(symbol, modifiers):
             graph.graph = mode.mode
             mode.draw_graph = True
             
+#        elif symbol == key.V: # debugging
+#            Menu(soundchoices, title='Hello World!')
+#        elif symbol == key.B:
+#            print soundchoices
+                
         elif symbol == key.S and not JAEGGI_MODE:
             mode.sound_select = True
     
