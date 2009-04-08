@@ -2321,8 +2321,9 @@ class AnalysisLabel:
         else:
             percent = min(category_percents['position'], category_percents['audio'])
             if CLINICAL_MODE:
-                str_list += [' Position score: %i%%' % category_percents['position']]
-                str_list += ['       Sound score: %i%%' % category_percents['audio']]
+                #str_list += [' Position score: %i%%' % category_percents['position']]
+                #str_list += ['       Sound score: %i%%' % category_percents['audio']]
+                pass
             else:
                 str_list += ['Lowest score: %i%%' % percent]
         
@@ -2340,7 +2341,7 @@ class ChartTitleLabel:
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
-        if mode.started or CLINICAL_MODE:
+        if mode.started:
             self.label.text = ''
         else:
             self.label.text = 'Today\'s Last 20:'
@@ -2381,7 +2382,7 @@ class ChartLabel:
             self.column1[x].text = ''
             self.column2[x].text = ''
             self.column3[x].text = ''
-        if mode.started or CLINICAL_MODE: return
+        if mode.started: return
         index = 0
         for x in range(len(stats.history) - 20, len(stats.history)):
             if x < 0: continue
