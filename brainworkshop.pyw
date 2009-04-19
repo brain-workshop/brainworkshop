@@ -342,6 +342,13 @@ COLOR_LABEL_CORRECT = (64, 255, 64, 255)
 COLOR_LABEL_OOPS = (64, 64, 255, 255)
 COLOR_LABEL_INCORRECT = (255, 64, 64, 255)
 
+
+# Saccadic eye movement options.
+# Delay = number of seconds to wait before switching the dot
+# Repetitions = number of times to switch the dot
+SACCADIC_DELAY = 0.5
+SACCADIC_REPETITIONS = 60
+
 ######################################################################
 # Keyboard definitions.
 # The following keys cannot be used: ESC, X, P, F8, F10.
@@ -724,6 +731,7 @@ class Mode:
         self.game_select = False
         self.sound_select = False
         self.draw_graph = False
+        self.saccadic = False
         if SKIP_TITLE_SCREEN:
             self.title_screen = False
         else:
@@ -1672,6 +1680,8 @@ class KeysListLabel:
             str_list.append('G: Daily Progress Graph\n')
             str_list.append('\n')
             str_list.append('W: Brain Workshop Web Site\n')
+            if WINDOW_FULLSCREEN:
+                str_list.append('E: Saccadic Eye Exercise\n')
             str_list.append('\n')
             str_list.append('ESC: Exit\n')
             
@@ -2455,6 +2465,48 @@ class TrialsRemainingLabel:
         else:
             self.label.text = '%i remaining' % (mode.num_trials + mode.back - mode.trial_number)
            
+class Saccadic:
+    def __init__(self):
+        self.position = 'left'
+        self.counter = 0
+        self.radius = 10
+        self.color = (0, 0, 255, 255)
+    
+    def tick(self, dt):
+        self.counter += 1
+        if self.counter == SACCADIC_REPETITIONS:
+            self.stop()
+        elif self.position == 'left':
+            self.position = 'right'
+        else: self.position = 'left'
+        
+    def start(self):
+        self.position = 'left'
+        mode.saccadic = True
+        self.counter = 0
+        pyglet.clock.schedule_interval(saccadic.tick, SACCADIC_DELAY)
+
+    def stop(self):
+        pyglet.clock.unschedule(saccadic.tick)
+        mode.saccadic = False
+        
+    def draw(self):
+        y = window.height / 2
+        if saccadic.position == 'left':
+            x = self.radius
+        elif saccadic.position == 'right':
+            x = window.width - self.radius
+        pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i', (
+            x - self.radius, y - self.radius,  # lower-left
+            x + self.radius, y - self.radius,  # lower-right
+            x + self.radius, y + self.radius,  # upper-right
+            x - self.radius, y + self.radius,  # upper-left
+            
+            )), ('c4B', self.color * 4))
+
+#                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None, 
+#                                            ('v2i', xy), ('c4B', self.color * 40))
+
 #
 # --- END GRAPHICS SECTION ----------------------------------------------
 #
@@ -3090,6 +3142,10 @@ def on_key_press(symbol, modifiers):
             USE_PIANO = not USE_PIANO
         elif symbol == key._5 or symbol == key.NUM_5:
             USE_MORSE = not USE_MORSE
+    
+    elif mode.saccadic:
+        if symbol in (key.ESCAPE, key.E, key.X, key.SPACE):
+            saccadic.stop()
             
     elif not mode.started:
         
@@ -3108,6 +3164,9 @@ def on_key_press(symbol, modifiers):
                 #webbrowser.open_new_tab(CLINICAL_TUTORIAL)
         # No elifs below this line at this indentation will be 
         # executed in CLINICAL_MODE
+        
+        elif symbol == key.E and WINDOW_FULLSCREEN:
+            saccadic.start()
         
         elif symbol == key.G:
 #            sound_stop()
@@ -3264,6 +3323,8 @@ def on_draw():
         gameSelect.draw()
     elif mode.sound_select:
         soundSelect.draw()
+    elif mode.saccadic:
+        saccadic.draw()
     elif mode.title_screen:
         brain_graphic.draw()
         titleMessageLabel.draw()
@@ -3343,6 +3404,7 @@ visual = Visual()
 stats = Stats()
 graph = Graph()
 circles = Circles()
+saccadic = Saccadic()
 
 gameSelect = GameSelect()
 soundSelect = SoundSelect()
