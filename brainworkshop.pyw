@@ -164,9 +164,9 @@ BLACK_BACKGROUND = False
 WINDOW_FULLSCREEN = False
 
 # Window size in windowed mode.
-# Minimum values: width = 800, height = 600
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+# Minimum recommended values: width = 800, height = 600
+WINDOW_WIDTH = 912
+WINDOW_HEIGHT = 684
 
 # Skip title screen?
 SKIP_TITLE_SCREEN = False
@@ -201,6 +201,11 @@ ANIMATE_SQUARES = True
 # Also, use sharp corners or rounded corners?
 OLD_STYLE_SQUARES = False
 OLD_STYLE_SHARP_CORNERS = False
+
+# Specify image sets here. This is a list of subfolders in the res\sprites\
+# folder which may be selected in Image mode.
+# The first item in the list is the default which is loaded on startup.
+IMAGE_SETS = ['national-park-service', 'pentominoes', 'tetrominoes-fixed']
 
 # Start in Manual mode?
 # If this is False, the game will start in standard mode.
@@ -523,6 +528,7 @@ try:
     os.environ["PYGLET_SHADOW_WINDOW"]="0"
     # import pyglet
     import pyglet
+    from pyglet.gl import *
     if NOVBO: pyglet.options['graphics_vbo'] = False
     from pyglet.window import key
 except:
@@ -687,9 +693,9 @@ if sys.platform == 'linux2':
 
 # set the background color of the window
 if BLACK_BACKGROUND:
-    pyglet.gl.glClearColor(0, 0, 0, 1)
+    glClearColor(0, 0, 0, 1)
 else:
-    pyglet.gl.glClearColor(1, 1, 1, 1)
+    glClearColor(1, 1, 1, 1)
 if WINDOW_FULLSCREEN:
     window.maximize()
     window.set_mouse_visible(False)
@@ -783,7 +789,6 @@ class Mode:
         
         self.current_position = 0
         self.current_color = 0
-        self.current_image = 0
         self.current_vis = 0
         self.current_audio = 0
         self.current_number = 0
@@ -793,6 +798,7 @@ class Mode:
         self.paused = False
         self.show_missed = False
         self.game_select = False
+        self.image_select = False
         self.sound_select = False
         self.draw_graph = False
         self.saccadic = False
@@ -987,7 +993,7 @@ class Graph:
         dictionary = self.dictionaries[self.graph]
         graph_title = mode.long_mode_names[self.graph] + ' N-Back'
         
-        self.batch.add(3, pyglet.gl.GL_LINE_STRIP, 
+        self.batch.add(3, GL_LINE_STRIP, 
             pyglet.graphics.OrderedGroup(order=1), ('v2i', (
             left, top,
             left, bottom,
@@ -1091,11 +1097,11 @@ class Graph:
                     font_size=8, bold=False, color=COLOR_TEXT,
                     x=x, y=bottom - 15,
                     anchor_x='center', anchor_y='top')
-                self.batch.add(2, pyglet.gl.GL_LINES, 
+                self.batch.add(2, GL_LINES, 
                     pyglet.graphics.OrderedGroup(order=0), ('v2i', (
                     x, bottom,
                     x, top)), ('c3B', minorcolor * 2))
-                self.batch.add(2, pyglet.gl.GL_LINES, 
+                self.batch.add(2, GL_LINES, 
                     pyglet.graphics.OrderedGroup(order=1), ('v2i', (
                     x, bottom - 10,
                     x, bottom)), ('c3B', axiscolor * 2))
@@ -1110,21 +1116,21 @@ class Graph:
                 font_size = 10, bold=False, color=COLOR_TEXT,
                 x = left - 30, y = y + 1,
                 anchor_x = 'center', anchor_y = 'center')
-            self.batch.add(2, pyglet.gl.GL_LINES, 
+            self.batch.add(2, GL_LINES, 
                 pyglet.graphics.OrderedGroup(order=0), ('v2i', (
                 left, y,
                 right, y)), ('c3B', minorcolor * 2))
-            self.batch.add(2, pyglet.gl.GL_LINES, 
+            self.batch.add(2, GL_LINES, 
                 pyglet.graphics.OrderedGroup(order=1), ('v2i', (
                 left - 10, y,
                 left, y)), ('c3B', axiscolor * 2))
             y_marking += y_marking_interval
         
-        self.batch.add(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP, 
+        self.batch.add(len(avgpoints) // 2, GL_LINE_STRIP, 
             pyglet.graphics.OrderedGroup(order=2), ('v2i',
             avgpoints),
             ('c3B', linecolor * (len(avgpoints) // 2)))
-        self.batch.add(len(maxpoints) // 2, pyglet.gl.GL_LINE_STRIP, 
+        self.batch.add(len(maxpoints) // 2, GL_LINE_STRIP, 
             pyglet.graphics.OrderedGroup(order=3), ('v2i',
             maxpoints),
             ('c3B', linecolor2 * (len(maxpoints) // 2)))
@@ -1138,7 +1144,7 @@ class Graph:
             avg = avgpoints[index * 2 + 1]
             max = maxpoints[index * 2 + 1]
             # draw average
-            self.batch.add(4, pyglet.gl.GL_POLYGON, 
+            self.batch.add(4, GL_POLYGON, 
                 pyglet.graphics.OrderedGroup(order=o), ('v2i',
                 (x - radius, avg - radius,
                  x - radius, avg + radius,
@@ -1147,7 +1153,7 @@ class Graph:
                 ('c3b', linecolor * 4))
             o += 1
             # draw maximum
-            self.batch.add(4, pyglet.gl.GL_POLYGON, 
+            self.batch.add(4, GL_POLYGON, 
                 pyglet.graphics.OrderedGroup(order=o), ('v2i',
                 (x - radius, max - radius,
                  x - radius, max + radius,
@@ -1206,7 +1212,7 @@ class Menu:
             x=window.width/8, y=(window.height*8)/10 - i*(self.choicesize*3/2),
             anchor_x='left', anchor_y='center') for i in range(self.pagesize)]
         
-        self.marker = self.batch.add(3, pyglet.gl.GL_POLYGON, None, ('v2i', (0,)*6,),
+        self.marker = self.batch.add(3, GL_POLYGON, None, ('v2i', (0,)*6,),
             ('c3b', self.markercolors))
             
         self.update_labels()
@@ -1345,6 +1351,29 @@ class GameSelect:
         
         self.label.draw()
         self.label2.draw()
+        
+class ImageSelect:
+    def __init__(self):
+        
+        str_list = []
+        str_list.append('Type a number to choose images for the image n-back task.\n\n')
+        
+        for index in range(0, len(IMAGE_SETS)):
+            if index > 9: break
+            str_list.append('  ')
+            str_list.append(str(index))
+            str_list.append(': ')
+            str_list.append(IMAGE_SETS[index])
+            str_list.append('\n')
+        
+        self.label = pyglet.text.Label(
+            ''.join(str_list), multiline = True, width = 450,
+            font_size = 16, bold=False, color = COLOR_TEXT,
+            x = window.width // 2, y = window.height - 50,
+            anchor_x='center', anchor_y='top')
+        
+    def draw(self):
+        self.label.draw()
             
 class SoundSelect:
     def __init__(self):
@@ -1425,7 +1454,7 @@ class Field:
         
         # add the inside lines
         if GRIDLINES:
-            self.v_lines = batch.add(8, pyglet.gl.GL_LINES, None, ('v2i', (
+            self.v_lines = batch.add(8, GL_LINES, None, ('v2i', (
                 self.x1, self.y3,
                 self.x2, self.y3,
                 self.x1, self.y4,
@@ -1447,7 +1476,7 @@ class Field:
         if (not mode.paused) and 'position' in mode.modalities[mode.mode] and not VARIABLE_NBACK: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
             if self.crosshair_visible: return
             else:
-                self.v_crosshair = batch.add(4, pyglet.gl.GL_LINES, None, ('v2i', (
+                self.v_crosshair = batch.add(4, GL_LINES, None, ('v2i', (
                     self.center_x - 8, self.center_y,
                     self.center_x + 8, self.center_y,
                     self.center_x, self.center_y - 8,
@@ -1472,26 +1501,36 @@ class Visual:
             '',
             font_size=field.size//6, bold=True,
             anchor_x='center', anchor_y='center', batch=batch)
-        
-        self.spr_square = [pyglet.sprite.Sprite(pyglet.image.load(path)) # fixme: all sprite sets
-                              for path in resourcepaths['sprites']['colored-squares']]
+
+        self.spr_square = [pyglet.sprite.Sprite(pyglet.image.load(path))
+                              for path in resourcepaths['misc']['colored-squares']]
         self.spr_square_size = self.spr_square[0].width
         
-        self.nps_pictographs = [pyglet.sprite.Sprite(pyglet.image.load(path))
-                                for path in resourcepaths['sprites']['national-park-service']]
-        self.nps_pictographs_size = self.nps_pictographs[0].width
-
+        # load default image set
+        self.load_set(0)
+        
+    def load_set(self, index):
+        self.image_set = [pyglet.sprite.Sprite(pyglet.image.load(path))
+                          for path in resourcepaths['sprites'][IMAGE_SETS[index]]]
+        self.image_set_size = self.image_set[0].width
+        
+    def choose_random_images(self, number):
+        self.images = random.sample(self.image_set, number)
+        
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
-        if OLD_STYLE_SQUARES:
-            self.size = int(field.size / 3.2)
+        if ANIMATE_SQUARES:
+            self.size_factor = 0.85
+        elif OLD_STYLE_SQUARES:
+            self.size_factor = 0.9375
         else:
-            self.size = int(field.size / 3)
+            self.size_factor = 1.0
+        self.size = int(field.size / 3 * self.size_factor)
         self.position = position
         self.color = get_color(color)
         self.vis = vis
         
-        self.center_x = field.center_x + (field.size/3)*((position+1)%3 - 1)
-        self.center_y = field.center_y + (field.size/3)*((position/3+1)%3 - 1)
+        self.center_x = field.center_x + (field.size / 3)*((position+1)%3 - 1) + (field.size / 3 - self.size)/2
+        self.center_y = field.center_y + (field.size / 3)*((position/3+1)%3 - 1) + (field.size / 3 - self.size)/2
         
         if self.vis == 0:
             if OLD_STYLE_SQUARES:
@@ -1502,7 +1541,7 @@ class Visual:
                 cr = self.size // 5
                 
                 if OLD_STYLE_SHARP_CORNERS:
-                    self.square = batch.add(4, pyglet.gl.GL_POLYGON, None, ('v2i', (
+                    self.square = batch.add(4, GL_POLYGON, None, ('v2i', (
                         lx, by,
                         rx, by,
                         rx, ty,
@@ -1520,7 +1559,7 @@ class Visual:
                     xy = []
                     for a,b in zip(x,y): xy.extend((a, b))
                     
-                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None, 
+                    self.square = batch.add(40, GL_POLYGON, None, 
                                             ('v2i', xy), ('c4B', self.color * 40))
                 
             else:
@@ -1530,10 +1569,12 @@ class Visual:
                 self.square.x = self.center_x - field.size // 6
                 self.square.y = self.center_y - field.size // 6
                 self.square.scale = 1.0 * self.size / self.spr_square_size
-                self.spr_square_size_scaled = self.square.width
+                self.square_size_scaled = self.square.width
                 self.square.batch = batch
                 
                 # initiate square animation
+                self.age = 0.0
+                #self.animate_square(0)
                 pyglet.clock.schedule_interval(visual.animate_square, 1/60.)
         
         elif mode.mode in (7, 8, 9): # display a number
@@ -1548,13 +1589,18 @@ class Visual:
             self.label.color = self.color
         elif mode.mode in (21, 23, 24, 25, 26, 27, 28): # display a pictogram
             self.square = self.images[vis-1]
-            #self.square.opacity = 255
+            self.square.opacity = 255
             self.square.color = self.color[:3]
             self.square.x = self.center_x - field.size // 6
             self.square.y = self.center_y - field.size // 6
-            self.square.scale = 1.0 * self.size / self.nps_pictographs_size
-            self.nps_pictographs_size_scaled = self.square.width
+            self.square.scale = 1.0 * self.size / self.image_set_size
+            self.square_size_scaled = self.square.width
             self.square.batch = batch
+            
+            # initiate square animation
+            self.age = 0.0
+            #self.animate_square(0)
+            pyglet.clock.schedule_interval(visual.animate_square, 1/60.)
             
         if variable > 0:
             # display variable n-back level
@@ -1572,25 +1618,26 @@ class Visual:
         self.visible = True
         
     def animate_square(self, dt):
+        self.age += dt
         if mode.paused: return
         if not ANIMATE_SQUARES: return
         
-        
         # factors which affect animation
-        scale_addition = dt / 4
-        opacity_begin = 0.095
-        opacity_end = 0.12
+        scale_addition = dt / 6
+        fade_begin_time = 0.4
+        fade_end_time = 0.5
+        fade_end_transparency = 1.0  # 1 = fully transparent, 0.5 = half transparent
     
         self.square.scale += scale_addition
-        dx = (self.square.width - self.spr_square_size_scaled) // 2
+        dx = (self.square.width - self.square_size_scaled) // 2
         self.square.x = self.center_x - field.size // 6 - dx
         self.square.y = self.center_y - field.size // 6 - dx
         
-        size_ratio = float(dx) / self.spr_square_size_scaled
-        if size_ratio >= opacity_begin:
-            opacity_factor = 1.0 - (size_ratio - opacity_begin) / (opacity_end - opacity_begin)
-            if opacity_factor < 0: opacity_factor = 0
-            self.square.opacity = int(255 * opacity_factor)
+        if self.age > fade_begin_time:
+            factor = (1.0 - fade_end_transparency * (self.age - fade_begin_time) / (fade_end_time - fade_begin_time))
+            if factor > 1.0: factor = 1.0
+            if factor < 0.0: factor = 0.0
+            self.square.opacity = int(255 * factor)
     
     def hide(self):
         if self.visible:
@@ -1598,6 +1645,7 @@ class Visual:
             self.variable_label.text = ''
             if mode.mode in (21, 23, 24, 25, 26, 27, 28):
                 self.square.batch = None
+                pyglet.clock.unschedule(visual.animate_square)
             elif self.vis == 0:
                 if OLD_STYLE_SQUARES:
                     self.square.delete()
@@ -1624,7 +1672,7 @@ class Circles:
         
         self.circle = []
         for index in range(0, THRESHOLD_FALLBACK_SESSIONS - 1):
-            self.circle.append(batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
+            self.circle.append(batch.add(4, GL_QUADS, None, ('v2i', (
                 self.start_x + self.distance * index - self.radius,
                 self.y + self.radius,
                 self.start_x + self.distance * index + self.radius,
@@ -1766,6 +1814,7 @@ class KeysListLabel:
                 str_list.append('\n')
             str_list.append('C: Choose Game Type\n')
             str_list.append('S: Select Sounds\n')
+            str_list.append('I: Select Images\n')
             if mode.manual:
                 str_list.append('M: Standard Mode\n')
             else:
@@ -1797,7 +1846,8 @@ class TitleKeysLabel:
         str_list = []
         if not (JAEGGI_MODE or CLINICAL_MODE):
             str_list.append('C: Choose Game Mode\n')
-            str_list.append('S: Choose Sounds\n\n')
+            str_list.append('S: Choose Sounds\n')
+            str_list.append('I: Choose Images\n')
         if not CLINICAL_MODE:
             str_list.append('G: Daily Progress Graph\n')
         str_list.append('H: Help / Tutorial\n')
@@ -2439,7 +2489,7 @@ class AnalysisLabel:
                     back = mode.variable_list[x - mode.back]
                                 
                 # data is a dictionary of lists.
-                if mod in ['position', 'audio', 'color']:
+                if mod in ['position', 'audio', 'color', 'image']:
                     rights[mod] += int((data[mod][x] == data[mod][x-back]) and data[mod+'_input'][x])
                     wrongs[mod] += int((data[mod][x] == data[mod][x-back])  ^  data[mod+'_input'][x]) # XOR
                     if JAEGGI_MODE: 
@@ -2654,7 +2704,7 @@ class Saccadic:
             x = self.radius
         elif saccadic.position == 'right':
             x = window.width - self.radius
-        pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i', (
+        pyglet.graphics.draw(4, GL_POLYGON, ('v2i', (
             x - self.radius, y - self.radius,  # lower-left
             x + self.radius, y - self.radius,  # lower-right
             x + self.radius, y + self.radius,  # upper-right
@@ -2662,7 +2712,7 @@ class Saccadic:
             
             )), ('c4B', self.color * 4))
 
-#                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None, 
+#                    self.square = batch.add(40, GL_POLYGON, None, 
 #                                            ('v2i', xy), ('c4B', self.color * 40))
 
 #
@@ -2760,6 +2810,7 @@ class Stats:
         self.session = {}
         self.session['position'] = []
         self.session['color'] = []
+        self.session['image'] = []
         self.session['audio'] = []
         self.session['vis'] = []
         self.session['numbers'] = []
@@ -2777,6 +2828,7 @@ class Stats:
     def save_input(self):
         self.session['position'].append(mode.current_position)
         self.session['color'].append(mode.current_color)
+        self.session['image'].append(mode.current_vis)
         self.session['audio'].append(mode.current_audio)
         self.session['vis'].append(mode.current_vis)
         self.session['numbers'].append(mode.current_number)
@@ -2960,7 +3012,7 @@ def new_session():
         choices.append('letters')
     mode.sound_mode = random.choice(choices)
     visual.letters = random.sample(sounds[mode.sound_mode].keys(), 8)
-    visual.images = random.sample(visual.nps_pictographs, 8)
+    visual.choose_random_images(8)
     mode.soundlist = [sounds[mode.sound_mode][l] for l in visual.letters]
             
     if JAEGGI_MODE:
@@ -3192,7 +3244,7 @@ def on_key_press(symbol, modifiers):
     if symbol == key.D and (modifiers & key.MOD_CTRL):
         dump_pyglet_info()
         
-    elif mode.title_screen and not mode.draw_graph and not mode.game_select and not mode.sound_select:
+    elif mode.title_screen and not mode.draw_graph and not mode.game_select and not mode.image_select and not mode.sound_select:
         if symbol == key.ESCAPE or symbol == key.X:
             window.on_close()
             
@@ -3218,6 +3270,9 @@ def on_key_press(symbol, modifiers):
 #        elif symbol == key.B:
 #            print soundchoices
                 
+        elif symbol == key.I and not JAEGGI_MODE:
+            mode.image_select = True
+
         elif symbol == key.S and not JAEGGI_MODE:
             mode.sound_select = True
     
@@ -3307,8 +3362,43 @@ def on_key_press(symbol, modifiers):
             mode.mode = 28
             execute_mode_change()
             
+    elif mode.image_select:        
+        if symbol in (key.ESCAPE, key.I, key.X, key.SPACE):
+            mode.image_select = False                   
+        
+        elif symbol in (key._0, key.NUM_0) and len(IMAGE_SETS) > 0:
+            visual.load_set(0)
+            mode.image_select =False
+        elif symbol in (key._1, key.NUM_1) and len(IMAGE_SETS) > 1:
+            visual.load_set(1)
+            mode.image_select =False
+        elif symbol in (key._2, key.NUM_2) and len(IMAGE_SETS) > 2:
+            visual.load_set(2)
+            mode.image_select =False
+        elif symbol in (key._3, key.NUM_3) and len(IMAGE_SETS) > 3:
+            visual.load_set(3)
+            mode.image_select =False
+        elif symbol in (key._4, key.NUM_4) and len(IMAGE_SETS) > 4:
+            visual.load_set(4)
+            mode.image_select =False
+        elif symbol in (key._5, key.NUM_5) and len(IMAGE_SETS) > 5:
+            visual.load_set(5)
+            mode.image_select =False
+        elif symbol in (key._6, key.NUM_6) and len(IMAGE_SETS) > 6:
+            visual.load_set(6)
+            mode.image_select =False
+        elif symbol in (key._7, key.NUM_7) and len(IMAGE_SETS) > 7:
+            visual.load_set(7)
+            mode.image_select =False
+        elif symbol in (key._8, key.NUM_8) and len(IMAGE_SETS) > 8:
+            visual.load_set(8)
+            mode.image_select =False
+        elif symbol in (key._9, key.NUM_9) and len(IMAGE_SETS) > 9:
+            visual.load_set(9)
+            mode.image_select =False
+            
     elif mode.sound_select:
-        if symbol == key.ESCAPE or symbol == key.S or symbol == key.X or symbol == key.SPACE:
+        if symbol in (key.ESCAPE, key.S, key.X, key.SPACE):
             mode.sound_select = False
             
         elif symbol == key._1 or symbol == key.NUM_1:
@@ -3399,6 +3489,12 @@ def on_key_press(symbol, modifiers):
                 return
             mode.game_select = True
         
+        elif symbol == key.I:
+            if JAEGGI_MODE:
+                jaeggiWarningLabel.show()
+                return
+            mode.image_select = True
+
         elif symbol == key.S:
             if JAEGGI_MODE:
                 jaeggiWarningLabel.show()
@@ -3470,27 +3566,27 @@ def on_key_press(symbol, modifiers):
                 mode.position_input = True
                 positionLabel.update()
                 
-            elif symbol == KEY_VISVIS:
+            if symbol == KEY_VISVIS:
                 mode.visvis_input = True
                 visvisLabel.update()
                 
-            elif symbol == KEY_VISAUDIO:
+            if symbol == KEY_VISAUDIO:
                 mode.visaudio_input = True
                 visaudioLabel.update()
                 
-            elif symbol == KEY_COLOR:
+            if symbol == KEY_COLOR:
                 mode.color_input = True
                 colorLabel.update()
                 
-            elif symbol == KEY_AUDIOVIS:
+            if symbol == KEY_AUDIOVIS:
                 mode.audiovis_input = True
                 audiovisLabel.update()
                 
-            elif symbol == KEY_IMAGE:
+            if symbol == KEY_IMAGE:
                 mode.image_input = True
                 imageLabel.update()
 
-            elif symbol == KEY_AUDIO:
+            if symbol == KEY_AUDIO:
                 mode.audio_input = True
                 audioLabel.update()
             
@@ -3504,6 +3600,8 @@ def on_draw():
         graph.draw()
     elif mode.game_select:
         gameSelect.draw()
+    elif mode.image_select:
+        imageSelect.draw()
     elif mode.sound_select:
         soundSelect.draw()
     elif mode.saccadic:
@@ -3570,7 +3668,7 @@ def pulsate(dt):
 batch = pyglet.graphics.Batch()
 
 try: 
-    test_polygon = batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
+    test_polygon = batch.add(4, GL_QUADS, None, ('v2i', (
         100, 100,
         100, 200,
         200, 200,
@@ -3590,6 +3688,7 @@ circles = Circles()
 saccadic = Saccadic()
 
 gameSelect = GameSelect()
+imageSelect = ImageSelect()
 soundSelect = SoundSelect()
 updateLabel = UpdateLabel()
 gameModeLabel = GameModeLabel()
@@ -3646,6 +3745,10 @@ def shrink_brain(dt):
 
 # start the event loops!
 if __name__ == '__main__':
+    
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
     pyglet.app.run()
 
 # nothing below the line "pyglet.app.run()" will be executed until the
