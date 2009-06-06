@@ -34,9 +34,9 @@ FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
 STATS_BINARY = 'logfile.dat'
-CHARTFILE = {2:'chart-02-dnb.txt', 3:'chart-03-tnb.txt', 4:'chart-04-dlnb.txt', 5:'chart-05-tlnb.txt',
-             6:'chart-06-qlnb.txt',7:'chart-07-anb.txt', 8:'chart-08-danb.txt', 9:'chart-09-tanb.txt',
-             10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
+#CHARTFILE = {2:'chart-02-dnb.txt', 3:'chart-03-tnb.txt', 4:'chart-04-dlnb.txt', 5:'chart-05-tlnb.txt',
+             #6:'chart-06-qlnb.txt',7:'chart-07-anb.txt', 8:'chart-08-danb.txt', 9:'chart-09-tanb.txt',
+             #10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
 ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
 WEB_SITE = 'http://brainworkshop.sourceforge.net/'
@@ -859,33 +859,33 @@ class Graph:
                     self.percents[game][category].append(average)
                                     
                         
-    def export_data(self):       
-        dictionary = {}
-        for x in self.dictionaries: # cycle through game modes
-            chartfile_name = CHARTFILE[x]
-            dictionary = self.dictionaries[x]
-            output = ['Date\t%s N-Back Average\n' % mode.long_mode_names[x]]
+    #def export_data(self):       
+        #dictionary = {}
+        #for x in self.dictionaries: # cycle through game modes
+            #chartfile_name = CHARTFILE[x]
+            #dictionary = self.dictionaries[x]
+            #output = ['Date\t%s N-Back Average\n' % mode.long_mode_names[x]]
             
-            keyslist = dictionary.keys()
-            keyslist.sort()
-            if len(keyslist) == 0: continue
-            for datestamp in keyslist:
-                if dictionary[datestamp] == (-1, -1):
-                    continue
-                output.append(str(datestamp))
-                output.append('\t')
-                output.append(str(dictionary[datestamp]))
-                output.append('\n')
+            #keyslist = dictionary.keys()
+            #keyslist.sort()
+            #if len(keyslist) == 0: continue
+            #for datestamp in keyslist:
+                #if dictionary[datestamp] == (-1, -1):
+                    #continue
+                #output.append(str(datestamp))
+                #output.append('\t')
+                #output.append(str(dictionary[datestamp]))
+                #output.append('\n')
         
-            try:
-                chartfile_path = os.path.join(get_data_dir(), chartfile_name)
-                chartfile = open(chartfile_path, 'w')
-                chartfile.write(''.join(output))
-                chartfile.close()
+            #try:
+                #chartfile_path = os.path.join(get_data_dir(), chartfile_name)
+                #chartfile = open(chartfile_path, 'w')
+                #chartfile.write(''.join(output))
+                #chartfile.close()
                             
-            except:
-                quit_with_error('Error writing chart file:\n%s' %
-                                os.path.join(get_data_dir(), chartfile_name))
+            #except:
+                #quit_with_error('Error writing chart file:\n%s' %
+                                #os.path.join(get_data_dir(), chartfile_name))
                 
     
     def draw(self):
@@ -928,7 +928,7 @@ class Graph:
             right, bottom)), ('c3B', axiscolor * 3))
         
         pyglet.text.Label(
-            'G: Return to Main Screen\nCtrl-E: Export Data\n\nN: Next Game Type',
+            'G: Return to Main Screen\n\nN: Next Game Type',
             batch=self.batch,
             multiline = True, width = 300,
             font_size=9,
@@ -1397,7 +1397,7 @@ class Visual:
             font_size=field.size//6, bold=True,
             anchor_x='center', anchor_y='center', batch=batch)
         self.spr_square = [pyglet.sprite.Sprite(pyglet.image.load(path)) # fixme: all sprite sets
-                              for path in resourcepaths['sprites']['colored_squares']]
+                              for path in resourcepaths['sprites']['colored-squares']]
         self.spr_square_size = self.spr_square[0].width
 
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
@@ -3061,8 +3061,8 @@ def on_key_press(symbol, modifiers):
         if symbol == key.ESCAPE or symbol == key.G or symbol == key.X:
             mode.draw_graph = False
             
-        elif symbol == key.E and (modifiers & key.MOD_CTRL):
-            graph.export_data()
+        #elif symbol == key.E and (modifiers & key.MOD_CTRL):
+            #graph.export_data()
 
         elif symbol == key.N:
             graph.next_mode()
