@@ -13,7 +13,7 @@ must be maintained.
 
 Example line:
 
-2008-08-12 13:26:55,D2B,95,2,2,12,22,0,4,66,50,0,0,0,0,0
+2008-08-12 13:26:55,D2B,95,2,2,12,22,0,4,66,50,0,0,0,0,0,0
 
 1. The date format is as shown: YYYY-MM-DD HH:MM:SS
 
@@ -55,6 +55,7 @@ Example line:
     e. Vis & N-Audio
     f. Audio & N-Vis
     g. Arithmetic
+	h. Image
 
 Each column is delimited by the comma character: ,
 

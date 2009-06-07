@@ -195,7 +195,7 @@ CROSSHAIRS = True
 VISUAL_COLOR = 1
 
 # Animate squares in Dual/Triple N-Back mode?
-ANIMATE_SQUARES = True
+ANIMATE_SQUARES = False
 
 # Use the flat, single-color squares like in versions prior to 4.1?
 # Also, use sharp corners or rounded corners?
@@ -205,7 +205,8 @@ OLD_STYLE_SHARP_CORNERS = False
 # Specify image sets here. This is a list of subfolders in the res\sprites\
 # folder which may be selected in Image mode.
 # The first item in the list is the default which is loaded on startup.
-IMAGE_SETS = ['national-park-service', 'pentominoes', 'tetrominoes-fixed']
+IMAGE_SETS = ['polygons-basic', 'national-park-service', 'pentominoes',
+              'tetrominoes-fixed', 'cartoon-faces']
 
 # Start in Manual mode?
 # If this is False, the game will start in standard mode.
@@ -550,8 +551,8 @@ except:
     USE_MUSIC = False
     if pyglet.version >= '1.2':  
         pyglet.media.have_avbin = False
-    #print 'AVBin not detected. Music disabled.'
-    #print 'Download AVBin from: http://code.google.com/p/avbin/'
+    print 'AVBin not detected. Music disabled.'
+    print 'Download AVBin from: http://code.google.com/p/avbin/'
         
 # Initialize resources (sounds and images)
 #
@@ -678,7 +679,16 @@ if WINDOW_FULLSCREEN:
     style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
 else:
     style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
-    
+     
+#display = pyglet.window.get_platform().get_default_display() 
+#screen = display.get_default_screen() 
+#template_config = Config(double_buffer=True, sample_buffers=True, samples=4) 
+#try: 
+    #config = screen.get_best_config(template_config) 
+#except pyglet.window.NoSuchConfigException: 
+    ## Rats. No antialiasing. 
+    #config = screen.get_best_config(Config(double_buffer=True)) 
+
 class MyWindow(pyglet.window.Window):
     def on_key_press(self, symbol, modifiers):
         pass
@@ -1312,7 +1322,7 @@ class GameSelect:
         str_list.append('  1: Auditory N-Back\n')
         str_list.append('\n')
         str_list.append('  2: Dual N-Back (default)\n')
-        str_list.append('  3: Position - Auditory - Color\n')
+        str_list.append('  3: Position - Color - Auditory\n')
         str_list.append('\n')
         str_list.append('  4: Dual Combination N-Back\n')
         str_list.append('  5: Tri Combination N-Back\n')
@@ -1331,18 +1341,16 @@ class GameSelect:
         str_list.append('  ESC: Cancel')
         
         str_list2 = []
-        #str_list2.append('P: Position, A: Auditory,\n')
-        #str_list2.append('C: Color,  I: Image\n')
         str_list2.append('\n\n\n\n')
-        str_list2.append('  Q: Position - Auditory\n')
+        str_list2.append('  Q: Position - Color\n')
         str_list2.append('  W: Position - Image\n')
-        str_list2.append('  E: Auditory - Color\n')
-        str_list2.append('  R: Auditory - Image\n')
+        str_list2.append('  E: Color - Auditory\n')
+        str_list2.append('  R: Image - Auditory\n')
         str_list2.append('  T: Color - Image\n')
         str_list2.append('\n')
         str_list2.append('  Y: Position - Color - Image\n')
-        str_list2.append('  U: Position - Auditory - Image\n')
-        str_list2.append('  I: Auditory - Color - Image\n')
+        str_list2.append('  U: Position - Image - Auditory\n')
+        str_list2.append('  I: Color - Image - Auditory\n')
         str_list2.append('\n')
         str_list2.append('  O: Quad N-Back\n')
 
@@ -1356,7 +1364,7 @@ class ImageSelect:
     def __init__(self):
         
         str_list = []
-        str_list.append('Type a number to choose images for the image n-back task.\n\n')
+        str_list.append('Type a number to choose images for the Image n-back task.\n\n')
         
         for index in range(0, len(IMAGE_SETS)):
             if index > 9: break
@@ -1379,7 +1387,7 @@ class SoundSelect:
     def __init__(self):
                 
         str_list = []
-        str_list.append('Type a number to choose sounds for the auditory n-back task.\n\n')
+        str_list.append('Type a number to choose sounds for the Auditory n-back task.\n\n')
         str_list.append('If multiple sounds are selected, one will be randomly chosen each session.\n')
         str_list.append('\n\n')
         
@@ -1519,7 +1527,7 @@ class Visual:
         
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
         if ANIMATE_SQUARES:
-            self.size_factor = 0.85
+            self.size_factor = 0.9375
         elif OLD_STYLE_SQUARES:
             self.size_factor = 0.9375
         else:
@@ -1574,7 +1582,6 @@ class Visual:
                 
                 # initiate square animation
                 self.age = 0.0
-                #self.animate_square(0)
                 pyglet.clock.schedule_interval(visual.animate_square, 1/60.)
         
         elif mode.mode in (7, 8, 9): # display a number
@@ -1623,7 +1630,7 @@ class Visual:
         if not ANIMATE_SQUARES: return
         
         # factors which affect animation
-        scale_addition = dt / 6
+        scale_addition = dt / 8
         fade_begin_time = 0.4
         fade_end_time = 0.5
         fade_end_transparency = 1.0  # 1 = fully transparent, 0.5 = half transparent
@@ -3368,34 +3375,34 @@ def on_key_press(symbol, modifiers):
         
         elif symbol in (key._0, key.NUM_0) and len(IMAGE_SETS) > 0:
             visual.load_set(0)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._1, key.NUM_1) and len(IMAGE_SETS) > 1:
             visual.load_set(1)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._2, key.NUM_2) and len(IMAGE_SETS) > 2:
             visual.load_set(2)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._3, key.NUM_3) and len(IMAGE_SETS) > 3:
             visual.load_set(3)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._4, key.NUM_4) and len(IMAGE_SETS) > 4:
             visual.load_set(4)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._5, key.NUM_5) and len(IMAGE_SETS) > 5:
             visual.load_set(5)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._6, key.NUM_6) and len(IMAGE_SETS) > 6:
             visual.load_set(6)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._7, key.NUM_7) and len(IMAGE_SETS) > 7:
             visual.load_set(7)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._8, key.NUM_8) and len(IMAGE_SETS) > 8:
             visual.load_set(8)
-            mode.image_select =False
+            mode.image_select = False
         elif symbol in (key._9, key.NUM_9) and len(IMAGE_SETS) > 9:
             visual.load_set(9)
-            mode.image_select =False
+            mode.image_select = False
             
     elif mode.sound_select:
         if symbol in (key.ESCAPE, key.S, key.X, key.SPACE):
