@@ -43,6 +43,10 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
+4.5:
+* First release with Quad N-Back and other new modes
+* Includes various improvements by Jonathan Toomim
+
 4.41:
 * The size of the field with the FIELD_EXPAND option was decreased slightly.
 
