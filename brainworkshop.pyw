@@ -187,26 +187,26 @@ FIELD_EXPAND = False
 GRIDLINES = True
 CROSSHAIRS = True
 
-# Set the color of the square in Dual N-Back mode.
+# Set the color of the square in non-Color N-Back modes.
 # This also affects Dual Combination N-Back and Arithmetic N-Back.
 # 1 = blue, 2 = cyan, 3 = green, 4 = grey,
 # 5 = magenta, 6 = red, 7 = white, 8 = yellow
 # Default: 1
 VISUAL_COLOR = 1
 
-# Animate squares in Dual/Triple N-Back mode?
+# Specify image sets here. This is a list of subfolders in the res\sprites\
+# folder which may be selected in Image mode.
+# The first item in the list is the default which is loaded on startup.
+IMAGE_SETS = ['polygons-basic', 'national-park-service', 'pentominoes',
+              'tetrominoes-fixed', 'cartoon-faces']
+
+# Animate squares?
 ANIMATE_SQUARES = False
 
 # Use the flat, single-color squares like in versions prior to 4.1?
 # Also, use sharp corners or rounded corners?
 OLD_STYLE_SQUARES = False
 OLD_STYLE_SHARP_CORNERS = False
-
-# Specify image sets here. This is a list of subfolders in the res\sprites\
-# folder which may be selected in Image mode.
-# The first item in the list is the default which is loaded on startup.
-IMAGE_SETS = ['polygons-basic', 'national-park-service', 'pentominoes',
-              'tetrominoes-fixed', 'cartoon-faces']
 
 # Start in Manual mode?
 # If this is False, the game will start in standard mode.
@@ -649,15 +649,14 @@ def get_color(color):
 # set the input text label size
 def input_label_size():
     m = mode.mode
-    if m in (2, 3, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27):
+    if m in (2, 3, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28):
         return 16
-    if m in (4, 28):
+    if m in (4,):
         return 14
     if m in (5,):
         return 13
     if m in (6,):
         return 11
-    sys.exit(1)
 
 def default_nback_mode(mode):
     return eval('BACK_%i' % mode)
@@ -3753,9 +3752,6 @@ def shrink_brain(dt):
 # start the event loops!
 if __name__ == '__main__':
     
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
     pyglet.app.run()
 
 # nothing below the line "pyglet.app.run()" will be executed until the
