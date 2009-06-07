@@ -893,8 +893,6 @@ class Graph:
                     except:
                         continue
                     newmode = int(newline[3])
-                    if newmode > 11:
-                        continue
                     newback = int(newline[4])
                     newpercent = int(newline[2])
                     dictionary = self.dictionaries[newmode]
@@ -902,6 +900,8 @@ class Graph:
                         dictionary[datestamp] = []
                     dictionary[datestamp].append(newback)
                     
+                    if len(newline) == 16:
+                        newline.append('0') # make it work for image mode
                     if len(newline) >= 16:
                         for m in mode.modalities[newmode]:
                             self.percents[newmode][m].append(int(newline[ind[m]]))
@@ -1844,8 +1844,15 @@ class TitleMessageLabel:
             font_size = 32, bold = True, color = COLOR_TEXT,
             x = window.width // 2, y = window.height - 35,
             anchor_x = 'center', anchor_y = 'center')
+        self.label2 = pyglet.text.Label(
+            'Version ' + str(VERSION),
+            font_size = 14, bold = False, color = COLOR_TEXT,
+            x = window.width // 2, y = window.height - 75,
+            anchor_x = 'center', anchor_y = 'center')
+        
     def draw(self):
         self.label.draw()
+        self.label2.draw()
 
 class TitleKeysLabel:
     def __init__(self):
@@ -2766,8 +2773,6 @@ class Stats:
                     stats.sessions_today += 1
                     newline = line.split(separator)
                     newmode = int(newline[3])
-                    if newmode > 11:
-                        continue
                     newback = int(newline[4])
                     newpercent = int(newline[2])
                     newmanual = bool(int(newline[7]))
@@ -3731,7 +3736,10 @@ update_all_labels()
 brain_icon = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
 brain_icon.set_position(field.center_x - brain_icon.width//2,
                            field.center_y - brain_icon.height//2)
-brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash'])))
+if BLACK_BACKGROUND:
+    brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
+else:
+    brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash'])))
 brain_graphic.set_position(field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
 
