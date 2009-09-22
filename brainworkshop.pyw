@@ -891,8 +891,8 @@ class Graph:
         self.reset_percents()
         ind = {'date':0, 'modename':1, 'percent':2, 'mode':3, 'n':4, 'ticks':5,
                'trials':6, 'manual':7, 'session':8, 'position':9, 'audio':10,
-               'color':11, 'visvis':12, 'visaudio':13, 'audiovis':14, 'arithmetic':15, 'image':16}
-        
+               'color':11, 'visvis':12, 'audiovis':13, 'arithmetic':14, 'image':15, 'visaudio':16}
+                    
         if os.path.isfile(os.path.join(get_data_dir(), STATSFILE)):
             try:
                 statsfile_path = os.path.join(get_data_dir(), STATSFILE)
@@ -921,8 +921,8 @@ class Graph:
                         dictionary[datestamp] = []
                     dictionary[datestamp].append(newback)
                     
-                    if len(newline) == 16:
-                        newline.append('0') # make it work for image mode
+                    while len(newline) < 17:
+                        newline.append('0') # make it work for image mode and missing visaudio
                     if len(newline) >= 16:
                         for m in mode.modalities[newmode]:
                             self.percents[newmode][m].append(int(newline[ind[m]]))
@@ -1201,7 +1201,7 @@ class Graph:
         str_list = ['Last 50 rounds:   ']
         for m in mode.modalities[self.graph]:
             str_list.append(labelstrings[m] + '%i%% ' % self.percents[self.graph][m][-1]
-                            + ' ' * (7-len(mode.modalities[self.graph])))            
+                            + ' ' * (7-len(mode.modalities[self.graph])))
           
         pyglet.text.Label(''.join(str_list),
             batch=self.batch,
@@ -2900,7 +2900,8 @@ class Stats:
                            str(category_percents['visvis']),
                            str(category_percents['audiovis']),
                            str(category_percents['arithmetic']),
-                           str(category_percents['image'])]
+                           str(category_percents['image']),
+                           str(category_percents['visaudio'])]
                 statsfile.write(sep.join(outlist)) # adds sep between each element
                 statsfile.write('\n')  # but we don't want a sep before '\n'
                 statsfile.close()
