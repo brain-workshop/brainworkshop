@@ -283,10 +283,17 @@ TICKS_26 = 12
 TICKS_27 = 12
 TICKS_28 = 12
 
-# Default number of trials per session.
+# The number of trials per session equals
+# NUM_TRIALS + NUM_TRIALS_FACTOR * n ^ NUM_TRIALS_EXPONENT,
+# where n is the current n-back level.
+
+# Default base number of trials per session.
 # Must be greater than or equal to 1.
 # Default: 20
 NUM_TRIALS = 20
+
+NUM_TRIALS_FACTOR = 1
+NUM_TRIALS_EXPONENT = 2
 
 # Thresholds for n-back level advancing & fallback.
 # Values are 0-100.
@@ -507,6 +514,8 @@ if JAEGGI_MODE and not JAEGGI_INTERFACE_DEFAULT_SCORING:
         CROSSHAIRS = True
         SHOW_FEEDBACK = False
         THRESHOLD_FALLBACK_SESSIONS = 1
+        NUM_TRIALS_FACTOR = 1
+        NUM_TRIALS_EXPONENT = 1
     if JAEGGI_FORCE_OPTIONS_ADDITIONAL:
         BLACK_BACKGROUND = True
         WINDOW_FULLSCREEN = True
@@ -737,6 +746,10 @@ class Mode:
         self.back = default_nback_mode(self.mode)
         self.ticks_per_trial = default_ticks(self.mode)
         self.num_trials = NUM_TRIALS
+        self.num_trials_factor = NUM_TRIALS_FACTOR
+        self.num_trials_exponent = NUM_TRIALS_EXPONENT
+        self.num_trials_total = self.num_trials + self.num_trials_factor * \
+            self.back ** self.num_trials_exponent
 
         self.short_mode_names = {2:'D',
                                  3:'PCA',
@@ -852,6 +865,10 @@ class Mode:
         self.back = default_nback_mode(self.mode)
         self.ticks_per_trial = default_ticks(self.mode)
         self.num_trials = NUM_TRIALS
+        self.num_trials_factor = NUM_TRIALS_FACTOR
+        self.num_trials_exponent = NUM_TRIALS_EXPONENT
+        self.num_trials_total = self.num_trials + self.num_trials_factor * \
+            self.back ** self.num_trials_exponent
         self.session_number = 0
 
     def short_name(self, mode=None, back=None):
@@ -2378,8 +2395,10 @@ class SessionInfoLabel:
             self.label.text = ''
         else:
             self.label.text = 'Session:\n%1.2f sec/trial\n%i+%i trials\n%i seconds' % \
-                              (mode.ticks_per_trial / 4.0, mode.num_trials, mode.back, 
-                               int((mode.ticks_per_trial / 4.0) * (mode.num_trials + mode.back)))
+                              (mode.ticks_per_trial / 4.0, mode.num_trials, \
+                               mode.num_trials_total - mode.num_trials, 
+                               int((mode.ticks_per_trial / 4.0) * \
+                               (mode.num_trials_total)))
     def flash(self):
         pyglet.clock.unschedule(sessionInfoLabel.unflash)
         self.label.bold = True
@@ -2705,7 +2724,7 @@ class TrialsRemainingLabel:
         if (not mode.started) or mode.hide_text:
             self.label.text = ''
         else:
-            self.label.text = '%i remaining' % (mode.num_trials + mode.back - mode.trial_number)
+            self.label.text = '%i remaining' % (mode.num_trials_total - mode.trial_number)
            
 class Saccadic:
     def __init__(self):
@@ -2827,6 +2846,7 @@ class Stats:
             mode.back = ls[2]
             if ls[3] >= get_threshold_advance():
                 mode.back += 1
+            mode.num_trials_total = mode.num_trials + mode.num_trials_factor * mode.back ** mode.num_trials_exponent
             mode.session_number = ls[0]
             mode.progress = 0
             for s in sessions:
@@ -2891,7 +2911,7 @@ class Stats:
                            str(mode.mode),
                            str(mode.back),
                            str(mode.ticks_per_trial),
-                           str(mode.num_trials + mode.back),
+                           str(mode.num_trials_total),
                            str(int(mode.manual)),
                            str(mode.session_number),
                            str(category_percents['position']),
@@ -2910,7 +2930,7 @@ class Stats:
                     picklefile = open(os.path.join(get_data_dir(), STATS_BINARY), 'ab')
                     pickle.dump([strftime("%Y-%m-%d %H:%M:%S"), mode.short_name(), 
                                  percent, mode.mode, mode.back, mode.ticks_per_trial,
-                                 mode.num_trials+mode.back, int(mode.manual),
+                                 mode.num_trials_total, int(mode.manual),
                                  mode.session_number, category_percents['position'],
                                  category_percents['audio'], category_percents['color'],
                                  category_percents['visvis'], category_percents['audiovis'],
@@ -2932,6 +2952,7 @@ class Stats:
         if not mode.manual:
             if percent >= get_threshold_advance():
                 mode.back += 1
+                mode.num_trials_total = mode.num_trials + mode.num_trials_factor * mode.back ** mode.num_trials_exponent
                 mode.progress = 0
                 circles.update()
                 if USE_APPLAUSE:
@@ -2947,6 +2968,7 @@ class Stats:
                 else:
                     if mode.progress == THRESHOLD_FALLBACK_SESSIONS - 1:
                         mode.back -= 1
+                        mode.num_trials_total = mode.num_trials + mode.num_trials_factor * mode.back ** mode.num_trials_exponent
                         fallback = True
                         mode.progress = 0
                         circles.update()
@@ -3056,7 +3078,7 @@ def new_session():
     if VARIABLE_NBACK == 1:
         # compute variable n-back sequence using beta distribution
         mode.variable_list = []
-        for index in range(0, mode.num_trials):
+        for index in range(0, mode.num_trials_total - mode.back):
             mode.variable_list.append(int(random.betavariate(mode.back / 2.0, 1) * mode.back + 1))
     field.crosshair_update()
     reset_input()
@@ -3095,11 +3117,30 @@ def reset_input():
     update_input_labels()
 
 # this handles the computation of a round with exactly 6 position and 6 audio matches
+def new_compute_bt_sequence(matches=6, modalities=['audio', 'vis']):
+    # not ready for visaudio or audiovis, doesn't get 
+    seq = {}
+    for m in modalities:
+        seq[m] = [False]*mode.back + \
+                 random.shuffle([True]*matches + 
+                                [False]*(mode.num_trials_total - mode.back - matches))
+        for i in range(mode.back):
+            seq[m][i] = random.randint(1,8)
+
+        for i in range(mode.back, len(seq[m])):
+            if seq[m][i] == True:
+                seq[m][i] = seq[m][i-mode.back]
+            elif seq[m][i] == False:  # should be all other cases
+                seq[m][i] = random.randint(1,7)
+                if seq[m][i] >= seq[m][i-mode.back]:
+                    seq[m][i] += 1
+    mode.bt_sequence = seq.values()
+
 def compute_bt_sequence():
     bt_sequence = []
     bt_sequence.append([])
     bt_sequence.append([])    
-    for x in range(0, mode.num_trials + mode.back):
+    for x in range(0, mode.num_trials_total):
         bt_sequence[0].append(0)
         bt_sequence[1].append(0)
     
@@ -3491,10 +3532,14 @@ def on_key_press(symbol, modifiers):
 
         elif symbol == key.F3 and mode.num_trials > 5 and mode.manual:
             mode.num_trials -= 5
+            mode.num_trials_total = mode.num_trials + mode.num_trials_factor * \
+                mode.back ** mode.num_trials_exponent
             sessionInfoLabel.flash()
 
         elif symbol == key.F4 and mode.manual:
             mode.num_trials += 5
+            mode.num_trials_total = mode.num_trials + mode.num_trials_factor * \
+                mode.back ** mode.num_trials_exponent
             sessionInfoLabel.flash()            
             
             
@@ -3667,7 +3712,7 @@ def update(dt):
                 stats.save_input()
             mode.trial_number += 1
             trialsRemainingLabel.update()
-            if mode.trial_number > mode.num_trials + mode.back:
+            if mode.trial_number > mode.num_trials_total:
                 end_session()
             else: generate_stimulus()
             reset_input()
