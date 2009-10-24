@@ -43,6 +43,13 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
+4.7:
+* Toggling Manual Mode no longer reverts to default settings
+* Title screen graphic is now colored inversely when a black background is
+   selected
+* Stats file may be specified on the command line with --statsfile,
+   complementing the --configfile command line parameter
+
 4.5:
 * First release with Quad N-Back and other new modes
 * Includes various improvements by Jonathan Toomim

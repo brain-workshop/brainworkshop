@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.6'
+VERSION = '4.7'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -478,6 +478,10 @@ for cfg in configs: # load defaultconfig first, in case of incomplete user's con
         exec "%s = item[1]" % item[0]
     del cfg
 del configs, config_items, try_eval
+
+try: STATSFILE = sys.argv[sys.argv.index('--statsfile') + 1]
+except:
+    pass
 
 if CLINICAL_MODE:
     JAEGGI_INTERFACE_DEFAULT_SCORING = False
@@ -3287,8 +3291,8 @@ def toggle_manual_mode():
     else:
         mode.manual = True
     
-    if not mode.manual:
-        mode.enforce_standard_mode()
+    #if not mode.manual:
+        #mode.enforce_standard_mode()
         
     update_all_labels()
 
@@ -3804,7 +3808,7 @@ brain_icon = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths[
 brain_icon.set_position(field.center_x - brain_icon.width//2,
                            field.center_y - brain_icon.height//2)
 if BLACK_BACKGROUND:
-    brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
+    brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash-black'])))
 else:
     brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash'])))
 brain_graphic.set_position(field.center_x - brain_graphic.width//2,
