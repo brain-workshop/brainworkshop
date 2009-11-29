@@ -15,47 +15,48 @@ Example line:
 
 2008-08-12 13:26:55,D2B,95,2,2,12,22,0,4,66,50,0,0,0,0,0,0
 
-1. The date format is as shown: YYYY-MM-DD HH:MM:SS
+0. The date format is as shown: YYYY-MM-DD HH:MM:SS
 
-2. The mode string can be any of the following:
+1. The mode string can be any of the following:
 	D#B - dual #-back
 	T#B - triple #-back
 	DL#B - dual letter #-back
 	TL#B - triple letter #-back
 	QL#B - quad letter #-back
 
-3. The percentage score from 0-100.
+2. The percentage score from 0-100.
 
-4. The mode number:
+3. The mode number:
 	2 = D#B - dual #-back
 	3 = T#B - triple #-back
 	4 = DL#B - dual letter #-back
 	5 = TL#B - triple letter #-back
 	6 = QL#B - quad letter #-back
 
-5. The n-back number. for example, 2 = 2-Back
+4. The n-back number. for example, 2 = 2-Back
 
-6. Number of quarter-seconds per trial.
-	 8 = 2 seconds
-	12 = 3 seconds
+5. Number of 0.1 seconds per trial.
+	15 = 1.5 seconds
+	30 = 3 seconds
 	etc.
 
-7. Number of trials in the session.
+6. Number of trials in the session.
 
-8. 0 = Standard mode, 1 = Training mode.
+7. 0 = Standard mode, 1 = Training mode.
 
-9. Session number, the number followed by # in game
+8. Session number, the number followed by # in game
 
-10. The next seven numbers are percentage scores for
+9-17. The next nine numbers are percentage scores for
     each of the seven input categories.
-    a. Position
-    b. Audio
-    c. Color
-    d. Vis & N-Vis
-    e. Vis & N-Audio
-    f. Audio & N-Vis
-    g. Arithmetic
-	h. Image
+    9. Position
+    10. Audio
+    11. Color
+    12. Vis & N-Vis
+    13. Audio & N-Vis
+    14. Arithmetic
+    15. Image
+    16. Vis & N-Audio
+    17. Audio2
 
 Each column is delimited by the comma character: ,
 

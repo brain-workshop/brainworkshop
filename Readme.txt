@@ -26,10 +26,10 @@ Enjoy!
 Python 2.5 or 2.6 is required to run Brain Workshop on Mac OS X
 and Linux. Python 2.4 may also work as long as the python-ctypes
 package is installed.
-[Note: Windows versions have python included.]
+[Note: Windows versions of Brain Workshop have python included.]
 
 Python 2.6 can be downloaded here:
-      http://www.python.org/download/releases/2.6/
+      http://www.python.org/download/releases/
 
 Music support requires AVBin (highly recommended!)
 Download AVBin here:
@@ -44,11 +44,19 @@ installation are available on the Brain Workshop web site:
 Change Log:
 
 4.7:
-* Toggling Manual Mode no longer reverts to default settings
+* Added Dual Audio n-back modes. Go to the Sound Selection screen to
+   choose the sound set and channel (left, right, center) for each
+   sound stimulus.
+* Number of trials per session now increases automatically with higher
+   n-back levels. The calculation can be adjusted from the config file.
+   (Jonathan Toomim)
+* Timing resolution has been increased to 0.1 seconds, with a maximum
+   speed of 0.3 seconds per trial. 
+* Toggling Manual Mode no longer reverts to default settings.
 * Title screen graphic is now colored inversely when a black background is
-   selected
+   selected.
 * Stats file may be specified on the command line with --statsfile,
-   complementing the --configfile command line parameter
+   complementing the --configfile command line parameter.
 
 4.5:
 * First release with Quad N-Back and other new modes
