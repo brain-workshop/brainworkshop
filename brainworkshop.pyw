@@ -1433,17 +1433,17 @@ class GameSelect:
         self.label = pyglet.text.Label(
             '', multiline=True, width=380,
             font_size=14, bold=False, color=COLOR_TEXT,
-            x=20, y=window.height - 50,
+            x=20, y=window.height - 30,
             anchor_x='left', anchor_y='top')
         self.label2 = pyglet.text.Label(
             '', multiline = True, width = 380,
             font_size=14, bold=False, color = COLOR_TEXT,
-            x = window.width // 2, y = window.height - 50,
+            x = window.width // 2, y = window.height - 30,
             anchor_x='left', anchor_y='top')
         
     def draw(self):
         str_list = []
-        str_list.append('Type a number or letter choose the game mode.\n')
+        str_list.append('Type a number or letter to choose the game mode.\n')
         str_list.append('\n\n')
         str_list.append('  0: Position N-Back\n')
         str_list.append('  1: Sound N-Back\n')
@@ -1464,7 +1464,7 @@ class GameSelect:
             str_list.append('   YES')
         elif VARIABLE_NBACK == 0:
             str_list.append('   NO')
-        str_list.append('\n\n')
+        str_list.append('\n\n\n\n')
         str_list.append('  ESC: Cancel')
         
         str_list2 = []
