@@ -149,14 +149,15 @@ JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
 # This selects which sounds to use for audio n-back tasks.
 # Select any combination of letters, numbers, the NATO Phonetic Alphabet
 # (Alpha, Bravo, Charlie, etc), the C scale on piano, and morse code.
-CHANNEL_AUDIO = 'center'
 USE_LETTERS = True
 USE_NUMBERS = False
 USE_NATO = False
 USE_PIANO = False
 USE_MORSE = False
 
-CHANNEL_AUDIO2 = 'center'
+# Sound configuration for the Dual Audio (A-A) task.
+CHANNEL_AUDIO = 'left'
+CHANNEL_AUDIO2 = 'right'
 USE_LETTERS_2 = True
 USE_NUMBERS_2 = False
 USE_NATO_2 = False
@@ -251,7 +252,7 @@ USE_MUSIC_MANUAL = False
 #  104:'P-C-A-A',
 #  105:'P-I-A-A',
 #  106:'C-I-A-A',
-#  107:'P-C-I-A-A'
+#  107:'P-C-I-A-A' (Quintuple)
 # Note: if JAEGGI_MODE is True, only Dual N-Back will be available.
 # Default: 2
 GAME_MODE = 2
@@ -1544,9 +1545,10 @@ class SoundSelect:
         str_list = []
         str_list.append('Sound task:\n\n')
         
-        str_list.append('  L:  ')
-        str_list.append(CHANNEL_AUDIO)
-        str_list.append(' channel\n\n')
+        if('audio2' in mode.modalities[mode.mode]):
+            str_list.append('  L:  ')
+            str_list.append(CHANNEL_AUDIO)
+            str_list.append(' channel\n\n')
         
         if USE_LETTERS:
             str_list.append('Yes')
