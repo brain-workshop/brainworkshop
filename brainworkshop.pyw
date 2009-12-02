@@ -156,6 +156,8 @@ USE_PIANO = False
 USE_MORSE = False
 
 # Sound configuration for the Dual Audio (A-A) task.
+# Possible values for CHANNEL_AUDIO and CHANNEL_AUDIO2:
+#    'left' 'right' 'center'
 CHANNEL_AUDIO = 'left'
 CHANNEL_AUDIO2 = 'right'
 USE_LETTERS_2 = True
