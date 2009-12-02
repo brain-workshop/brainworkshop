@@ -864,7 +864,7 @@ class Mode:
                                  104:'P-C-A-A',
                                  105:'P-I-A-A',
                                  106:'C-I-A-A',
-                                 107:'P-C-I-A-A'
+                                 107:'Quintuple'
                                  }
         
         self.modalities = { 2:['position', 'audio'],
