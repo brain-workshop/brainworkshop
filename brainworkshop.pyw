@@ -254,7 +254,7 @@ USE_MUSIC_MANUAL = False
 #  104:'P-C-A-A',
 #  105:'P-I-A-A',
 #  106:'C-I-A-A',
-#  107:'P-C-I-A-A' (Quintuple)
+#  107:'P-C-I-A-A' (Pentuple)
 # Note: if JAEGGI_MODE is True, only Dual N-Back will be available.
 # Default: 2
 GAME_MODE = 2
@@ -837,7 +837,7 @@ class Mode:
                                  104:'PCAA',
                                  105:'PIAA',
                                  106:'CIAA',
-                                 107:'PCIAA'
+                                 107:'P'
                                  }
         
         self.long_mode_names =  {2:'Dual',
@@ -866,7 +866,7 @@ class Mode:
                                  104:'P-C-A-A',
                                  105:'P-I-A-A',
                                  106:'C-I-A-A',
-                                 107:'Quintuple'
+                                 107:'Pentuple'
                                  }
         
         self.modalities = { 2:['position', 'audio'],
@@ -1490,7 +1490,7 @@ class GameSelect:
         str_list2.append('  G: Position - Color - Sound - Sound2\n')
         str_list2.append('  H: Position - Image - Sound - Sound2\n')
         str_list2.append('  J: Color - Image - Sound - Sound2\n\n')
-        str_list2.append('  K: Quintuple N-Back\n')
+        str_list2.append('  K: Pentuple N-Back\n')
                 
 
         self.label.text = ''.join(str_list)
