@@ -1008,6 +1008,7 @@ class Graph:
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
+                    if line[0] not in ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'): continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
                     if hour < ROLLOVER_HOUR:
@@ -3028,6 +3029,7 @@ class Stats:
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
+                    if line[0] not in ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'): continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
                     if int(strftime('%H')) < ROLLOVER_HOUR:
