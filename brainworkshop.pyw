@@ -30,7 +30,10 @@ CLINICAL_MODE = False
 # Internal static options not available in config file.
 CONFIG_OVERWRITE_IF_OLDER_THAN = 4.7
 NOVBO = True
-VSYNC = False
+if sys.platform == 'darwin':
+    VSYNC = True
+else: 
+    VSYNC = False
 FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'

@@ -57,6 +57,8 @@ Change Log:
    selected.
 * Stats file may be specified on the command line with --statsfile,
    complementing the --configfile command line parameter.
+* Comments may be added to the stats file on separate lines beginning
+   with the # character.
 
 4.5:
 * First release with Quad N-Back and other new modes
