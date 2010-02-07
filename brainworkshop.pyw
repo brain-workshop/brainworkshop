@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7'
+VERSION = '4.7.1'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -30,14 +30,13 @@ CLINICAL_MODE = False
 # Internal static options not available in config file.
 CONFIG_OVERWRITE_IF_OLDER_THAN = 4.7
 NOVBO = True
-if sys.platform == 'darwin':
-    VSYNC = True
-else: 
-    VSYNC = False
+VSYNC = False
+DEBUG = False
 FOLDER_RES = 'res'
 FOLDER_DATA = 'data'
 CONFIGFILE = 'config.ini'
 STATS_BINARY = 'logfile.dat'
+USER = 'default'
 #CHARTFILE = {2:'chart-02-dnb.txt', 3:'chart-03-tnb.txt', 4:'chart-04-dlnb.txt', 5:'chart-05-tlnb.txt',
              #6:'chart-06-qlnb.txt',7:'chart-07-anb.txt', 8:'chart-08-danb.txt', 9:'chart-09-tanb.txt',
              #10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
@@ -159,8 +158,6 @@ USE_PIANO = False
 USE_MORSE = False
 
 # Sound configuration for the Dual Audio (A-A) task.
-# Possible values for CHANNEL_AUDIO and CHANNEL_AUDIO2:
-#    'left' 'right' 'center'
 CHANNEL_AUDIO = 'left'
 CHANNEL_AUDIO2 = 'right'
 USE_LETTERS_2 = True
@@ -257,7 +254,7 @@ USE_MUSIC_MANUAL = False
 #  104:'P-C-A-A',
 #  105:'P-I-A-A',
 #  106:'C-I-A-A',
-#  107:'P-C-I-A-A' (Pentuple)
+#  107:'P-C-I-A-A' (Quintuple)
 # Note: if JAEGGI_MODE is True, only Dual N-Back will be available.
 # Default: 2
 GAME_MODE = 2
@@ -467,19 +464,15 @@ def dump_pyglet_info():
     sys.stdout = open(os.path.join(get_data_dir(), 'dump.txt'), 'w')
     info.dump()
     sys.stdout.close()
-    window.on_close()
-
+    sys.exit()
+    
 # parse config file & command line options
-try:
-    sys.argv[sys.argv.index('--vsync')]
+if '--debug' in sys.argv:
+    DEBUG = True
+if '--vsync' in sys.argv:
     VSYNC = True
-except:
-    pass
-try:
-    sys.argv[sys.argv.index('--dump')]
+if '--dump' in sys.argv:
     dump_pyglet_info()
-except:
-    pass
 try: CONFIGFILE = sys.argv[sys.argv.index('--configfile') + 1]
 except:
     pass
@@ -605,10 +598,10 @@ def update_check():
     req = urllib2.Request(WEB_VERSION_CHECK)
     try:
         response = urllib2.urlopen(req)
-        version = Decimal(response.readline())
+        version = response.readline().strip()
     except:
         return
-    if version > Decimal(VERSION):
+    if version > VERSION: # simply comparing strings works just fine
         update_available = True
         update_version = version
 
@@ -788,6 +781,8 @@ class MyWindow(pyglet.window.Window):
         pass
     
 window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
+if DEBUG: 
+    window.push_handlers(pyglet.window.event.WindowEventLogger())
 if sys.platform == 'darwin': # and WINDOW_FULLSCREEN:
     window.set_exclusive_keyboard()
 if sys.platform == 'linux2':
@@ -840,7 +835,7 @@ class Mode:
                                  104:'PCAA',
                                  105:'PIAA',
                                  106:'CIAA',
-                                 107:'P'
+                                 107:'PCIAA'
                                  }
         
         self.long_mode_names =  {2:'Dual',
@@ -869,7 +864,7 @@ class Mode:
                                  104:'P-C-A-A',
                                  105:'P-I-A-A',
                                  106:'C-I-A-A',
-                                 107:'Pentuple'
+                                 107:'P-C-I-A-A'
                                  }
         
         self.modalities = { 2:['position', 'audio'],
@@ -1011,7 +1006,6 @@ class Graph:
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
-                    if line[0] not in ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'): continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
                     if hour < ROLLOVER_HOUR:
@@ -1321,29 +1315,90 @@ class Graph:
             font_size = 11, bold = False, color = COLOR_TEXT,
             x = window.width // 2, y = 20,
             anchor_x = 'center', anchor_y = 'center')                
+class TextInputScreen:
+    titlesize = 18
+    textsize = 16
 
+    def __init__(self, title='', text='', callback=None, catch=''):
+        self.titletext = title
+        self.text = text
+        self.starttext = text
+        self.bgcolor = (255 * int(not BLACK_BACKGROUND), )*3
+        self.textcolor = (0,0,0,255)#(255 * int(BLACK_BACKGROUND), )*3
+        self.batch = pyglet.graphics.Batch()
+        self.title = pyglet.text.Label(title, font_size=self.titlesize,
+            bold=True, color=self.textcolor, batch=self.batch,
+            x=window.width/2, y=(window.height*9)/10,
+            anchor_x='center', anchor_y='center')
+        self.document = pyglet.text.document.UnformattedDocument()
+        self.layout = pyglet.text.layout.IncrementalTextLayout(self.document,
+            (3*window.width)/2, window.height/4, batch=self.batch)
+        # FIXME:  make the text input field centered in the screen
+        if not callback: callback = lambda x: x
+        self.callback = callback
+        self.caret = pyglet.text.caret.Caret(self.layout)
+        window.push_handlers(self.caret)
+        window.push_handlers(self.on_key_press, self.on_draw)
+        self.document.text = text
+        # workaround for a bug:  the keypress that spawns TextInputScreen doesn't
+        # get handled until after the caret handler has been pushed, which seems
+        # to result in the keypress being interpreted as a text input, so we 
+        # catch that later
+        self.catch = catch
+        
+    
+    def on_draw(self):
+        if self.catch and self.document.text == self.catch + self.starttext: # the bugfix hack
+            self.document.text = self.starttext
+            self.catch = ''
+#            self.caret.select_to_point(window.width, window.height)
+            self.caret.select_paragraph(0,0)
+            #self.layout.set_selection(0, len(self.starttext))
+
+        window.clear()
+        self.batch.draw()
+        return pyglet.event.EVENT_HANDLED
+
+    
+    def on_key_press(self, k, mod):
+        if k in (key.ESCAPE, key.RETURN, key.ENTER):
+            if k is key.ESCAPE:
+                self.text = self.starttext
+            else:
+                self.text = self.document.text
+            window.pop_handlers()
+            window.pop_handlers()
+        self.callback(self.text)
+        return pyglet.event.EVENT_HANDLED
+      
+    
 class Menu:
     """
-    Menu.__init__(self, options, title=''):
+    Menu.__init__(self, options, actions={}, title='',  choose_once=False, 
+                  default=0):
         
     A generic menu class.  The argument options is edited in-place.  Instancing
     the Menu displays the menu.  Menu will install its own event handlers for
     on_key_press, on_text, on_text_motion and on_draw, all of which 
     do not pass events to later handlers on the stack.  When the user presses 
-    esc,  Menu pops its handlers off the stack.
+    esc,  Menu pops its handlers off the stack. If the argument actions is used,
+    it should be a dict with keys being options with specific actions, and values
+    being a python callable which returns the new value for that option.
     
     """
     titlesize = 18
     choicesize = 12
     
-    def __init__(self, options, title=''):
+    def __init__(self, options, actions={}, title='', choose_once=False, default=0):
         self.bgcolor = (255 * int(not BLACK_BACKGROUND), )*3
         self.textcolor = (0,0,0,255)#(255 * int(BLACK_BACKGROUND), )*3
         self.markercolors = (255, 0, 0, 0, 255, 0, 0, 0, 255) # self.textcolor*3
         self.pagesize = min(len(options), (window.height*7/10) / (self.choicesize*3/2))
         self.options = options
-        self.disppos = 0  # which item in options is the first on the screen
-        self.selpos = 0 
+        self.actions = actions
+        self.choose_once = choose_once
+        self.disppos = 0  # which item in options is the first on the screen                          
+        self.selpos = default # may be offscreen?
         self.batch = pyglet.graphics.Batch()
         self.title = pyglet.text.Label(title, font_size=self.titlesize,
             bold=True, color=self.textcolor, batch=self.batch,
@@ -1378,8 +1433,11 @@ class Menu:
             i += 1
         ending = int(self.disppos + self.pagesize < len(self.options))
         while i < self.pagesize-ending and i+self.disppos < len(self.options):
-            k,v = self.options.items()[i+self.disppos]
-            self.labels[i].text = '%s:\t%s' % (str(k), self.textify(v))
+            if type(self.options) == dict:
+                k,v = self.options.items()[i+self.disppos]
+                self.labels[i].text = '%s:\t%s' % (str(k), self.textify(v))
+            else:
+                self.labels[i].text = self.options[i+self.disppos]
             i += 1
         if ending:
             self.labels[i].text = '...'
@@ -1409,13 +1467,23 @@ class Menu:
         return pyglet.event.EVENT_HANDLED
     
     def select(self):
-        k = self.options.keys()[self.selpos]
-        if type(self.options[k]) == bool:
+        if type(self.options) == dict:
+            k = self.options.keys()[self.selpos]
+            i = k
+        else: 
+            k = self.options[self.selpos]
+            i = self.selpos
+        if k in self.actions.keys():
+            self.options[i] = self.actions[k](k)
+        elif type(self.options[k]) == bool:
             self.options[k] = not self.options[k]  # todo: other data types
+        if self.choose_once:
+            self.close()
         self.update_labels()
         
     def close(self):
-        return window.pop_handlers()
+        return window.remove_handlers(self.on_key_press, self.on_text, 
+                                      self.on_text_motion, self.on_draw)
     
     def on_text_motion(self, evt):
         if evt == key.MOTION_UP:            self.move_selection(steps=-1)
@@ -1494,7 +1562,7 @@ class GameSelect:
         str_list2.append('  G: Position - Color - Sound - Sound2\n')
         str_list2.append('  H: Position - Image - Sound - Sound2\n')
         str_list2.append('  J: Color - Image - Sound - Sound2\n\n')
-        str_list2.append('  K: Pentuple N-Back\n')
+        str_list2.append('  K: Quintuple N-Back\n')
                 
 
         self.label.text = ''.join(str_list)
@@ -2043,6 +2111,7 @@ class TitleKeysLabel:
             str_list.append('S: Choose Sounds\n')
             str_list.append('I: Choose Images\n')
         if not CLINICAL_MODE:
+            str_list.append('U: Choose User\n')
             str_list.append('G: Daily Progress Graph\n')
         str_list.append('H: Help / Tutorial\n')
         if not CLINICAL_MODE:
@@ -3032,7 +3101,6 @@ class Stats:
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
-                    if line[0] not in ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'): continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
                     if int(strftime('%H')) < ROLLOVER_HOUR:
@@ -3588,6 +3656,38 @@ def toggle_manual_mode():
         
     update_all_labels()
 
+def set_user(newuser):
+    global STATSFILE
+    global USER
+    global STATS_BINARY
+    USER = newuser
+    if USER.lower() == 'default':
+        STATSFILE = 'stats.txt'      # FIXME: will do strange things if config.ini
+        STATS_BINARY = 'logfile.dat' # or cmd-line-opts use non-default files
+    else:
+        STATSFILE = USER + '-stats.txt'
+        STATS_BINARY = USER + '-logfile.dat'
+        try:
+            os.stat(os.path.join(get_data_dir(), STATSFILE))
+        except OSError:
+            f = file(os.path.join(get_data_dir(), STATSFILE), 'w')
+            f.close()
+        try:
+            os.stat(os.path.join(get_data_dir(), STATS_BINARY))
+        except OSError:
+            f = file(os.path.join(get_data_dir(), STATS_BINARY), 'w')
+            f.close()
+            
+def choose_user(newuser):
+    if newuser == "New user":
+        textInput = TextInputScreen("Enter new user name:", USER, callback=set_user, catch='u')
+    else:
+        set_user(newuser)
+
+def get_users():
+    users = ['default'] + [fn.split('-')[0] for fn in os.listdir(get_data_dir()) if '-stats.txt' in fn]
+    if 'Readme' in users: users.remove('Readme')
+    return users
 
 # there are 3 event loops:
 #   on_key_press: listens to the keyboard and acts when certain keys are pressed
@@ -3646,6 +3746,15 @@ def on_key_press(symbol, modifiers):
 #            Menu(soundchoices, title='Hello World!')
 #        elif symbol == key.B:
 #            print soundchoices
+
+        elif symbol == key.U: 
+            users = ["New user"] + get_users()
+            userSwitchMenu = Menu(options=users, 
+                               actions=dict([(user, choose_user) for user in users]),
+                               title="Please select your user account",
+                               choose_once=True,
+                               default=users.index(USER))
+
                 
         elif symbol == key.I and not JAEGGI_MODE:
             mode.image_select = True
@@ -4023,7 +4132,7 @@ def on_key_press(symbol, modifiers):
             if symbol == KEY_AUDIO2:
                 mode.audio2_input = True
                 audio2Label.update()
-            
+    return pyglet.event.EVENT_HANDLED
 # the loop where everything is drawn on the screen.
 @window.event
 def on_draw():
@@ -4075,10 +4184,12 @@ def update(dt):
         # Hide square at either the 0.5 second mark or sooner
         if mode.tick == 6 or mode.tick == mode.ticks_per_trial - 1:
             visual.hide()
-        if mode.tick == mode.ticks_per_trial:
+        if mode.tick == mode.ticks_per_trial - 2:  # display feedback for 200 ms
             mode.tick = 0
             mode.show_missed = True
             update_input_labels()
+        if mode.tick == mode.ticks_per_trial:
+            mode.tick = 0
 pyglet.clock.schedule_interval(update, TICK_DURATION)
 
 angle = 0
