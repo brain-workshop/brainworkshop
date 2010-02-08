@@ -158,6 +158,8 @@ USE_PIANO = False
 USE_MORSE = False
 
 # Sound configuration for the Dual Audio (A-A) task.
+# Possible values for CHANNEL_AUDIO and CHANNEL_AUDIO2:
+#    'left' 'right' 'center'
 CHANNEL_AUDIO = 'left'
 CHANNEL_AUDIO2 = 'right'
 USE_LETTERS_2 = True
@@ -254,7 +256,7 @@ USE_MUSIC_MANUAL = False
 #  104:'P-C-A-A',
 #  105:'P-I-A-A',
 #  106:'C-I-A-A',
-#  107:'P-C-I-A-A' (Quintuple)
+#  107:'P-C-I-A-A' (Pentuple)
 # Note: if JAEGGI_MODE is True, only Dual N-Back will be available.
 # Default: 2
 GAME_MODE = 2
@@ -835,7 +837,7 @@ class Mode:
                                  104:'PCAA',
                                  105:'PIAA',
                                  106:'CIAA',
-                                 107:'PCIAA'
+                                 107:'P'
                                  }
         
         self.long_mode_names =  {2:'Dual',
@@ -864,7 +866,7 @@ class Mode:
                                  104:'P-C-A-A',
                                  105:'P-I-A-A',
                                  106:'C-I-A-A',
-                                 107:'P-C-I-A-A'
+                                 107:'Pentuple'
                                  }
         
         self.modalities = { 2:['position', 'audio'],
@@ -1006,6 +1008,7 @@ class Graph:
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
+                    if line[0] not in '0123456789': continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
                     if hour < ROLLOVER_HOUR:
@@ -1562,7 +1565,7 @@ class GameSelect:
         str_list2.append('  G: Position - Color - Sound - Sound2\n')
         str_list2.append('  H: Position - Image - Sound - Sound2\n')
         str_list2.append('  J: Color - Image - Sound - Sound2\n\n')
-        str_list2.append('  K: Quintuple N-Back\n')
+        str_list2.append('  K: Pentuple N-Back\n')
                 
 
         self.label.text = ''.join(str_list)
@@ -3101,6 +3104,7 @@ class Stats:
                 for line in statsfile:
                     if line == '': continue
                     if line == '\n': continue
+                    if line[0] not in '0123456789': continue
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
                     if int(strftime('%H')) < ROLLOVER_HOUR:
@@ -3593,9 +3597,8 @@ def generate_stimulus():
     # audio is never static so it doesn't have a default.
     if not 'color'    in mode.modalities[mode.mode]: mode.current_color = VISUAL_COLOR
     if not 'position' in mode.modalities[mode.mode]: mode.current_position = 0
-    if not 'visvis'   in mode.modalities[mode.mode] and \
-     not 'arithmetic' in mode.modalities[mode.mode] and \
-     not 'image'      in mode.modalities[mode.mode]: mode.current_vis = 0
+    if not set(['visvis', 'arithmetic', 'image']).intersection(mode.modalities[mode.mode]):
+        mode.current_vis = 0
 
     # in jaeggi mode, set using the predetermined sequence.
     if JAEGGI_MODE:
@@ -3606,8 +3609,8 @@ def generate_stimulus():
     # mode.current_audio is a number from 1 to 8.
     if mode.mode in (7, 8, 9) and mode.trial_number > mode.back:
         player = pyglet.media.ManagedSoundPlayer()
-        player.queue(sounds['operations'][mode.current_operation])
-        player.play()
+        player.queue(sounds['operations'][mode.current_operation])  # maybe we should try... catch... here
+        player.play()                                               # and maybe we should recycle sound players...
     elif mode.mode in (2, 3, 4, 5, 6, 11, 22, 23, 26, 27, 28):
         player = pyglet.media.ManagedSoundPlayer()
         player.queue(mode.soundlist[mode.current_audio-1])
