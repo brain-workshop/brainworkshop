@@ -976,6 +976,13 @@ class Graph:
         self.reset_dictionaries()
         self.reset_percents()
         self.batch = None
+        self.styles = ['N', '%', 'N.%', 'N+2*%-1']
+        self.style = 0
+    
+    def next_style(self):
+        self.style = (self.style + 1) % len(self.styles)
+        print "style = %s" % self.styles[self.style] # fixme:  change the labels
+        self.parse_stats()
 
     def reset_dictionaries(self):
         self.dictionaries = dict([(i, {}) for i in mode.modalities])
@@ -1024,11 +1031,6 @@ class Graph:
                         continue
                     newmode = int(newline[3])
                     newback = int(newline[4])
-                    newpercent = int(newline[2])
-                    dictionary = self.dictionaries[newmode]
-                    if datestamp not in dictionary:
-                        dictionary[datestamp] = []
-                    dictionary[datestamp].append(newback)
                     
                     while len(newline) < 18:
                         newline.append('0') # make it work for image mode, missing visaudio and audio2
@@ -1036,23 +1038,42 @@ class Graph:
                         for m in mode.modalities[newmode]:
                             self.percents[newmode][m].append(int(newline[ind[m]]))
                         
+                    dictionary = self.dictionaries[newmode]
+                    if datestamp not in dictionary:
+                        dictionary[datestamp] = []
+                    dictionary[datestamp].append([newback] + \
+                        [self.percents[newmode][n][-1] for n in mode.modalities[newmode]])
+
                 statsfile.close()
             except:
                 quit_with_error('Error parsing stats file\n %s' % 
                                 os.path.join(get_data_dir(), STATSFILE),
                                 'Please fix, delete or rename the stats file.')
 
+            def mean(x):
+                try:
+                    return sum(x)/float(len(x))
+                except TypeError: # don't know if this is necessary or not
+                    return x
+            def cent(x):
+                try:
+                    return map(lambda y: .01*y, x)
+                except TypeError:
+                    return .01*x
+            
             for dictionary in self.dictionaries.values():
-                for datestamp in dictionary.keys():
-                    average = 0.0
-                    max = 0.0
-                    numentries = 0
-                    for entry in dictionary[datestamp]:
-                        average += entry
-                        if entry > max:
-                            max = entry
-                        numentries += 1
-                    dictionary[datestamp] = (average / numentries, max)
+                for datestamp in dictionary.keys(): # this would be so much easier with numpy
+                    entries = dictionary[datestamp]
+                    nonzeros = [[num for num in entry if num] for entry in entries]
+                    if self.styles[self.style] == 'N':
+                        scores = [entry[0] for entry in entries]
+                    elif self.styles[self.style] == '%':
+                        scores = [mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                    elif self.styles[self.style] == 'N.%':
+                        scores = [nonzero[0] + mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                    elif self.styles[self.style] == 'N+2*%-1':
+                        scores = [nonzero[0] - 1 + 2*mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                    dictionary[datestamp] = (mean(scores), max(scores))
                     
             for game in self.percents:
                 for category in self.percents[game]:
@@ -1205,8 +1226,8 @@ class Graph:
         ymax = int(math.ceil(ymax * 4))/4.
         
         # remove these two lines to revert to the old behaviour
-        ymin = 1.0
-        ymax += 0.25
+        #ymin = 1.0
+        #ymax += 0.25
         
         # add intermediate days
         z = 0
@@ -1221,7 +1242,7 @@ class Graph:
         maxpoints = []
         
         xinterval = width / (float(len(dates) - 1))
-        skip_x = int(math.floor(x_label_width / xinterval))
+        skip_x = int(x_label_width // xinterval)
 
         for index in range(len(dates)):
             x = int(xinterval * index + left)
@@ -3777,6 +3798,9 @@ def on_key_press(symbol, modifiers):
 
         elif symbol == key.N:
             graph.next_mode()
+            
+        elif symbol == key.M:
+            graph.next_style()
             
     elif mode.game_select:
         def execute_mode_change():
