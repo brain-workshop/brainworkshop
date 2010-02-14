@@ -976,7 +976,7 @@ class Graph:
         self.reset_dictionaries()
         self.reset_percents()
         self.batch = None
-        self.styles = ['N', '%', 'N.%', 'N+2*%-1']
+        self.styles = ['N+10/3+4/3', 'N', '%', 'N.%', 'N+2*%-1']
         self.style = 0
     
     def next_style(self):
@@ -1073,6 +1073,8 @@ class Graph:
                         scores = [nonzero[0] + mean(cent(nonzero[1:])) for nonzero in nonzeros]
                     elif self.styles[self.style] == 'N+2*%-1':
                         scores = [nonzero[0] - 1 + 2*mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                    elif self.styles[self.style] == 'N+10/3+4/3':
+                        scores = [nonzero[0] - 5./3. + 10./3.*mean(cent(nonzero[1:])) for nonzero in nonzeros]
                     dictionary[datestamp] = (mean(scores), max(scores))
                     
             for game in self.percents:
