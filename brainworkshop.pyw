@@ -291,6 +291,33 @@ BACK_104 = 2
 BACK_105 = 2
 BACK_106 = 2
 BACK_107 = 2
+BACK_130 = 2
+BACK_131 = 2
+BACK_132 = 1
+BACK_133 = 1
+BACK_134 = 1
+BACK_135 = 1
+BACK_136 = 1
+BACK_137 = 1
+BACK_138 = 2
+BACK_139 = 2
+BACK_148 = 2
+BACK_149 = 2
+BACK_150 = 2
+BACK_151 = 2
+BACK_152 = 2
+BACK_153 = 2
+BACK_154 = 2
+BACK_155 = 2
+BACK_156 = 2
+BACK_228 = 2
+BACK_229 = 2
+BACK_230 = 2
+BACK_231 = 2
+BACK_232 = 2
+BACK_233 = 2
+BACK_234 = 2
+BACK_235 = 2
 
 # Use Variable N-Back by default?
 # 0 = static n-back (default)
@@ -328,6 +355,34 @@ TICKS_104 = 30
 TICKS_105 = 30
 TICKS_106 = 30
 TICKS_107 = 30
+TICKS_130 = 30
+TICKS_131 = 30
+TICKS_132 = 30
+TICKS_133 = 30
+TICKS_134 = 30
+TICKS_135 = 30
+TICKS_136 = 30
+TICKS_137 = 30
+TICKS_138 = 30
+TICKS_139 = 30
+TICKS_148 = 30
+TICKS_149 = 30
+TICKS_150 = 30
+TICKS_151 = 30
+TICKS_152 = 30
+TICKS_153 = 30
+TICKS_154 = 30
+TICKS_155 = 30
+TICKS_156 = 30
+TICKS_228 = 30
+TICKS_229 = 30
+TICKS_230 = 30
+TICKS_231 = 30
+TICKS_232 = 30
+TICKS_233 = 30
+TICKS_234 = 30
+TICKS_235 = 30
+
 
 # The number of trials per session equals
 # NUM_TRIALS + NUM_TRIALS_FACTOR * n ^ NUM_TRIALS_EXPONENT,
@@ -471,7 +526,7 @@ def dump_pyglet_info():
 # parse config file & command line options
 if '--debug' in sys.argv:
     DEBUG = True
-if '--vsync' in sys.argv:
+if '--vsync' in sys.argv or sys.platform == 'darwin':
     VSYNC = True
 if '--dump' in sys.argv:
     dump_pyglet_info()
@@ -899,6 +954,22 @@ class Mode:
                             107:['position', 'color', 'image', 'audio', 'audio2']
                             }
         
+        self.flags = {}
+        for m in self.short_mode_names.keys():
+            nm = m | 128 # newmode; Crab DNB = 2 | 128 = 130
+            self.flags[m] = {'crab':0}  # forwards
+            self.flags[nm] = {'crab':1} # every (self.back) stimuli are reversed for matching
+            self.short_mode_names[nm] = 'C' + self.short_mode_names[m]
+            self.long_mode_names[nm] = 'Crab ' + self.long_mode_names[m]
+            self.modalities[nm] = self.modalities[m][:] # the [:] at the end is
+            # so we take a copy of the list, in case we want to change it later
+#            print "flags:", self.flags
+#            print "short_mode_names:", self.short_mode_names
+#            print "long_mode_names:", self.long_mode_names
+#            print "modalities:", self.modalities
+            
+            
+            
         self.variable_list = []
         
         self.manual = MANUAL
@@ -1340,11 +1411,12 @@ class Graph:
             batch=self.batch,
             font_size = 11, bold = False, color = COLOR_TEXT,
             x = window.width // 2, y = 20,
-            anchor_x = 'center', anchor_y = 'center')                
+            anchor_x = 'center', anchor_y = 'center')
+
 class TextInputScreen:
     titlesize = 18
     textsize = 16
-
+    
     def __init__(self, title='', text='', callback=None, catch=''):
         self.titletext = title
         self.text = text
@@ -1377,9 +1449,7 @@ class TextInputScreen:
         if self.catch and self.document.text == self.catch + self.starttext: # the bugfix hack
             self.document.text = self.starttext
             self.catch = ''
-#            self.caret.select_to_point(window.width, window.height)
             self.caret.select_paragraph(0,0)
-            #self.layout.set_selection(0, len(self.starttext))
 
         window.clear()
         self.batch.draw()
@@ -1400,7 +1470,7 @@ class TextInputScreen:
     
 class Menu:
     """
-    Menu.__init__(self, options, actions={}, title='',  choose_once=False, 
+    Menu.__init__(self, options, values={}, actions={}, title='',  choose_once=False, 
                   default=0):
         
     A generic menu class.  The argument options is edited in-place.  Instancing
@@ -1415,15 +1485,21 @@ class Menu:
     titlesize = 18
     choicesize = 12
     
-    def __init__(self, options, actions={}, title='', choose_once=False, default=0):
+    def __init__(self, options, values=None, actions={}, title='', choose_once=False, default=0):
         self.bgcolor = (255 * int(not BLACK_BACKGROUND), )*3
         self.textcolor = (0,0,0,255)#(255 * int(BLACK_BACKGROUND), )*3
         self.markercolors = (255, 0, 0, 0, 255, 0, 0, 0, 255) # self.textcolor*3
         self.pagesize = min(len(options), (window.height*7/10) / (self.choicesize*3/2))
-        self.options = options
+        if type(options) == dict:
+            vals = options
+            self.options = options.keys()
+        else:
+            vals = dict([[op, None] for op in options])
+            self.options = options
+        self.values = values or vals # use values if there's anything in it
         self.actions = actions
         self.choose_once = choose_once
-        self.disppos = 0  # which item in options is the first on the screen                          
+        self.disppos = 0 # which item in options is the first on the screen                          
         self.selpos = default # may be offscreen?
         self.batch = pyglet.graphics.Batch()
         self.title = pyglet.text.Label(title, font_size=self.titlesize,
@@ -1450,17 +1526,19 @@ class Menu:
         return str(x)
 
     def update_labels(self):
-        for l in self.labels:   l.text = 'meow'
+        for l in self.labels: l.text = 'Hello, bug!'
         
         markerpos = self.selpos - self.disppos                
         i = 0
-        if not self.disppos == 0:
+        di = self.disppos
+        if not di == 0: # displacement of i
             self.labels[i].text = '...'
             i += 1
-        ending = int(self.disppos + self.pagesize < len(self.options))
+        ending = int(di + self.pagesize < len(self.options))
         while i < self.pagesize-ending and i+self.disppos < len(self.options):
-            if type(self.options) == dict:
-                k,v = self.options.items()[i+self.disppos]
+            k = self.options[i+di]
+            if k in self.values.keys() and not self.values[k] == None: 
+                v = self.values[k]
                 self.labels[i].text = '%s:\t%s' % (str(k), self.textify(v))
             else:
                 self.labels[i].text = self.options[i+self.disppos]
@@ -1473,16 +1551,17 @@ class Menu:
                                 w/10, (h*8)/10 - markerpos*(cs*3/2) - cs/2]
         
     def move_selection(self, steps, relative=True):
+        # FIXME:  pageup/pagedown can occasionally cause "Hello bug!" to be displayed
         if relative:
             self.selpos += steps
         else:
             self.selpos = steps
         self.selpos = min(len(self.options)-1, max(0, self.selpos))
         if self.disppos >= self.selpos and not self.disppos == 0:
-            self.disppos = max(0, selpos-1)
-        if self.disppos <= self.selpos - self.pagesize \
+            self.disppos = max(0, self.selpos-1)
+        if self.disppos <= self.selpos - self.pagesize +1\
           and not self.disppos == len(self.options) - self.pagesize:
-            self.disppos = max(0, min(len(self.options), self.selpos+1) - self.pagesize)
+            self.disppos = max(0, min(len(self.options), self.selpos+1) - self.pagesize + 1)
         self.update_labels()
         
     def on_key_press(self, sym, mod):
@@ -1493,19 +1572,21 @@ class Menu:
         return pyglet.event.EVENT_HANDLED
     
     def select(self):
-        if type(self.options) == dict:
-            k = self.options.keys()[self.selpos]
-            i = k
-        else: 
-            k = self.options[self.selpos]
-            i = self.selpos
+        k = self.options[self.selpos]
+        i = self.selpos
         if k in self.actions.keys():
-            self.options[i] = self.actions[k](k)
-        elif type(self.options[k]) == bool:
-            self.options[k] = not self.options[k]  # todo: other data types
-        if self.choose_once:
+            self.values[k] = self.actions[k](k)
+        elif type(self.values[k]) == bool:
+            self.values[k] = not self.values[k]  # todo: other data types
+        elif self.values[k] == None:
+            self.choose(k, i)
             self.close()
+        if self.choose_once:
+            self.close()        
         self.update_labels()
+        
+    def choose(self, k, i): # override this method in subclasses
+        print "Thank you for beta-testing our software."
         
     def close(self):
         return window.remove_handlers(self.on_key_press, self.on_text, 
@@ -1514,8 +1595,8 @@ class Menu:
     def on_text_motion(self, evt):
         if evt == key.MOTION_UP:            self.move_selection(steps=-1)
         if evt == key.MOTION_DOWN:          self.move_selection(steps=1)
-        if evt == key.MOTION_NEXT_PAGE:     self.move_selection(steps=-self.pagesize)
-        if evt == key.MOTION_PREVIOUS_PAGE: self.move_selection(steps=self.pagesize)
+        if evt == key.MOTION_PREVIOUS_PAGE: self.move_selection(steps=-self.pagesize)
+        if evt == key.MOTION_NEXT_PAGE:     self.move_selection(steps=self.pagesize)
         return pyglet.event.EVENT_HANDLED
     
     def on_text(self, evt):
@@ -1526,6 +1607,28 @@ class Menu:
         self.batch.draw()
         return pyglet.event.EVENT_HANDLED
         
+
+class NewGameSelect(Menu):
+    def __init__(self):
+        modes = mode.long_mode_names.items()
+        modes.sort()
+        self.modes = modes
+        options = [m[1] + ' N-Back' for m in modes]
+        options.append('Use Variable N-Back levels?')
+        vals = dict([[op, None] for op in options])
+        vals[options[-1]] = bool(VARIABLE_NBACK)
+        default = modes.index((mode.mode, mode.long_mode_names[mode.mode]))
+        Menu.__init__(self, options, vals, title='Choose your game mode', default=default)
+    
+    def close(self):
+        global VARIABLE_NBACK
+        VARIABLE_NBACK = self.values[self.options[-1]]
+        Menu.close(self)
+        update_all_labels()
+        
+    def choose(self, k, i):
+        mode.mode = self.modes[i][0]
+        stats.retrieve_progress()
 
 class GameSelect:
     def __init__(self):
@@ -1560,9 +1663,9 @@ class GameSelect:
         str_list.append('  9: Triple Arithmetic N-Back\n')
         str_list.append('\n')
         str_list.append('  V: Use Variable n-back levels?')
-        if VARIABLE_NBACK == 1:
+        if VARIABLE_NBACK:
             str_list.append('   YES')
-        elif VARIABLE_NBACK == 0:
+        else:
             str_list.append('   NO')
         str_list.append('\n\n\n\n')
         str_list.append('  ESC: Cancel')
@@ -1857,17 +1960,17 @@ class Visual:
                 self.age = 0.0
                 pyglet.clock.schedule_interval(visual.animate_square, 1/60.)
         
-        elif mode.mode in (7, 8, 9): # display a number
+        elif 'arithmetic' in mode.modalities[mode.mode]: # display a number
             self.label.text = str(number)
             self.label.x = self.center_x
             self.label.y = self.center_y + 4
             self.label.color = self.color
-        elif mode.mode in (4, 5, 6): # display a letter
+        elif 'visvis' in mode.modalities[mode.mode]: # display a letter
             self.label.text = self.letters[vis - 1].upper()
             self.label.x = self.center_x
             self.label.y = self.center_y + 4
             self.label.color = self.color
-        elif mode.mode in (21, 23, 24, 25, 26, 27, 28, 103, 105, 106, 107): # display a pictogram
+        elif 'image' in mode.modalities[mode.mode]: # display a pictogram
             self.square = self.images[vis-1]
             self.square.opacity = 255
             self.square.color = self.color[:3]
@@ -1923,7 +2026,7 @@ class Visual:
         if self.visible:
             self.label.text = ''
             self.variable_label.text = ''
-            if mode.mode in (21, 23, 24, 25, 26, 27, 28, 103, 105, 106, 107):
+            if 'image' in mode.modalities[mode.mode]:
                 self.square.batch = None
                 pyglet.clock.unschedule(visual.animate_square)
             elif self.vis == 0:
@@ -2017,7 +2120,7 @@ class GameModeLabel:
             if mode.manual:
                 str_list.append('Manual mode: ')
             str_list.append(mode.long_mode_names[mode.mode] + ' ')
-            if VARIABLE_NBACK == 1:
+            if VARIABLE_NBACK:
                 str_list.append('V. ')
             str_list.append(str(mode.back))
             str_list.append('-Back')
@@ -2290,6 +2393,7 @@ class ArithmeticAnswerLabel:
                 
 
 # this controls the "A: position match" below the field.
+# TODO: fix the rest of the labels for crab back modes
 class PositionLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
@@ -2301,11 +2405,11 @@ class PositionLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode in (2, 3, 8, 9, 10, 20, 21, 25, 26, 101):
+        elif 'position' in mode.modalities[mode.mode] and not 'visvis' in mode.modalities[mode.mode]:
             str_list = [key.symbol_string(KEY_POSITION)]
             str_list.append(': position match')
             self.label.text = ''.join(str_list)
-        elif mode.mode in (5, 6, 28, 104, 105, 107):
+        elif 'position' in mode.modalities[mode.mode]:
             str_list = []
             str_list.append(key.symbol_string(KEY_POSITION))
             str_list.append(': position')
@@ -2344,7 +2448,7 @@ class VisvisLabel:
         self.label.font_size = input_label_size()
         if mode.started and mode.hide_text:
             self.label.text = ''
-        elif mode.mode in (4, 5, 6): # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
+        elif 'visvis' in mode.modalities[mode.mode]:
             if mode.mode == 4: self.label.anchor_x = 'left'
             else: self.label.anchor_x = 'center'
             str_list = []
@@ -2771,7 +2875,7 @@ class SpaceLabel:
             str_list.append(': ')
             str_list.append(mode.long_mode_names[mode.mode] + ' ')
                 
-            if VARIABLE_NBACK == 1:
+            if VARIABLE_NBACK:
                 str_list.append('V. ')
             str_list.append(str(mode.back))
             str_list.append('-Back')
@@ -2781,10 +2885,17 @@ def check_match(input_type, check_missed = False):
     current = 0
     back_data = ''
     operation = 0
-    if VARIABLE_NBACK == 1:
-        nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - mode.back - 1] - 1
-    elif VARIABLE_NBACK == 0:
-        nback_trial = mode.trial_number - mode.back - 1
+    # FIXME:  I'm not going to think about whether crab_back will work with 
+    # VARIABLE_NBACK yet, since I don't actually understand how the latter works
+    
+    if mode.flags[mode.mode]['crab'] == 1:
+        back = 1 + 2*((mode.trial_number-1) % mode.back)
+    else:
+        back = mode.back
+    if VARIABLE_NBACK:
+        nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - back - 1] - 1
+    else:
+        nback_trial = mode.trial_number - back - 1
         
     if len(stats.session['position']) < mode.back:
         return 'unknown'
@@ -2864,9 +2975,12 @@ class AnalysisLabel:
         for mod in mods:
             for x in range(mode.back, len(data['position'])):
 
-                back = mode.back
+                if mode.flags[mode.mode]['crab'] == 1:
+                    back = 1 + 2*((mode.trial_number-1) % mode.back)
+                else:
+                    back = mode.back
                 if VARIABLE_NBACK:
-                    back = mode.variable_list[x - mode.back]
+                    back = mode.variable_list[x - back]
                                 
                 # data is a dictionary of lists.
                 if mod in ['position', 'audio', 'audio2', 'color', 'image']:
@@ -3435,7 +3549,7 @@ def new_session():
         
     pyglet.clock.tick(poll=True) # Prevent music/applause skipping
         
-    if VARIABLE_NBACK == 1:
+    if VARIABLE_NBACK:
         # compute variable n-back sequence using beta distribution
         mode.variable_list = []
         for index in range(0, mode.num_trials_total - mode.back):
@@ -3563,7 +3677,7 @@ def generate_stimulus():
         min_number = 0
     max_number = ARITHMETIC_MAX_NUMBER
     
-    if mode.current_operation == 'divide' and mode.mode in (7, 8, 9):
+    if mode.current_operation == 'divide' and 'arithmetic' in mode.modalities[mode.mode]:
         if len(stats.session['position']) >= mode.back:
             number_nback = stats.session['numbers'][mode.trial_number - mode.back - 1]
             possibilities = []
@@ -3591,10 +3705,14 @@ def generate_stimulus():
         input_types = mode.modalities[mode.mode]
 
         choice = random.choice(input_types)
-        if VARIABLE_NBACK == 1:
-            nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - mode.back - 1] - 1
+        if mode.flags[mode.mode]['crab'] == 1:
+            back = 1 + 2*((mode.trial_number-1) % mode.back)
         else:
-            nback_trial = mode.trial_number - mode.back - 1
+            back = mode.back
+        if VARIABLE_NBACK:
+            nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - back - 1] - 1
+        else:
+            nback_trial = mode.trial_number - back - 1
 
         if choice == 'position':
             mode.current_position = stats.session['position'][nback_trial]
@@ -3630,15 +3748,15 @@ def generate_stimulus():
     
     # initiate the chosen stimuli.
     # mode.current_audio is a number from 1 to 8.
-    if mode.mode in (7, 8, 9) and mode.trial_number > mode.back:
+    if 'arithmetic' in mode.modalities[mode.mode] and mode.trial_number > mode.back:
         player = pyglet.media.ManagedSoundPlayer()
         player.queue(sounds['operations'][mode.current_operation])  # maybe we should try... catch... here
         player.play()                                               # and maybe we should recycle sound players...
-    elif mode.mode in (2, 3, 4, 5, 6, 11, 22, 23, 26, 27, 28):
+    elif 'audio' in mode.modalities[mode.mode] and not 'audio2' in mode.modalities[mode.mode]:
         player = pyglet.media.ManagedSoundPlayer()
         player.queue(mode.soundlist[mode.current_audio-1])
         player.play()
-    elif mode.mode in (100, 101, 102, 103, 104, 105, 106, 107):
+    elif 'audio2' in mode.modalities[mode.mode]:
         # dual audio modes - two sound players
         player = pyglet.media.ManagedSoundPlayer()
         player.queue(mode.soundlist[mode.current_audio-1])
@@ -3665,7 +3783,7 @@ def generate_stimulus():
         player2.play()
         
             
-    if VARIABLE_NBACK == 1 and mode.trial_number > mode.back:
+    if VARIABLE_NBACK and mode.trial_number > mode.back:
         variable = mode.variable_list[mode.trial_number - 1 - mode.back]
     else:
         variable = 0
@@ -3757,7 +3875,8 @@ def on_key_press(symbol, modifiers):
             #pyglet.clock.schedule_interval(shrink_brain, 1/60.)
             
         elif symbol == key.C and not JAEGGI_MODE:
-            mode.game_select = True
+            #mode.game_select = True
+            NewGameSelect()
                                     
         elif symbol == key.H:
             webbrowser.open_new_tab(WEB_TUTORIAL)
@@ -3816,9 +3935,7 @@ def on_key_press(symbol, modifiers):
         if symbol == key.ESCAPE or symbol == key.C or symbol == key.X:
             mode.game_select = False
         elif symbol == key.V:
-            if VARIABLE_NBACK == 1:
-                VARIABLE_NBACK = 0
-            else: VARIABLE_NBACK = 1
+            VARIABLE_NBACK = not VARIABLE_NBACK
         elif symbol == key._0 or symbol == key.NUM_0:
             mode.mode = 10
             execute_mode_change()
@@ -4055,7 +4172,8 @@ def on_key_press(symbol, modifiers):
             if JAEGGI_MODE:
                 jaeggiWarningLabel.show()
                 return
-            mode.game_select = True
+            #mode.game_select = True
+            NewGameSelect()
         
         elif symbol == key.I:
             if JAEGGI_MODE:
