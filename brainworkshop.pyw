@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.1'
+VERSION = '4.7.2'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -257,6 +257,7 @@ USE_MUSIC_MANUAL = False
 #  105:'P-I-A-A',
 #  106:'C-I-A-A',
 #  107:'P-C-I-A-A' (Pentuple)
+#  128+x:  Crab mode
 # Note: if JAEGGI_MODE is True, only Dual N-Back will be available.
 # Default: 2
 GAME_MODE = 2
@@ -635,7 +636,6 @@ if JAEGGI_MODE and not JAEGGI_INTERFACE_DEFAULT_SCORING:
 
 if BLACK_BACKGROUND:
     COLOR_TEXT = COLOR_TEXT_BLK
-        
 def get_threshold_advance():
     if JAEGGI_MODE:
         return JAEGGI_ADVANCE
@@ -647,7 +647,7 @@ def get_threshold_fallback():
 
 # this function checks if a new update for Brain Workshop is available.
 update_available = False
-update_version = Decimal(0)
+update_version = 0
 def update_check():
     global update_available
     global update_version
@@ -664,7 +664,6 @@ def update_check():
 
 if VERSION_CHECK_ON_STARTUP and not CLINICAL_MODE:
     update_check()
-
 try:
     # workaround for pyglet.gl.ContextException error on certain video cards.
     os.environ["PYGLET_SHADOW_WINDOW"]="0"
@@ -753,7 +752,6 @@ def sound_stop():
     global musicplayer
     musicplayer.volume = 0
     applauseplayer.volume = 0
-
 def fade_out(dt):
     global applauseplayer
     global musicplayer
@@ -836,7 +834,7 @@ class MyWindow(pyglet.window.Window):
         pass
     def on_key_release(self, symbol, modifiers):
         pass
-    
+
 window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
 if DEBUG: 
     window.push_handlers(pyglet.window.event.WindowEventLogger())
@@ -853,7 +851,6 @@ else:
 if WINDOW_FULLSCREEN:
     window.maximize()
     window.set_mouse_visible(False)
-
 # All changeable game state variables are located in an instance of the Mode class
 class Mode:
     def __init__(self):
@@ -896,7 +893,7 @@ class Mode:
                                  }
         
         self.long_mode_names =  {2:'Dual',
-                                 3:'P-C-A',
+                                 3:'Position, Color, Sound',
                                  4:'Dual Combination',
                                  5:'Tri Combination',
                                  6:'Quad Combination', 
@@ -905,22 +902,22 @@ class Mode:
                                  9:'Triple Arithmetic',
                                  10:'Position',
                                  11:'Sound',
-                                 20:'P-C',
-                                 21:'P-I',
-                                 22:'C-A',
-                                 23:'I-A',
-                                 24:'C-I',
-                                 25:'P-C-I',
-                                 26:'P-I-A',
-                                 27:'C-I-A',
+                                 20:'Position, Color',
+                                 21:'Position, Image',
+                                 22:'Color, Sound',
+                                 23:'Image, Sound',
+                                 24:'Color, Image',
+                                 25:'Position, Color, Image',
+                                 26:'Position, Image, Sound',
+                                 27:'Color, Image, Sound',
                                  28:'Quad',
-                                 100:'A-A',
-                                 101:'P-A-A',
-                                 102:'C-A-A',
-                                 103:'I-A-A',
-                                 104:'P-C-A-A',
-                                 105:'P-I-A-A',
-                                 106:'C-I-A-A',
+                                 100:'Sound, Sound2',
+                                 101:'Position, Sound, Sound2',
+                                 102:'Color, Sound, Sound2',
+                                 103:'Image, Sound, Sound2',
+                                 104:'Position, Color, Sound, Sound2',
+                                 105:'Position, Image, Sound, Sound2',
+                                 106:'Color, Image, Sound, Sound2',
                                  107:'Pentuple'
                                  }
         
@@ -943,7 +940,6 @@ class Mode:
                             26:['position', 'image', 'audio'],
                             27:['color', 'image', 'audio'],
                             28:['position', 'color', 'image', 'audio'],
-                            
                             100:['audio', 'audio2'],
                             101:['position', 'audio', 'audio2'],
                             102:['color', 'audio', 'audio2'],
@@ -956,19 +952,13 @@ class Mode:
         
         self.flags = {}
         for m in self.short_mode_names.keys():
-            nm = m | 128 # newmode; Crab DNB = 2 | 128 = 130
+            nm = m | 128                # newmode; Crab DNB = 2 | 128 = 130
             self.flags[m] = {'crab':0}  # forwards
             self.flags[nm] = {'crab':1} # every (self.back) stimuli are reversed for matching
             self.short_mode_names[nm] = 'C' + self.short_mode_names[m]
             self.long_mode_names[nm] = 'Crab ' + self.long_mode_names[m]
             self.modalities[nm] = self.modalities[m][:] # the [:] at the end is
             # so we take a copy of the list, in case we want to change it later
-#            print "flags:", self.flags
-#            print "short_mode_names:", self.short_mode_names
-#            print "long_mode_names:", self.long_mode_names
-#            print "modalities:", self.modalities
-            
-            
             
         self.variable_list = []
         
@@ -976,14 +966,14 @@ class Mode:
         if not self.manual:
             self.enforce_standard_mode()
                     
-        self.position_input = False
-        self.color_input = False
-        self.image_input = False
-        self.visvis_input = False
-        self.visaudio_input = False
-        self.audiovis_input = False
-        self.audio_input = False
-        self.audio2_input = False
+        self.inputs = {'position': False,
+                       'color':    False,
+                       'image':    False,
+                       'visvis':   False, 
+                       'visaudio': False,
+                       'audiovis': False,
+                       'audio':    False,
+                       'audio2':   False}
         
         self.hide_text = HIDE_TEXT
         
@@ -1608,7 +1598,7 @@ class Menu:
         return pyglet.event.EVENT_HANDLED
         
 
-class NewGameSelect(Menu):
+class GameSelect(Menu):
     def __init__(self):
         modes = mode.long_mode_names.items()
         modes.sort()
@@ -1625,80 +1615,83 @@ class NewGameSelect(Menu):
         VARIABLE_NBACK = self.values[self.options[-1]]
         Menu.close(self)
         update_all_labels()
+        circles.update()
         
     def choose(self, k, i):
         mode.mode = self.modes[i][0]
-        stats.retrieve_progress()
-
-class GameSelect:
-    def __init__(self):
+        if not mode.manual:
+            mode.enforce_standard_mode()
+            stats.retrieve_progress()
         
-        self.label = pyglet.text.Label(
-            '', multiline=True, width=380,
-            font_size=14, bold=False, color=COLOR_TEXT,
-            x=20, y=window.height - 30,
-            anchor_x='left', anchor_y='top')
-        self.label2 = pyglet.text.Label(
-            '', multiline = True, width = 380,
-            font_size=14, bold=False, color = COLOR_TEXT,
-            x = window.width // 2, y = window.height - 30,
-            anchor_x='left', anchor_y='top')
-        
-    def draw(self):
-        str_list = []
-        str_list.append('Type a number or letter to choose the game mode.\n')
-        str_list.append('\n\n')
-        str_list.append('  0: Position N-Back\n')
-        str_list.append('  1: Sound N-Back\n')
-        str_list.append('\n')
-        str_list.append('  2: Dual N-Back (default)\n')
-        str_list.append('  3: Position - Color - Sound\n')
-        str_list.append('\n')
-        str_list.append('  4: Dual Combination N-Back\n')
-        str_list.append('  5: Tri Combination N-Back\n')
-        str_list.append('  6: Quad Combination N-Back\n')
-        str_list.append('\n')
-        str_list.append('  7: Arithmetic N-Back\n')
-        str_list.append('  8: Dual Arithmetic N-Back\n')
-        str_list.append('  9: Triple Arithmetic N-Back\n')
-        str_list.append('\n')
-        str_list.append('  V: Use Variable n-back levels?')
-        if VARIABLE_NBACK:
-            str_list.append('   YES')
-        else:
-            str_list.append('   NO')
-        str_list.append('\n\n\n\n')
-        str_list.append('  ESC: Cancel')
-        
-        str_list2 = []
-        str_list2.append('\n\n\n\n')
-        str_list2.append('  Q: Position - Color\n')
-        str_list2.append('  W: Position - Image\n')
-        str_list2.append('  E: Color - Sound\n')
-        str_list2.append('  R: Image - Sound\n')
-        str_list2.append('  T: Color - Image\n')
-        str_list2.append('\n')
-        str_list2.append('  Y: Position - Color - Image\n')
-        str_list2.append('  U: Position - Image - Sound\n')
-        str_list2.append('  I: Color - Image - Sound\n')
-        str_list2.append('\n')
-        str_list2.append('  O: Quad N-Back\n')
-        str_list2.append('\n')
-        str_list2.append('  A: Sound - Sound2\n')
-        str_list2.append('  S: Position - Sound - Sound2\n')
-        str_list2.append('  D: Color - Sound - Sound2\n')
-        str_list2.append('  F: Image - Sound - Sound2\n')
-        str_list2.append('  G: Position - Color - Sound - Sound2\n')
-        str_list2.append('  H: Position - Image - Sound - Sound2\n')
-        str_list2.append('  J: Color - Image - Sound - Sound2\n\n')
-        str_list2.append('  K: Pentuple N-Back\n')
-                
-
-        self.label.text = ''.join(str_list)
-        self.label2.text = ''.join(str_list2)
-        
-        self.label.draw()
-        self.label2.draw()
+##class GameSelect:
+##    def __init__(self):
+##        
+##        self.label = pyglet.text.Label(
+##            '', multiline=True, width=380,
+##            font_size=14, bold=False, color=COLOR_TEXT,
+##            x=20, y=window.height - 30,
+##            anchor_x='left', anchor_y='top')
+##        self.label2 = pyglet.text.Label(
+##            '', multiline = True, width = 380,
+##            font_size=14, bold=False, color = COLOR_TEXT,
+##            x = window.width // 2, y = window.height - 30,
+##            anchor_x='left', anchor_y='top')
+##        
+##    def draw(self):
+##        str_list = []
+##        str_list.append('Type a number or letter to choose the game mode.\n')
+##        str_list.append('\n\n')
+##        str_list.append('  0: Position N-Back\n')
+##        str_list.append('  1: Sound N-Back\n')
+##        str_list.append('\n')
+##        str_list.append('  2: Dual N-Back (default)\n')
+##        str_list.append('  3: Position - Color - Sound\n')
+##        str_list.append('\n')
+##        str_list.append('  4: Dual Combination N-Back\n')
+##        str_list.append('  5: Tri Combination N-Back\n')
+##        str_list.append('  6: Quad Combination N-Back\n')
+##        str_list.append('\n')
+##        str_list.append('  7: Arithmetic N-Back\n')
+##        str_list.append('  8: Dual Arithmetic N-Back\n')
+##        str_list.append('  9: Triple Arithmetic N-Back\n')
+##        str_list.append('\n')
+##        str_list.append('  V: Use Variable n-back levels?')
+##        if VARIABLE_NBACK:
+##            str_list.append('   YES')
+##        else:
+##            str_list.append('   NO')
+##        str_list.append('\n\n\n\n')
+##        str_list.append('  ESC: Cancel')
+##        
+##        str_list2 = []
+##        str_list2.append('\n\n\n\n')
+##        str_list2.append('  Q: Position - Color\n')
+##        str_list2.append('  W: Position - Image\n')
+##        str_list2.append('  E: Color - Sound\n')
+##        str_list2.append('  R: Image - Sound\n')
+##        str_list2.append('  T: Color - Image\n')
+##        str_list2.append('\n')
+##        str_list2.append('  Y: Position - Color - Image\n')
+##        str_list2.append('  U: Position - Image - Sound\n')
+##        str_list2.append('  I: Color - Image - Sound\n')
+##        str_list2.append('\n')
+##        str_list2.append('  O: Quad N-Back\n')
+##        str_list2.append('\n')
+##        str_list2.append('  A: Sound - Sound2\n')
+##        str_list2.append('  S: Position - Sound - Sound2\n')
+##        str_list2.append('  D: Color - Sound - Sound2\n')
+##        str_list2.append('  F: Image - Sound - Sound2\n')
+##        str_list2.append('  G: Position - Color - Sound - Sound2\n')
+##        str_list2.append('  H: Position - Image - Sound - Sound2\n')
+##        str_list2.append('  J: Color - Image - Sound - Sound2\n\n')
+##        str_list2.append('  K: Pentuple N-Back\n')
+##                
+##
+##        self.label.text = ''.join(str_list)
+##        self.label2.text = ''.join(str_list2)
+##        
+##        self.label.draw()
+##        self.label2.draw()
         
 class ImageSelect:
     def __init__(self):
@@ -2327,6 +2320,72 @@ class CongratsLabel:
             str_list.append('N-Back decreased')
         self.label.text = ''.join(str_list)
         
+class FeedbackLabel:
+    def __init__(self, modality, pos=0, total=1):
+        """
+        Generic text label for giving user feedback during N-back sessions.  All
+        of the feedback labels should be instances of this class.
+        
+        pos should be which label number this one is displayed as (order: left-to-right).
+        total should be the total number of feedback labels for this mode.
+        
+        INCOMPLETE.  I need to get to sleep.
+        """
+        self.modality = modality
+        self.letter = letter = eval('key.symbol_string(KEY_%s)' % modality.upper())        
+        modalityname = modality
+        if modalityname.endswith('vis'):
+            modalityname = modalityname[:-3] + ' & n-vis'
+        elif modalityname.endswith('audio') and not modalityname == 'audio':
+            modalityname = modalityname[:-5] + ' & n-audio'
+        self.text = "%s: %s" % (letter.upper(), modalityname)
+        if total < 4: text += ' match'
+        if   total < 4: font_size = 16
+        elif total < 5: font_size = 14
+        elif total < 6: font_size = 13
+        else:           font_size = 11 
+                
+        self.label = pyglet.text.Label(
+            '',
+            x=-200, y=30, # we'll fix this position later, after we see how big the label is
+            anchor_x='left', anchor_y='center', batch=batch, font_size=font_size)
+        self.update()
+
+    def update(self):
+
+        if mode.started and not mode.hide_text and self.modality in mode.modalities[mode.mode]: # still necessary?
+            self.label.text = self.text
+        else:
+            self.label.text = ''
+        if SHOW_FEEDBACK and mode.inputs[self.modality]:
+            result = check_match(self.modality)
+            if result == 'correct':
+                self.label.color = COLOR_LABEL_CORRECT
+                self.label.bold = True
+            elif result == 'unknown':
+                self.label.color = COLOR_LABEL_OOPS
+                self.label.bold = True
+            elif result == 'incorrect':
+                self.label.color = COLOR_LABEL_INCORRECT
+                self.label.bold = True
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
+            result = check_match('position', check_missed = True)
+            if result == 'missed':
+                self.label.color = COLOR_LABEL_OOPS
+                self.label.bold = True
+        else:
+            self.label.color = COLOR_TEXT
+            self.label.bold = False
+
+def generate_answer_labels():
+    labels = []
+    labelstrings = []    
+    modalities = mode.modalities[mode.mode]
+    for m in modalities:
+        pass
+
+    
+    return labels
 class ArithmeticAnswerLabel:
     def __init__(self):
         self.answer = []
@@ -2416,7 +2475,7 @@ class PositionLabel:
             self.label.text = ''.join(str_list)
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.position_input:
+        if SHOW_FEEDBACK and mode.inputs['position']:
             result = check_match('position')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2427,7 +2486,7 @@ class PositionLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('position', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -2463,7 +2522,7 @@ class VisvisLabel:
                 self.label.x = window.width // 5
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.visvis_input:
+        if SHOW_FEEDBACK and mode.inputs['visvis']:
             result = check_match('visvis')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2474,7 +2533,7 @@ class VisvisLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('visvis', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -2508,7 +2567,7 @@ class VisaudioLabel:
                 self.label.x = window.width // 5 * 2
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.visaudio_input:
+        if SHOW_FEEDBACK and mode.inputs['visaudio']:
             result = check_match('visaudio')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2519,7 +2578,7 @@ class VisaudioLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('visaudio', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -2573,7 +2632,7 @@ class ColorLabel:
             self.label.x = window.width - 20
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.color_input:
+        if SHOW_FEEDBACK and mode.inputs['color']:
             result = check_match('color')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2584,7 +2643,7 @@ class ColorLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('color', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -2614,7 +2673,7 @@ class AudiovisLabel:
                 self.label.x = window.width // 5 * 4
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.audiovis_input:
+        if SHOW_FEEDBACK and mode.inputs['audiovis']:
             result = check_match('audiovis')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2625,7 +2684,7 @@ class AudiovisLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('audiovis', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -2683,7 +2742,7 @@ class ImageLabel:
             self.label.x = window.width - 20
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.image_input:
+        if SHOW_FEEDBACK and mode.inputs['image']:
             result = check_match('image')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2694,7 +2753,7 @@ class ImageLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('image', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -2741,7 +2800,7 @@ class AudioLabel:
             self.label.text = '%s: sound' % key.symbol_string(KEY_AUDIO)
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.audio_input:
+        if SHOW_FEEDBACK and mode.inputs['audio']:
             result = check_match('audio')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2752,7 +2811,7 @@ class AudioLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('audio', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -2786,7 +2845,7 @@ class Audio2Label:
             self.label.text = '%s: sound2' % keytext
         else:
             self.label.text = ''
-        if SHOW_FEEDBACK and mode.audio2_input:
+        if SHOW_FEEDBACK and mode.inputs['audio2']:
             result = check_match('audio2')
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
@@ -2797,7 +2856,7 @@ class Audio2Label:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
                 self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.audiovis_input) and mode.show_missed:
+        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('audio2', check_missed = True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
@@ -3337,14 +3396,14 @@ class Stats:
         self.session['numbers'].append(mode.current_number)
         self.session['operation'].append(mode.current_operation)
 
-        self.session['position_input'].append(mode.position_input)
-        self.session['visvis_input'].append(mode.visvis_input)
-        self.session['visaudio_input'].append(mode.visaudio_input)
-        self.session['color_input'].append(mode.color_input)
-        self.session['audiovis_input'].append(mode.audiovis_input)
-        self.session['image_input'].append(mode.image_input)
-        self.session['audio_input'].append(mode.audio_input)
-        self.session['audio2_input'].append(mode.audio2_input)
+        self.session['position_input'].append(mode.inputs['position'])
+        self.session['visvis_input'].append(mode.inputs['visvis'])
+        self.session['visaudio_input'].append(mode.inputs['visaudio'])
+        self.session['color_input'].append(mode.inputs['color'])
+        self.session['audiovis_input'].append(mode.inputs['audiovis'])
+        self.session['image_input'].append(mode.inputs['image'])
+        self.session['audio_input'].append(mode.inputs['audio'])
+        self.session['audio2_input'].append(mode.inputs['audio2'])
         self.session['arithmetic_input'].append(arithmeticAnswerLabel.parse_answer())
 
     def submit_session(self, percent, category_percents):
@@ -3580,14 +3639,14 @@ def end_session(cancelled = False):
 # this function causes the key labels along the bottom to revert to their
 # "non-pressed" state for a new trial or when returning to the main screen.
 def reset_input():
-    mode.position_input = False
-    mode.color_input = False
-    mode.visvis_input = False
-    mode.visaudio_input = False
-    mode.audiovis_input = False
-    mode.image_input = False
-    mode.audio_input = False
-    mode.audio2_input = False
+    mode.inputs['position'] = False
+    mode.inputs['color'] = False
+    mode.inputs['visvis'] = False
+    mode.inputs['visaudio'] = False
+    mode.inputs['audiovis'] = False
+    mode.inputs['image'] = False
+    mode.inputs['audio'] = False
+    mode.inputs['audio2'] = False
     arithmeticAnswerLabel.reset_input()
     update_input_labels()
 
@@ -3876,7 +3935,7 @@ def on_key_press(symbol, modifiers):
             
         elif symbol == key.C and not JAEGGI_MODE:
             #mode.game_select = True
-            NewGameSelect()
+            GameSelect()
                                     
         elif symbol == key.H:
             webbrowser.open_new_tab(WEB_TUTORIAL)
@@ -3922,103 +3981,7 @@ def on_key_press(symbol, modifiers):
             
         elif symbol == key.M:
             graph.next_style()
-            
-    elif mode.game_select:
-        def execute_mode_change():
-            if not mode.manual:
-                mode.enforce_standard_mode()
-                stats.retrieve_progress()
-            update_all_labels()
-            circles.update()
-            mode.game_select = False
-        
-        if symbol == key.ESCAPE or symbol == key.C or symbol == key.X:
-            mode.game_select = False
-        elif symbol == key.V:
-            VARIABLE_NBACK = not VARIABLE_NBACK
-        elif symbol == key._0 or symbol == key.NUM_0:
-            mode.mode = 10
-            execute_mode_change()
-        elif symbol == key._1 or symbol == key.NUM_1:
-            mode.mode = 11
-            execute_mode_change()
-        elif symbol == key._2 or symbol == key.NUM_2:
-            mode.mode = 2
-            execute_mode_change()
-        elif symbol == key._3 or symbol == key.NUM_3:
-            mode.mode = 3
-            execute_mode_change()
-        elif symbol == key._4 or symbol == key.NUM_4:
-            mode.mode = 4
-            execute_mode_change()
-        elif symbol == key._5 or symbol == key.NUM_5:
-            mode.mode = 5
-            execute_mode_change()
-        elif symbol == key._6 or symbol == key.NUM_6:
-            mode.mode = 6
-            execute_mode_change()
-        elif symbol == key._7 or symbol == key.NUM_7:
-            mode.mode = 7
-            execute_mode_change()
-        elif symbol == key._8 or symbol == key.NUM_8:
-            mode.mode = 8
-            execute_mode_change()
-        elif symbol == key._9 or symbol == key.NUM_9:
-            mode.mode = 9
-            execute_mode_change()
-        elif symbol == key.Q:
-            mode.mode = 20
-            execute_mode_change()
-        elif symbol == key.W:
-            mode.mode = 21
-            execute_mode_change()
-        elif symbol == key.E:
-            mode.mode = 22
-            execute_mode_change()
-        elif symbol == key.R:
-            mode.mode = 23
-            execute_mode_change()
-        elif symbol == key.T:
-            mode.mode = 24
-            execute_mode_change()
-        elif symbol == key.Y:
-            mode.mode = 25
-            execute_mode_change()
-        elif symbol == key.U:
-            mode.mode = 26
-            execute_mode_change()
-        elif symbol == key.I:
-            mode.mode = 27
-            execute_mode_change()
-        elif symbol == key.O:
-            mode.mode = 28
-            execute_mode_change()
-
-        elif symbol == key.A:
-            mode.mode = 100
-            execute_mode_change()
-        elif symbol == key.S:
-            mode.mode = 101
-            execute_mode_change()
-        elif symbol == key.D:
-            mode.mode = 102
-            execute_mode_change()
-        elif symbol == key.F:
-            mode.mode = 103
-            execute_mode_change()
-        elif symbol == key.G:
-            mode.mode = 104
-            execute_mode_change()
-        elif symbol == key.H:
-            mode.mode = 105
-            execute_mode_change()
-        elif symbol == key.J:
-            mode.mode = 106
-            execute_mode_change()
-        elif symbol == key.K:
-            mode.mode = 107
-            execute_mode_change()
-            
+                        
     elif mode.image_select:        
         if symbol in (key.ESCAPE, key.I, key.X, key.SPACE):
             mode.image_select = False                   
@@ -4173,7 +4136,7 @@ def on_key_press(symbol, modifiers):
                 jaeggiWarningLabel.show()
                 return
             #mode.game_select = True
-            NewGameSelect()
+            GameSelect()
         
         elif symbol == key.I:
             if JAEGGI_MODE:
@@ -4220,7 +4183,7 @@ def on_key_press(symbol, modifiers):
             update_all_labels()
                 
         elif mode.tick != 0 and mode.trial_number > 0:
-            if mode.mode == 7 or mode.mode == 8 or mode.mode == 9:
+            if 'arithmetic' in mode.modalities[mode.mode]:
                 if symbol == key.BACKSPACE or symbol == key.DELETE:
                     arithmeticAnswerLabel.reset_input()
                 elif symbol == key.MINUS or symbol == key.NUM_SUBTRACT:
@@ -4249,35 +4212,35 @@ def on_key_press(symbol, modifiers):
                     arithmeticAnswerLabel.input('9')
                     
             if symbol == KEY_POSITION:
-                mode.position_input = True
+                mode.inputs['position'] = True
                 positionLabel.update()
                 
             if symbol == KEY_VISVIS:
-                mode.visvis_input = True
+                mode.inputs['visvis'] = True
                 visvisLabel.update()
                 
             if symbol == KEY_VISAUDIO:
-                mode.visaudio_input = True
+                mode.inputs['visaudio'] = True
                 visaudioLabel.update()
                 
             if symbol == KEY_COLOR:
-                mode.color_input = True
+                mode.inputs['color'] = True
                 colorLabel.update()
                 
             if symbol == KEY_AUDIOVIS:
-                mode.audiovis_input = True
+                mode.inputs['audiovis'] = True
                 audiovisLabel.update()
                 
             if symbol == KEY_IMAGE:
-                mode.image_input = True
+                mode.inputs['image'] = True
                 imageLabel.update()
 
             if symbol == KEY_AUDIO:
-                mode.audio_input = True
+                mode.inputs['audio'] = True
                 audioLabel.update()
                 
             if symbol == KEY_AUDIO2:
-                mode.audio2_input = True
+                mode.inputs['audio2'] = True
                 audio2Label.update()
     return pyglet.event.EVENT_HANDLED
 # the loop where everything is drawn on the screen.
@@ -4288,8 +4251,6 @@ def on_draw():
     window.clear()
     if mode.draw_graph:
         graph.draw()
-    elif mode.game_select:
-        gameSelect.draw()
     elif mode.image_select:
         imageSelect.draw()
     elif mode.sound_select:
@@ -4380,7 +4341,7 @@ graph = Graph()
 circles = Circles()
 saccadic = Saccadic()
 
-gameSelect = GameSelect()
+#gameSelect = GameSelect()
 imageSelect = ImageSelect()
 soundSelect = SoundSelect()
 updateLabel = UpdateLabel()
