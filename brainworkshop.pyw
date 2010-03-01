@@ -928,7 +928,7 @@ class Mode:
                             6:['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio'],
                             7:['arithmetic'],
                             8:['position', 'arithmetic'],
-                            9:['position', 'color', 'arithmetic'],
+                            9:['position', 'arithmetic', 'color'],
                             10:['position'],
                             11:['audio'],
                             20:['position', 'color'],
@@ -2328,8 +2328,6 @@ class FeedbackLabel:
         
         pos should be which label number this one is displayed as (order: left-to-right).
         total should be the total number of feedback labels for this mode.
-        
-        INCOMPLETE.  I need to get to sleep.
         """
         self.modality = modality
         self.letter = letter = eval('key.symbol_string(KEY_%s)' % modality.upper())        
@@ -2339,35 +2337,39 @@ class FeedbackLabel:
         elif modalityname.endswith('audio') and not modalityname == 'audio':
             modalityname = modalityname[:-5] + ' & n-audio'
         self.text = "%s: %s" % (letter.upper(), modalityname)
-        if total < 4: text += ' match'
+        if total < 4: self.text += ' match'
         if   total < 4: font_size = 16
         elif total < 5: font_size = 14
         elif total < 6: font_size = 13
         else:           font_size = 11 
                 
         self.label = pyglet.text.Label(
-            '',
+            text=self.text,
             x=-200, y=30, # we'll fix this position later, after we see how big the label is
             anchor_x='left', anchor_y='center', batch=batch, font_size=font_size)
+        #w = self.label.width  # this doesn't work; how are you supposed to find the width of a label texture?
+        w = (len(self.text) * font_size*4)/5
+        dis = (window.width-60) / float(total-.99)
+        x = 30 + int( pos*dis - w*pos/(total-.5) )
+        self.label.x = x
         self.update()
-
+        
+    def draw(self):
+        self.label.draw()
     def update(self):
-
         if mode.started and not mode.hide_text and self.modality in mode.modalities[mode.mode]: # still necessary?
             self.label.text = self.text
         else:
             self.label.text = ''
         if SHOW_FEEDBACK and mode.inputs[self.modality]:
             result = check_match(self.modality)
+            self.label.bold = True
             if result == 'correct':
                 self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
             elif result == 'unknown':
                 self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
         elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
             result = check_match('position', check_missed = True)
             if result == 'missed':
@@ -2377,15 +2379,20 @@ class FeedbackLabel:
             self.label.color = COLOR_TEXT
             self.label.bold = False
 
-def generate_answer_labels():
-    labels = []
-    labelstrings = []    
-    modalities = mode.modalities[mode.mode]
-    for m in modalities:
-        pass
+    def delete(self):
+        self.label.delete()
 
-    
+def generate_input_labels():
+    labels = []
+    modalities = mode.modalities[mode.mode]
+    pos = 0
+    total = len(modalities)
+    for m in modalities:
+        if m != 'arithmetic':
+            labels.append(FeedbackLabel(m, pos, total))
+        pos += 1
     return labels
+
 class ArithmeticAnswerLabel:
     def __init__(self):
         self.answer = []
@@ -2397,14 +2404,15 @@ class ArithmeticAnswerLabel:
             anchor_x='left', anchor_y='center', batch=batch)
         self.update()
     def update(self):
-        if mode.mode != 7 and mode.mode != 8 and mode.mode != 9:
+        if not 'arithmetic' in mode.modalities[mode.mode] or not mode.started:
             self.label.text = ''
             return
         if mode.started and mode.hide_text:
             self.label.text = ''
             return
         
-        self.label.font_size = input_label_size()
+#        self.label.font_size = input_label_size()
+        self.label.font_size = 16
         str_list = []
         str_list.append('Answer: ')
         str_list.append(str(self.parse_answer()))
@@ -3542,26 +3550,36 @@ def update_all_labels(do_analysis = False):
     trialsRemainingLabel.update()
    
     update_input_labels()
+    #new_update_input_labels()
     
 def update_input_labels():
-    positionLabel.update()
-    colorLabel.update()
-    imageLabel.update()
-    audioLabel.update()
-    audio2Label.update()
-    visvisLabel.update()
-    visaudioLabel.update()
-    audiovisLabel.update()
-    arithmeticAnswerLabel.update()
+    for label in input_labels:
+        label.update()
+
+
+##def update_input_labels():
+##    positionLabel.update()
+##    colorLabel.update()
+##    imageLabel.update()
+##    audioLabel.update()
+##    audio2Label.update()
+##    visvisLabel.update()
+##    visaudioLabel.update()
+##    audiovisLabel.update()
+##    arithmeticAnswerLabel.update()
 
 # this function handles initiation of a new session.
 def new_session():
+    global input_labels
+    input_labels.extend(generate_input_labels())
+    
     mode.tick = -9  # give a 1-second delay before displaying first trial
     mode.session_number += 1
     mode.trial_number = 0
     mode.started = True
     mode.paused = False
     circles.update()
+    
     
     # initialize sounds
     choices = []
@@ -3621,6 +3639,10 @@ def new_session():
 
 # this function handles the finish or cancellation of a session.
 def end_session(cancelled = False):
+    for label in input_labels: 
+        label.delete()
+    while input_labels:
+        input_labels.remove(input_labels[0])
     if cancelled:
         mode.session_number -= 1
     if not cancelled:
@@ -4213,35 +4235,44 @@ def on_key_press(symbol, modifiers):
                     
             if symbol == KEY_POSITION:
                 mode.inputs['position'] = True
-                positionLabel.update()
+                #positionLabel.update()
+                update_input_labels()
                 
             if symbol == KEY_VISVIS:
                 mode.inputs['visvis'] = True
-                visvisLabel.update()
+                #visvisLabel.update()
+                update_input_labels()
                 
             if symbol == KEY_VISAUDIO:
                 mode.inputs['visaudio'] = True
-                visaudioLabel.update()
+                #visaudioLabel.update()
+                update_input_labels()
                 
             if symbol == KEY_COLOR:
                 mode.inputs['color'] = True
-                colorLabel.update()
+                #colorLabel.update()
+                update_input_labels()
                 
             if symbol == KEY_AUDIOVIS:
                 mode.inputs['audiovis'] = True
-                audiovisLabel.update()
+                #audiovisLabel.update()
+                update_input_labels()
                 
             if symbol == KEY_IMAGE:
                 mode.inputs['image'] = True
-                imageLabel.update()
+                #imageLabel.update()
+                update_input_labels()
 
             if symbol == KEY_AUDIO:
                 mode.inputs['audio'] = True
-                audioLabel.update()
+                #audioLabel.update()
+                update_input_labels()
                 
             if symbol == KEY_AUDIO2:
                 mode.inputs['audio2'] = True
-                audio2Label.update()
+                #audio2Label.update()
+                update_input_labels()
+
     return pyglet.event.EVENT_HANDLED
 # the loop where everything is drawn on the screen.
 @window.event
@@ -4267,6 +4298,8 @@ def on_draw():
             brain_icon.draw()
             logoUpperLabel.draw()
             logoLowerLabel.draw()
+    for label in input_labels: 
+        label.draw()
 
 # the event timer loop. Runs every 1/10 second. This loop controls the session
 # game logic.
@@ -4365,14 +4398,15 @@ todayLabel = TodayLabel()
 trialsRemainingLabel = TrialsRemainingLabel()
 
 arithmeticAnswerLabel = ArithmeticAnswerLabel()
-positionLabel = PositionLabel()
-colorLabel = ColorLabel()
-imageLabel = ImageLabel()
-audioLabel = AudioLabel()
-audio2Label = Audio2Label()
-visvisLabel = VisvisLabel()
-visaudioLabel = VisaudioLabel()
-audiovisLabel = AudiovisLabel()
+#positionLabel = PositionLabel()
+#colorLabel = ColorLabel()
+#imageLabel = ImageLabel()
+#audioLabel = AudioLabel()
+#audio2Label = Audio2Label()
+#visvisLabel = VisvisLabel()
+#visaudioLabel = VisaudioLabel()
+#audiovisLabel = AudiovisLabel()
+input_labels = []
 
 update_all_labels()
 
