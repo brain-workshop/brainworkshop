@@ -326,7 +326,7 @@ BACK_235 = 2
 VARIABLE_NBACK = 0
 
 # Number of 0.1 second intervals per trial.
-# Must be greater than or equal to 4 (ie, 1 second)
+# Must be greater than or equal to 4 (ie, 0.4 seconds)
 # Look above to find the corresponding mode number.
 # Default: 30 (40 for the Arithmetic modes)
 TICKS_2 = 30
