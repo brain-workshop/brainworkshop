@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.2'
+VERSION = '4.7.3'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -813,8 +813,8 @@ class MyWindow(pyglet.window.Window):
         pass
 
 window = MyWindow(WINDOW_WIDTH, WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
-if DEBUG: 
-    window.push_handlers(pyglet.window.event.WindowEventLogger())
+#if DEBUG: 
+#    window.push_handlers(pyglet.window.event.WindowEventLogger())
 if sys.platform == 'darwin': # and WINDOW_FULLSCREEN:
     window.set_exclusive_keyboard()
 if sys.platform == 'linux2':
@@ -2350,7 +2350,7 @@ class FeedbackLabel:
             elif result == 'incorrect':
                 self.label.color = COLOR_LABEL_INCORRECT
         elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('position', check_missed = True)
+            result = check_match(self.modality, check_missed=True)
             if result == 'missed':
                 self.label.color = COLOR_LABEL_OOPS
                 self.label.bold = True
@@ -2578,7 +2578,7 @@ class AnalysisLabel:
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
         
-    def update(self, skip = False):
+    def update(self, skip=False):
         if mode.started or mode.session_number == 0 or skip:
             self.label.text = ''
             return
@@ -2595,7 +2595,7 @@ class AnalysisLabel:
             for x in range(mode.back, len(data['position'])):
 
                 if mode.flags[mode.mode]['crab'] == 1:
-                    back = 1 + 2*((mode.trial_number-1) % mode.back)
+                    back = 1 + 2*(x % mode.back)
                 else:
                     back = mode.back
                 if VARIABLE_NBACK:
@@ -3076,13 +3076,13 @@ class Stats:
         self.history = []
         self.sessions_today = 0
         
-def update_all_labels(do_analysis = False):
+def update_all_labels(do_analysis=False):
     updateLabel.update()
     congratsLabel.update()
     if do_analysis:
         analysisLabel.update()
     else:
-        analysisLabel.update(skip = True)
+        analysisLabel.update(skip=True)
             
     pyglet.clock.tick(poll=True) # Prevent music/applause skipping 1
 
@@ -3318,18 +3318,18 @@ def generate_stimulus():
             input_types.remove('arithmetic')
 
         choice = random.choice(input_types)
-        if   input_type in ('visvis', 'visaudio'):
+        if   choice in ('visvis', 'visaudio'):
             current = mode.current_stim['vis']
-        elif input_type in ('audiovis', ):
+        elif choice in ('audiovis', ):
             current = mode.current_stim['audio']
         else:
-            current = input_type
-        if   input_type in ('visvis', 'audiovis'):
+            current = choice
+        if   choice in ('visvis', 'audiovis'):
             back_data = 'vis'
-        elif input_type in ('visaudio', ):
+        elif choice in ('visaudio', ):
             back_data = 'audio'
-        
-        back_data = input_type
+        else:
+            back_data = choice
             
         if mode.flags[mode.mode]['crab'] == 1:
             back = 1 + 2*((mode.trial_number-1) % mode.back)
@@ -3398,6 +3398,12 @@ def generate_stimulus():
         variable = mode.variable_list[mode.trial_number - 1 - mode.back]
     else:
         variable = 0
+    if DEBUG:
+        print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+                (mode.trial_number, mode.current_stim['position'], mode.current_stim['audio'], 
+                 mode.current_stim['color'], mode.current_stim['vis'], \
+                 mode.current_stim['number'], mode.current_operation, variable)
+
     visual.spawn(mode.current_stim['position'], mode.current_stim['color'], mode.current_stim['vis'], mode.current_stim['number'], mode.current_operation, variable)
 
 def toggle_manual_mode():
