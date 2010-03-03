@@ -9,7 +9,7 @@
 #
 # Also see Readme.txt.
 #
-# Copyright (C) 2009: Paul Hoskinson (plhosk@gmail.com) 
+# Copyright (C) 2009-2010: Paul Hoskinson (plhosk@gmail.com) 
 #
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
@@ -785,20 +785,6 @@ def get_color(color):
         return eval('COLOR_%i_BLK' % color)
     return eval('COLOR_%i' % color)
 
-# set the input text label size
-def input_label_size():
-    m = mode.mode
-    if m in (2, 3, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28):
-        return 16
-    if m in (4,):
-        return 14
-    if m in (5,):
-        return 13
-    if m in (6,):
-        return 11
-    if m in (100, 101, 102, 103, 104, 105, 106, 107):
-        return 16
-
 def default_nback_mode(mode):
     return eval('BACK_%i' % mode)
 
@@ -820,15 +806,6 @@ if WINDOW_FULLSCREEN:
 else:
     style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
      
-#display = pyglet.window.get_platform().get_default_display() 
-#screen = display.get_default_screen() 
-#template_config = Config(double_buffer=True, sample_buffers=True, samples=4) 
-#try: 
-    #config = screen.get_best_config(template_config) 
-#except pyglet.window.NoSuchConfigException: 
-    ## Rats. No antialiasing. 
-    #config = screen.get_best_config(Config(double_buffer=True)) 
-
 class MyWindow(pyglet.window.Window):
     def on_key_press(self, symbol, modifiers):
         pass
@@ -977,12 +954,13 @@ class Mode:
         
         self.hide_text = HIDE_TEXT
         
-        self.current_position = 0
-        self.current_color = 0
-        self.current_vis = 0
-        self.current_audio = 0
-        self.current_audio2 = 0
-        self.current_number = 0
+        self.current_stim = {'position': 0,
+                             'color':    0,
+                             'vis':      0, 
+                             'audio':    0,
+                             'audio2':   0,
+                             'number':   0}
+        
         self.current_operation = 'none'
         
         self.started = False
@@ -2355,7 +2333,8 @@ class FeedbackLabel:
         self.update()
         
     def draw(self):
-        self.label.draw()
+        pass # don't draw twice; this was just for debugging
+        #self.label.draw()
     def update(self):
         if mode.started and not mode.hide_text and self.modality in mode.modalities[mode.mode]: # still necessary?
             self.label.text = self.text
@@ -2411,7 +2390,6 @@ class ArithmeticAnswerLabel:
             self.label.text = ''
             return
         
-#        self.label.font_size = input_label_size()
         self.label.font_size = 16
         str_list = []
         str_list.append('Answer: ')
@@ -2458,421 +2436,6 @@ class ArithmeticAnswerLabel:
         self.decimal = False
         self.update()
                 
-
-# this controls the "A: position match" below the field.
-# TODO: fix the rest of the labels for crab back modes
-class PositionLabel:
-    def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
-            x=20, y=30,
-            anchor_x='left', anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif 'position' in mode.modalities[mode.mode] and not 'visvis' in mode.modalities[mode.mode]:
-            str_list = [key.symbol_string(KEY_POSITION)]
-            str_list.append(': position match')
-            self.label.text = ''.join(str_list)
-        elif 'position' in mode.modalities[mode.mode]:
-            str_list = []
-            str_list.append(key.symbol_string(KEY_POSITION))
-            str_list.append(': position')
-            self.label.text = ''.join(str_list)
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['position']:
-            result = check_match('position')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('position', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-            
-# this controls the "S: visual & n-visual" below the field.
-class VisvisLabel:
-    def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
-            y=30,
-            anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif 'visvis' in mode.modalities[mode.mode]:
-            if mode.mode == 4: self.label.anchor_x = 'left'
-            else: self.label.anchor_x = 'center'
-            str_list = []
-            str_list.append(key.symbol_string(KEY_VISVIS))
-            str_list.append(': vis & n-vis')
-            self.label.text = ''.join(str_list)
-            if mode.mode == 4: # or mode.mode == 14:
-                self.label.x = 20
-            elif mode.mode == 5: # or mode.mode == 15:
-                self.label.x = window.width // 4
-            elif mode.mode == 6: # or mode.mode == 16:
-                self.label.x = window.width // 5
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['visvis']:
-            result = check_match('visvis')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('visvis', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-        
-# this controls the "D: visual & n-audio" below the field.
-class VisaudioLabel:
-    def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
-            y=30,
-            anchor_x = 'center', anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif mode.mode == 4 or mode.mode == 5 or mode.mode == 6: # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            str_list = []
-            str_list.append(key.symbol_string(KEY_VISAUDIO))
-            str_list.append(': vis & n-sound')
-            self.label.text = ''.join(str_list)
-            if mode.mode == 4: # or mode.mode == 14:
-                self.label.x = window.width // 3
-            elif mode.mode == 5: # or mode.mode == 15:
-                self.label.x = window.width // 2
-            elif mode.mode == 6: # or mode.mode == 16:
-                self.label.x = window.width // 5 * 2
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['visaudio']:
-            result = check_match('visaudio')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('visaudio', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-
-# this controls the "F: color match" below the field.
-class ColorLabel:
-    def __init__(self):
-        self.label = pyglet.text.Label('',
-            y=30,
-            anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif mode.mode in (22, 24, 27, 102):
-            self.label.text = '%s: color match' % key.symbol_string(KEY_COLOR)
-            self.label.anchor_x = 'left'
-            self.label.x = 20
-        elif mode.mode in (3, 25):
-            self.label.text = '%s: color match' % key.symbol_string(KEY_COLOR)
-            self.label.anchor_x = 'center'
-            self.label.x = window.width // 2
-        elif mode.mode in (6, 28, 104, 106, 107):
-            str_list = []
-            str_list.append(key.symbol_string(KEY_COLOR))
-            str_list.append(': color')
-            self.label.text = ''.join(str_list)
-            self.label.anchor_x = 'center'
-            if mode.mode == 6:
-                self.label.x = window.width // 5 * 3
-            elif mode.mode == 28:
-                self.label.x = window.width // 3 * 1
-            elif mode.mode == 104:
-                self.label.x = window.width // 3 * 1
-            elif mode.mode == 106:
-                self.label.anchor_x = 'left'
-                self.label.x = 20
-            elif mode.mode == 107:
-                self.label.x = window.width // 4 * 1
-        elif mode.mode in (9, 20):
-            str_list = []
-            str_list.append(key.symbol_string(KEY_COLOR))
-            str_list.append(': color match')
-            self.label.text = ''.join(str_list)
-            self.label.anchor_x = 'right'
-            self.label.x = window.width - 20
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['color']:
-            result = check_match('color')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('color', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-
-# this controls the "J: audio & n-visual" below the field.
-class AudiovisLabel:
-    def __init__(self):
-        self.label = pyglet.text.Label('',
-            x=window.width - window.width//5, y=30,
-            anchor_x='center', anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif mode.mode in (4, 5, 6): # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            self.label.text = '%s: sound & n-vis' % key.symbol_string(KEY_AUDIOVIS)
-            if mode.mode == 4: # or mode.mode == 14:
-                self.label.x = window.width // 3 * 2
-            elif mode.mode == 5: # or mode.mode == 15:
-                self.label.x = window.width // 4 * 3
-            elif mode.mode == 6: # or mode.mode == 16:
-                self.label.x = window.width // 5 * 4
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['audiovis']:
-            result = check_match('audiovis')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('audiovis', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-
-# this controls the "J: image match" below the field.
-class ImageLabel:
-    def __init__(self):
-        self.label = pyglet.text.Label('',
-            y=30,
-            anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif mode.mode in (23, 103):
-            self.label.text = '%s: image match' % key.symbol_string(KEY_IMAGE)
-            self.label.anchor_x = 'left'
-            self.label.x = 20
-        elif mode.mode in (26, 27):
-            self.label.text = '%s: image match' % key.symbol_string(KEY_IMAGE)
-            self.label.anchor_x = 'center'
-            self.label.x = window.width // 2
-        elif mode.mode in (28,):
-            str_list = []
-            str_list.append(key.symbol_string(KEY_IMAGE))
-            str_list.append(': image')
-            self.label.text = ''.join(str_list)
-            self.label.anchor_x = 'center'
-            self.label.x = window.width // 3 * 2   
-        elif mode.mode in (105, 106):
-            str_list = []
-            str_list.append(key.symbol_string(KEY_IMAGE))
-            str_list.append(': image')
-            self.label.text = ''.join(str_list)
-            self.label.anchor_x = 'center'
-            self.label.x = window.width // 3
-        elif mode.mode in (107,):
-            str_list = []
-            str_list.append(key.symbol_string(KEY_IMAGE))
-            str_list.append(': image')
-            self.label.text = ''.join(str_list)
-            self.label.anchor_x = 'center'
-            self.label.x = window.width // 4 * 2
-        elif mode.mode in (21, 24, 25):
-            str_list = []
-            str_list.append(key.symbol_string(KEY_IMAGE))
-            str_list.append(': image match')
-            self.label.text = ''.join(str_list)
-            self.label.anchor_x = 'right'
-            self.label.x = window.width - 20
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['image']:
-            result = check_match('image')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('image', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-
-# this controls the "L: sound match" below the field.
-class AudioLabel:
-    def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
-            y=30,
-            anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif mode.mode in (2, 3, 22, 23, 26, 27): # or mode.mode == 12 or mode.mode == 13:
-            self.label.anchor_x='right'
-            self.label.x=window.width-20
-            self.label.text = '%s: sound match' % key.symbol_string(KEY_AUDIO)
-        elif mode.mode in (4, 5, 6, 28): # or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-            self.label.anchor_x='right'
-            self.label.x=window.width-20
-            self.label.text = '%s: sound' % key.symbol_string(KEY_AUDIO)
-        elif mode.mode in (100,):
-            self.label.anchor_x='left'
-            self.label.x=20
-            self.label.text = '%s: sound match' % key.symbol_string(KEY_AUDIO)
-        elif mode.mode in (101, 102, 103):
-            self.label.anchor_x='center'
-            self.label.x=window.width // 2
-            self.label.text = '%s: sound match' % key.symbol_string(KEY_AUDIO)
-        elif mode.mode in (104, 105, 106):
-            self.label.anchor_x='center'
-            self.label.x=window.width // 3 * 2
-            self.label.text = '%s: sound' % key.symbol_string(KEY_AUDIO)
-        elif mode.mode in (107,):
-            self.label.anchor_x='center'
-            self.label.x=window.width // 4 * 3
-            self.label.text = '%s: sound' % key.symbol_string(KEY_AUDIO)
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['audio']:
-            result = check_match('audio')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('audio', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-            
-# this controls the ";: sound2 match" below the field.
-class Audio2Label:
-    def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
-            y=30,
-            anchor_y='center', batch=batch)
-        self.update()
-    def update(self):
-        if key.symbol_string(KEY_AUDIO2) == 'SEMICOLON':
-            keytext = ';'
-        else: keytext = key.symbol_string(KEY_AUDIO2)
-        self.label.font_size = input_label_size()
-        if mode.started and mode.hide_text:
-            self.label.text = ''
-        elif mode.mode in (100, 101, 102, 103):
-            self.label.anchor_x='right'
-            self.label.x=window.width-20
-            self.label.text = '%s: sound2 match' % keytext
-        elif mode.mode in (104, 105, 106, 107):
-            self.label.anchor_x='right'
-            self.label.x=window.width-20
-            self.label.text = '%s: sound2' % keytext
-        else:
-            self.label.text = ''
-        if SHOW_FEEDBACK and mode.inputs['audio2']:
-            result = check_match('audio2')
-            if result == 'correct':
-                self.label.color = COLOR_LABEL_CORRECT
-                self.label.bold = True
-            elif result == 'unknown':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-            elif result == 'incorrect':
-                self.label.color = COLOR_LABEL_INCORRECT
-                self.label.bold = True
-        elif SHOW_FEEDBACK and (not mode.inputs['audiovis']) and mode.show_missed:
-            result = check_match('audio2', check_missed = True)
-            if result == 'missed':
-                self.label.color = COLOR_LABEL_OOPS
-                self.label.bold = True
-        else:
-            self.label.color = COLOR_TEXT
-            self.label.bold = False
-
 
 # this is the text that shows the seconds per trial and the number of trials.
 class SessionInfoLabel:
@@ -2959,6 +2522,7 @@ def check_match(input_type, check_missed = False):
         back = 1 + 2*((mode.trial_number-1) % mode.back)
     else:
         back = mode.back
+    
     if VARIABLE_NBACK:
         nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - back - 1] - 1
     else:
@@ -2966,35 +2530,23 @@ def check_match(input_type, check_missed = False):
         
     if len(stats.session['position']) < mode.back:
         return 'unknown'
-    if input_type == 'position':
-        current = mode.current_position
-        back_data = 'position'
-    elif input_type == 'color':
-        current = mode.current_color
-        back_data = 'color'
-    elif input_type == 'visvis':
-        current = mode.current_vis
+    
+    if   input_type in ('visvis', 'visaudio'):
+        current = mode.current_stim['vis']
+    elif input_type in ('audiovis', ):
+        current = mode.current_stim['audio']
+    if   input_type in ('visvis', 'audiovis'):
         back_data = 'vis'
-    elif input_type == 'visaudio':
-        current = mode.current_vis
+    elif input_type in ('visaudio', ):
         back_data = 'audio'
-    elif input_type == 'audiovis':
-        current = mode.current_audio
-        back_data = 'vis'
-    elif input_type == 'image':
-        current = mode.current_vis
-        back_data = 'vis'
-    elif input_type == 'audio':
-        current = mode.current_audio
-        back_data = 'audio'
-    elif input_type == 'audio2':
-        current = mode.current_audio2
-        back_data = 'audio2'    
-    elif input_type == 'arithmetic':
-        current = mode.current_number
+    elif input_type is 'arithmetic':
+        current = mode.current_stim['number']
         back_data = stats.session['numbers'][nback_trial]
         operation = mode.current_operation
-        
+    else:
+        current = mode.current_stim[input_type]
+        back_data = input_type
+            
     if input_type == 'arithmetic':
         if operation == 'add':
             correct_answer = back_data + current
@@ -3395,13 +2947,13 @@ class Stats:
         self.session['arithmetic_input'] = []
 
     def save_input(self):
-        self.session['position'].append(mode.current_position)
-        self.session['color'].append(mode.current_color)
-        self.session['image'].append(mode.current_vis)
-        self.session['audio'].append(mode.current_audio)
-        self.session['audio2'].append(mode.current_audio2)
-        self.session['vis'].append(mode.current_vis)
-        self.session['numbers'].append(mode.current_number)
+        self.session['position'].append(mode.current_stim['position'])
+        self.session['color'].append(mode.current_stim['color'])
+        self.session['image'].append(mode.current_stim['vis'])
+        self.session['audio'].append(mode.current_stim['audio'])
+        self.session['audio2'].append(mode.current_stim['audio2'])
+        self.session['vis'].append(mode.current_stim['vis'])
+        self.session['numbers'].append(mode.current_stim['number'])
         self.session['operation'].append(mode.current_operation)
 
         self.session['position_input'].append(mode.inputs['position'])
@@ -3550,23 +3102,11 @@ def update_all_labels(do_analysis = False):
     trialsRemainingLabel.update()
    
     update_input_labels()
-    #new_update_input_labels()
     
 def update_input_labels():
+    arithmeticAnswerLabel.update()
     for label in input_labels:
         label.update()
-
-
-##def update_input_labels():
-##    positionLabel.update()
-##    colorLabel.update()
-##    imageLabel.update()
-##    audioLabel.update()
-##    audio2Label.update()
-##    visvisLabel.update()
-##    visaudioLabel.update()
-##    audiovisLabel.update()
-##    arithmeticAnswerLabel.update()
 
 # this function handles initiation of a new session.
 def new_session():
@@ -3583,9 +3123,6 @@ def new_session():
     
     # initialize sounds
     choices = []
-    #if mode.mode == 13 or mode.mode == 14 or mode.mode == 15 or mode.mode == 16:
-        #choices.append('morse')
-    #else:
     if USE_LETTERS:
         choices.append('letters')
     if USE_NUMBERS:
@@ -3661,37 +3198,31 @@ def end_session(cancelled = False):
 # this function causes the key labels along the bottom to revert to their
 # "non-pressed" state for a new trial or when returning to the main screen.
 def reset_input():
-    mode.inputs['position'] = False
-    mode.inputs['color'] = False
-    mode.inputs['visvis'] = False
-    mode.inputs['visaudio'] = False
-    mode.inputs['audiovis'] = False
-    mode.inputs['image'] = False
-    mode.inputs['audio'] = False
-    mode.inputs['audio2'] = False
+    for k in mode.inputs.keys():
+        mode.inputs[k] = False
     arithmeticAnswerLabel.reset_input()
     update_input_labels()
 
 # this handles the computation of a round with exactly 6 position and 6 audio matches
 # this function is not currently used -- compute_bt_sequence() is used instead
-def new_compute_bt_sequence(matches=6, modalities=['audio', 'vis']):
-    # not ready for visaudio or audiovis, doesn't get 
-    seq = {}
-    for m in modalities:
-        seq[m] = [False]*mode.back + \
-                 random.shuffle([True]*matches + 
-                                [False]*(mode.num_trials_total - mode.back - matches))
-        for i in range(mode.back):
-            seq[m][i] = random.randint(1,8)
-
-        for i in range(mode.back, len(seq[m])):
-            if seq[m][i] == True:
-                seq[m][i] = seq[m][i-mode.back]
-            elif seq[m][i] == False:  # should be all other cases
-                seq[m][i] = random.randint(1,7)
-                if seq[m][i] >= seq[m][i-mode.back]:
-                    seq[m][i] += 1
-    mode.bt_sequence = seq.values()
+##def new_compute_bt_sequence(matches=6, modalities=['audio', 'vis']):
+##    # not ready for visaudio or audiovis, doesn't get 
+##    seq = {}
+##    for m in modalities:
+##        seq[m] = [False]*mode.back + \
+##                 random.shuffle([True]*matches + 
+##                                [False]*(mode.num_trials_total - mode.back - matches))
+##        for i in range(mode.back):
+##            seq[m][i] = random.randint(1,8)
+##
+##        for i in range(mode.back, len(seq[m])):
+##            if seq[m][i] == True:
+##                seq[m][i] = seq[m][i-mode.back]
+##            elif seq[m][i] == False:  # should be all other cases
+##                seq[m][i] = random.randint(1,7)
+##                if seq[m][i] >= seq[m][i-mode.back]:
+##                    seq[m][i] += 1
+##    mode.bt_sequence = seq.values()
 
 def compute_bt_sequence():
     bt_sequence = []
@@ -3738,11 +3269,11 @@ def compute_bt_sequence():
 # responsible for the random generation of each new stimulus (audio, color, position)
 def generate_stimulus():
     # first, randomly generate all stimuli
-    mode.current_position = random.randint(1, 8)
-    mode.current_color = random.randint(1, 8)
-    mode.current_vis = random.randint(1, 8)
-    mode.current_audio = random.randint(1, 8)
-    mode.current_audio2 = random.randint(1, 8)
+    mode.current_stim['position'] = random.randint(1, 8)
+    mode.current_stim['color'] = random.randint(1, 8)
+    mode.current_stim['vis'] = random.randint(1, 8)
+    mode.current_stim['audio'] = random.randint(1, 8)
+    mode.current_stim['audio2'] = random.randint(1, 8)
     
     # treat arithmetic specially
     operations = []
@@ -3771,21 +3302,35 @@ def generate_stimulus():
                 frac = Decimal(abs(number_nback)) / Decimal(abs(x))
                 if (frac % 1) in map(Decimal, ARITHMETIC_ACCEPTABLE_DECIMALS):
                     possibilities.append(x)
-            mode.current_number = random.choice(possibilities)
+            mode.current_stim['number'] = random.choice(possibilities)
         else:
-            mode.current_number = random.randint(min_number, max_number)
-            while mode.current_number == 0:
-                mode.current_number = random.randint(min_number, max_number)
+            mode.current_stim['number'] = random.randint(min_number, max_number)
+            while mode.current_stim['number'] == 0:
+                mode.current_stim['number'] = random.randint(min_number, max_number)
     else:
-        mode.current_number = random.randint(min_number, max_number)
+        mode.current_stim['number'] = random.randint(min_number, max_number)
     
     # force a match?
-    if mode.mode != 7 and mode.trial_number > mode.back and random.random() < CHANCE_OF_GUARANTEED_MATCH:
+    if mode.mode != 7 and mode.modalities[mode.mode] != ['arithmetic'] and mode.trial_number > mode.back and random.random() < CHANCE_OF_GUARANTEED_MATCH:
         # A match of a randomly chosen input type is guaranteed this trial.
-        
-        input_types = mode.modalities[mode.mode]
+        input_types = mode.modalities[mode.mode][:] # take a deep copy of the list
+        if 'arithmetic' in input_types:
+            input_types.remove('arithmetic')
 
         choice = random.choice(input_types)
+        if   input_type in ('visvis', 'visaudio'):
+            current = mode.current_stim['vis']
+        elif input_type in ('audiovis', ):
+            current = mode.current_stim['audio']
+        else:
+            current = input_type
+        if   input_type in ('visvis', 'audiovis'):
+            back_data = 'vis'
+        elif input_type in ('visaudio', ):
+            back_data = 'audio'
+        
+        back_data = input_type
+            
         if mode.flags[mode.mode]['crab'] == 1:
             back = 1 + 2*((mode.trial_number-1) % mode.back)
         else:
@@ -3794,53 +3339,38 @@ def generate_stimulus():
             nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - back - 1] - 1
         else:
             nback_trial = mode.trial_number - back - 1
-
-        if choice == 'position':
-            mode.current_position = stats.session['position'][nback_trial]
-        elif choice == 'color':
-            mode.current_color = stats.session['color'][nback_trial]
-        elif choice == 'visvis':
-            mode.current_vis = stats.session['vis'][nback_trial]
-        elif choice == 'visaudio':
-            mode.current_vis = stats.session['audio'][nback_trial]
-        elif choice == 'audiovis':
-            mode.current_audio = stats.session['vis'][nback_trial]
-        elif choice == 'image':
-            mode.current_vis = stats.session['vis'][nback_trial]
-        elif choice == 'audio':
-            mode.current_audio = stats.session['audio'][nback_trial]
-        elif choice == 'audio2':
-            mode.current_audio2 = stats.session['audio2'][nback_trial]
-
+        
+        mode.current_stim[current] = stats.session[back_data][nback_trial]
+        
     # set static stimuli according to mode.
     # default position is 0 (center)
     # default color is 1 (red) or 2 (black)
     # default vis is 0 (square)
     # audio is never static so it doesn't have a default.
-    if not 'color'    in mode.modalities[mode.mode]: mode.current_color = VISUAL_COLOR
-    if not 'position' in mode.modalities[mode.mode]: mode.current_position = 0
+    if not 'color'    in mode.modalities[mode.mode]: mode.current_stim['color'] = VISUAL_COLOR
+    if not 'position' in mode.modalities[mode.mode]: mode.current_stim['position'] = 0
     if not set(['visvis', 'arithmetic', 'image']).intersection(mode.modalities[mode.mode]):
-        mode.current_vis = 0
+        mode.current_stim['vis'] = 0
 
     # in jaeggi mode, set using the predetermined sequence.
     if JAEGGI_MODE:
-        mode.current_position = mode.bt_sequence[0][mode.trial_number - 1]
-        mode.current_audio = mode.bt_sequence[1][mode.trial_number - 1]
+        mode.current_stim['position'] = mode.bt_sequence[0][mode.trial_number - 1]
+        mode.current_stim['audio'] = mode.bt_sequence[1][mode.trial_number - 1]
     
     # initiate the chosen stimuli.
-    # mode.current_audio is a number from 1 to 8.
+    # mode.current_stim['audio'] is a number from 1 to 8.
     if 'arithmetic' in mode.modalities[mode.mode] and mode.trial_number > mode.back:
         player = pyglet.media.ManagedSoundPlayer()
         player.queue(sounds['operations'][mode.current_operation])  # maybe we should try... catch... here
         player.play()                                               # and maybe we should recycle sound players...
     elif 'audio' in mode.modalities[mode.mode] and not 'audio2' in mode.modalities[mode.mode]:
         player = pyglet.media.ManagedSoundPlayer()
-        player.queue(mode.soundlist[mode.current_audio-1])
+        player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.play()
     elif 'audio2' in mode.modalities[mode.mode]:
         # dual audio modes - two sound players
         player = pyglet.media.ManagedSoundPlayer()
-        player.queue(mode.soundlist[mode.current_audio-1])
+        player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.min_distance = 100.0
         if CHANNEL_AUDIO == 'left':
             player.position = (-99.0, 0.0, 0.0)
@@ -3852,7 +3382,7 @@ def generate_stimulus():
         player.play()
         
         player2 = pyglet.media.ManagedSoundPlayer()
-        player2.queue(mode.soundlist2[mode.current_audio2-1])
+        player2.queue(mode.soundlist2[mode.current_stim['audio2']-1])
         player2.min_distance = 100.0
         if CHANNEL_AUDIO2 == 'left':
             player2.position = (-99.0, 0.0, 0.0)
@@ -3868,7 +3398,7 @@ def generate_stimulus():
         variable = mode.variable_list[mode.trial_number - 1 - mode.back]
     else:
         variable = 0
-    visual.spawn(mode.current_position, mode.current_color, mode.current_vis, mode.current_number, mode.current_operation, variable)
+    visual.spawn(mode.current_stim['position'], mode.current_stim['color'], mode.current_stim['vis'], mode.current_stim['number'], mode.current_operation, variable)
 
 def toggle_manual_mode():
     if mode.manual:
@@ -3946,7 +3476,7 @@ def on_key_press(symbol, modifiers):
     if symbol == key.D and (modifiers & key.MOD_CTRL):
         dump_pyglet_info()
         
-    elif mode.title_screen and not mode.draw_graph and not mode.game_select and not mode.image_select and not mode.sound_select:
+    elif mode.title_screen and not mode.draw_graph and not mode.image_select and not mode.sound_select:
         if symbol == key.ESCAPE or symbol == key.X:
             window.on_close()
             
@@ -3956,7 +3486,6 @@ def on_key_press(symbol, modifiers):
             #pyglet.clock.schedule_interval(shrink_brain, 1/60.)
             
         elif symbol == key.C and not JAEGGI_MODE:
-            #mode.game_select = True
             GameSelect()
                                     
         elif symbol == key.H:
@@ -4157,7 +3686,6 @@ def on_key_press(symbol, modifiers):
             if JAEGGI_MODE:
                 jaeggiWarningLabel.show()
                 return
-            #mode.game_select = True
             GameSelect()
         
         elif symbol == key.I:
@@ -4235,42 +3763,34 @@ def on_key_press(symbol, modifiers):
                     
             if symbol == KEY_POSITION:
                 mode.inputs['position'] = True
-                #positionLabel.update()
                 update_input_labels()
                 
             if symbol == KEY_VISVIS:
                 mode.inputs['visvis'] = True
-                #visvisLabel.update()
                 update_input_labels()
                 
             if symbol == KEY_VISAUDIO:
                 mode.inputs['visaudio'] = True
-                #visaudioLabel.update()
                 update_input_labels()
                 
             if symbol == KEY_COLOR:
                 mode.inputs['color'] = True
-                #colorLabel.update()
                 update_input_labels()
                 
             if symbol == KEY_AUDIOVIS:
                 mode.inputs['audiovis'] = True
-                #audiovisLabel.update()
                 update_input_labels()
                 
             if symbol == KEY_IMAGE:
                 mode.inputs['image'] = True
-                #imageLabel.update()
                 update_input_labels()
 
             if symbol == KEY_AUDIO:
                 mode.inputs['audio'] = True
-                #audioLabel.update()
                 update_input_labels()
                 
             if symbol == KEY_AUDIO2:
                 mode.inputs['audio2'] = True
-                #audio2Label.update()
                 update_input_labels()
 
     return pyglet.event.EVENT_HANDLED
@@ -4374,7 +3894,6 @@ graph = Graph()
 circles = Circles()
 saccadic = Saccadic()
 
-#gameSelect = GameSelect()
 imageSelect = ImageSelect()
 soundSelect = SoundSelect()
 updateLabel = UpdateLabel()
@@ -4398,14 +3917,6 @@ todayLabel = TodayLabel()
 trialsRemainingLabel = TrialsRemainingLabel()
 
 arithmeticAnswerLabel = ArithmeticAnswerLabel()
-#positionLabel = PositionLabel()
-#colorLabel = ColorLabel()
-#imageLabel = ImageLabel()
-#audioLabel = AudioLabel()
-#audio2Label = Audio2Label()
-#visvisLabel = VisvisLabel()
-#visaudioLabel = VisaudioLabel()
-#audiovisLabel = AudiovisLabel()
 input_labels = []
 
 update_all_labels()
