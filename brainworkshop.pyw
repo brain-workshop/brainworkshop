@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.3'
+VERSION = '4.7.4'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -45,6 +45,7 @@ STATS_SEPARATOR = ','
 WEB_SITE = 'http://brainworkshop.sourceforge.net/'
 WEB_TUTORIAL = 'http://brainworkshop.sourceforge.net/#tutorial'
 CLINICAL_TUTORIAL = WEB_TUTORIAL # FIXME: Add tutorial catered to clinical trials
+WEB_DONATE = 'http://brainworkshop.sourceforge.net/donate.html'
 WEB_VERSION_CHECK = 'http://brainworkshop.sourceforge.net/version.txt'
 WEB_PYGLET_DOWNLOAD = 'http://pyglet.org/download.html'
 WEB_FORUM = 'http://groups.google.com/group/brain-training'
@@ -439,6 +440,12 @@ VERSION_CHECK_ON_STARTUP = True
 # Note: this option has no effect in Jaeggi mode.
 # Default: 0.25
 CHANCE_OF_GUARANTEED_MATCH = 0.25
+
+# How often should Brain Workshop panhandle for a donation?  After every
+# PANHANDLE_FREQUENCY sessions, Brain Workshop will annoy you slightly by 
+# asking for money.  Set this to 0 if you have a clear conscience.
+# Default: 100
+PANHANDLE_FREQUENCY = 100
 
 # Arithmetic mode settings.
 ARITHMETIC_MAX_NUMBER = 12
@@ -1605,76 +1612,6 @@ class GameSelect(Menu):
             mode.enforce_standard_mode()
             stats.retrieve_progress()
         
-##class GameSelect:
-##    def __init__(self):
-##        
-##        self.label = pyglet.text.Label(
-##            '', multiline=True, width=380,
-##            font_size=14, bold=False, color=COLOR_TEXT,
-##            x=20, y=window.height - 30,
-##            anchor_x='left', anchor_y='top')
-##        self.label2 = pyglet.text.Label(
-##            '', multiline = True, width = 380,
-##            font_size=14, bold=False, color = COLOR_TEXT,
-##            x = window.width // 2, y = window.height - 30,
-##            anchor_x='left', anchor_y='top')
-##        
-##    def draw(self):
-##        str_list = []
-##        str_list.append('Type a number or letter to choose the game mode.\n')
-##        str_list.append('\n\n')
-##        str_list.append('  0: Position N-Back\n')
-##        str_list.append('  1: Sound N-Back\n')
-##        str_list.append('\n')
-##        str_list.append('  2: Dual N-Back (default)\n')
-##        str_list.append('  3: Position - Color - Sound\n')
-##        str_list.append('\n')
-##        str_list.append('  4: Dual Combination N-Back\n')
-##        str_list.append('  5: Tri Combination N-Back\n')
-##        str_list.append('  6: Quad Combination N-Back\n')
-##        str_list.append('\n')
-##        str_list.append('  7: Arithmetic N-Back\n')
-##        str_list.append('  8: Dual Arithmetic N-Back\n')
-##        str_list.append('  9: Triple Arithmetic N-Back\n')
-##        str_list.append('\n')
-##        str_list.append('  V: Use Variable n-back levels?')
-##        if VARIABLE_NBACK:
-##            str_list.append('   YES')
-##        else:
-##            str_list.append('   NO')
-##        str_list.append('\n\n\n\n')
-##        str_list.append('  ESC: Cancel')
-##        
-##        str_list2 = []
-##        str_list2.append('\n\n\n\n')
-##        str_list2.append('  Q: Position - Color\n')
-##        str_list2.append('  W: Position - Image\n')
-##        str_list2.append('  E: Color - Sound\n')
-##        str_list2.append('  R: Image - Sound\n')
-##        str_list2.append('  T: Color - Image\n')
-##        str_list2.append('\n')
-##        str_list2.append('  Y: Position - Color - Image\n')
-##        str_list2.append('  U: Position - Image - Sound\n')
-##        str_list2.append('  I: Color - Image - Sound\n')
-##        str_list2.append('\n')
-##        str_list2.append('  O: Quad N-Back\n')
-##        str_list2.append('\n')
-##        str_list2.append('  A: Sound - Sound2\n')
-##        str_list2.append('  S: Position - Sound - Sound2\n')
-##        str_list2.append('  D: Color - Sound - Sound2\n')
-##        str_list2.append('  F: Image - Sound - Sound2\n')
-##        str_list2.append('  G: Position - Color - Sound - Sound2\n')
-##        str_list2.append('  H: Position - Image - Sound - Sound2\n')
-##        str_list2.append('  J: Color - Image - Sound - Sound2\n\n')
-##        str_list2.append('  K: Pentuple N-Back\n')
-##                
-##
-##        self.label.text = ''.join(str_list)
-##        self.label2.text = ''.join(str_list2)
-##        
-##        self.label.draw()
-##        self.label2.draw()
-        
 class ImageSelect:
     def __init__(self):
         
@@ -2178,6 +2115,7 @@ class KeysListLabel:
                 str_list.append('M: Standard Mode\n')
             else:
                 str_list.append('M: Manual Mode\n')
+            str_list.append('D: Donate\n')
             str_list.append('\n')
             str_list.append('G: Daily Progress Graph\n')
             str_list.append('\n')
@@ -2219,6 +2157,7 @@ class TitleKeysLabel:
             str_list.append('G: Daily Progress Graph\n')
         str_list.append('H: Help / Tutorial\n')
         if not CLINICAL_MODE:
+            str_list.append('D: Donate\n')
             str_list.append('F: Go to Forum / Mailing List')
         
         self.keys = pyglet.text.Label(
@@ -2836,6 +2775,100 @@ class Saccadic:
 #                    self.square = batch.add(40, GL_POLYGON, None, 
 #                                            ('v2i', xy), ('c4B', self.color * 40))
 
+class Panhandle:
+    def __init__(self, n=-1):
+        paragraphs = [ 
+"""
+You have completed %i sessions with Brain Workshop.  Your perseverance suggests \
+that you either are finding some benefit from using the program or have a \
+very boring life.  If you have been benefiting from Brain Workshop, don't you \
+think you should give something back to the project?
+""" % n, 
+"""
+Brain Workshop is and always will be 100% free.  Up until now, Brain Workshop \
+as a project has succeeded because a very small number of people have each \
+donated a huge amount of time to it.  It would be much better if the project \
+were supported by small donations from a large number of people.  Do your \
+part.  Donate.
+""",
+"""
+As of March 2010, Brain Workshop has been downloaded over 75,000 times in 20 \
+months.  If each downloader donated an average of $1, we could afford to pay \
+decent full- or part-time salaries (as appropriate) to all of our developers, \
+and we would be able to buy advertising to help people learn about Brain \
+Workshop.  With $2 per downloader, or with more downloaders, we could afford \
+to fund controlled experiments and clinical trials on Brain Workshop and \
+cognitive training.  Help us make that vision a reality.  Donate.
+""",  
+"""
+The authors think it important that access to cognitive training \
+technologies be available to everyone as freely as possible.  Like other \
+forms of education, cognitive training should not be a luxury of the rich, \
+since that would tend to exacerbate class disparity and conflict.  Charging \
+money for cognitive training does exactly that.  The commercial competitors \
+of Brain Workshop have two orders of magnitude more users than does Brain \
+Workshop because they have far more resources for research, development, and \
+marketing.  Help us bridge that gap and improve social equality of \
+opportunity.  Donate.
+""",
+"""
+Press SPACE to continue, or press D to donate now.
+"""]    # feel free to add more paragraphs or to change the chances for the 
+        # paragraphs you like and dislike, etc.
+        chances = [-1, 10, 10, 10, 0] # if < 0, 100% chance of being included.  Otherwise, relative weight.
+                                     # if == 0, appended to end and not counted
+                                     # for target_len.
+        assert len(chances) == len(paragraphs)
+        target_len = 3
+        text = []
+        options = []
+        for i in range(len(chances)):
+            if chances[i] < 0:
+                text.append(i)
+            else:
+                options.extend([i]*chances[i])
+        while len(text) < target_len and len(options) > 0:
+            choice = random.choice(options)
+            while choice in options:
+                options.remove(choice)
+            text.append(choice)
+        for i in range(len(chances)):
+            if chances[i] == 0:
+                text.append(i)
+        self.text = ''.join([paragraphs[i] for i in text])
+        
+        self.batch = pyglet.graphics.Batch()
+        self.label = pyglet.text.Label(self.text, 
+                            font_name='Times New Roman',
+                            color=COLOR_TEXT,
+                            batch=self.batch,
+                            multiline=True,
+                            width=(4*window.width)/5,
+                            font_size=14,
+                            x=window.width//2, y=window.height//2,
+                            anchor_x='center', anchor_y='center')
+        window.push_handlers(self.on_key_press, self.on_draw)
+        self.on_draw()
+
+    def on_key_press(self, sym, mod):
+        if sym in (key.ESCAPE, key.SPACE):
+            self.close()
+        elif sym in (key.RETURN, key.ENTER, key.D):
+            self.select()
+        return pyglet.event.EVENT_HANDLED
+    
+    def select(self):
+        webbrowser.open_new_tab(WEB_DONATE)
+        self.close()
+        
+    def close(self):
+        return window.remove_handlers(self.on_key_press, self.on_draw)    
+    
+    def on_draw(self):
+        window.clear()
+        self.batch.draw()
+        return pyglet.event.EVENT_HANDLED
+
 #
 # --- END GRAPHICS SECTION ----------------------------------------------
 #
@@ -3198,6 +3231,15 @@ def end_session(cancelled = False):
         update_all_labels()
     else:
         update_all_labels(do_analysis = True)
+        if PANHANDLE_FREQUENCY:
+            statsfile_path = os.path.join(get_data_dir(), STATSFILE)
+            statsfile = open(statsfile_path, 'r')
+            sessions = len(statsfile.readlines()) # let's just hope people 
+            statsfile.close()       # don't manually edit their statsfiles
+            if (sessions % PANHANDLE_FREQUENCY) == 0 and not CLINICAL_MODE:
+                Panhandle(n=sessions)
+            
+    
             
 # this function causes the key labels along the bottom to revert to their
 # "non-pressed" state for a new trial or when returning to the main screen.
@@ -3501,6 +3543,9 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.H:
             webbrowser.open_new_tab(WEB_TUTORIAL)
                 
+        elif symbol == key.D and not CLINICAL_MODE:
+            webbrowser.open_new_tab(WEB_DONATE)
+            
         elif symbol == key.G:
 #            sound_stop()
             graph.parse_stats()
@@ -3723,7 +3768,10 @@ def on_key_press(symbol, modifiers):
 
         elif symbol == key.H:
             webbrowser.open_new_tab(WEB_TUTORIAL)
-            
+                        
+        elif symbol == key.D and not CLINICAL_MODE:
+            webbrowser.open_new_tab(WEB_DONATE)
+
         elif symbol == key.J and USE_MORSE:
             webbrowser.open_new_tab(WEB_MORSE)
                             
