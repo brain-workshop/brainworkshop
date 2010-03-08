@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.4'
+VERSION = '4.7.5'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -132,8 +132,7 @@ JAEGGI_MODE = False
 # In Jaeggi Mode, adjust the default appearance and sounds of Brain Workshop
 # to emulate the original software used in the study?
 # If this is enabled, the following options will be set:
-#    USE_LETTERS = True, USE_NUMBERS = False, USE_NATO = False,
-#    USE_PIANO = False, USE_MORSE = False, ANIMATE_SQUARES = False,
+#    AUDIO1_SETS = ['letters'],  ANIMATE_SQUARES = False,
 #    OLD_STYLE_SQUARES = True, OLD_STYLE_SHARP_CORNERS = True,
 #    SHOW_FEEDBACK = False, GRIDLINES = False, CROSSHAIRS = True
 # (note: this option only takes effect if JAEGGI_MODE is set to True)
@@ -148,26 +147,6 @@ JAEGGI_FORCE_OPTIONS = True
 # (note: this option only takes effect if JAEGGI_MODE is set to True)
 # Default: True
 JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
-
-# This selects which sounds to use for audio n-back tasks.
-# Select any combination of letters, numbers, the NATO Phonetic Alphabet
-# (Alpha, Bravo, Charlie, etc), the C scale on piano, and morse code.
-USE_LETTERS = True
-USE_NUMBERS = False
-USE_NATO = False
-USE_PIANO = False
-USE_MORSE = False
-
-# Sound configuration for the Dual Audio (A-A) task.
-# Possible values for CHANNEL_AUDIO and CHANNEL_AUDIO2:
-#    'left' 'right' 'center'
-CHANNEL_AUDIO = 'left'
-CHANNEL_AUDIO2 = 'right'
-USE_LETTERS_2 = True
-USE_NUMBERS_2 = False
-USE_NATO_2 = False
-USE_PIANO_2 = False
-USE_MORSE_2 = False
 
 # Background color: True = black, False = white.
 # Default: False
@@ -214,6 +193,19 @@ VISUAL_COLOR = 1
 # The first item in the list is the default which is loaded on startup.
 IMAGE_SETS = ['polygons-basic', 'national-park-service', 'pentominoes',
               'tetrominoes-fixed', 'cartoon-faces']
+            
+# This selects which sounds to use for audio n-back tasks.
+# Select any combination of letters, numbers, the NATO Phonetic Alphabet
+# (Alpha, Bravo, Charlie, etc), the C scale on piano, and morse code.
+# AUDIO1_SETS = ['letters', 'morse', 'nato', 'numbers', 'piano']
+AUDIO1_SETS = ['letters']
+
+# Sound configuration for the Dual Audio (A-A) task.
+# Possible values for CHANNEL_AUDIO1 and CHANNEL_AUDIO2:
+#    'left' 'right' 'center'
+AUDIO2_SETS = ['letters']
+CHANNEL_AUDIO1 = 'left'
+CHANNEL_AUDIO2 = 'right'
 
 # Animate squares?
 ANIMATE_SQUARES = False
@@ -625,11 +617,7 @@ if JAEGGI_MODE and not JAEGGI_INTERFACE_DEFAULT_SCORING:
     GAME_MODE = 2
     VARIABLE_NBACK = 0
     if JAEGGI_FORCE_OPTIONS:
-        USE_LETTERS = True
-        USE_NUMBERS = False
-        USE_NATO = False
-        USE_PIANO = False
-        USE_MORSE = False
+        AUDIO1_SETS = ['letters']
         ANIMATE_SQUARES = False
         OLD_STYLE_SQUARES = True
         OLD_STYLE_SHARP_CORNERS = True
@@ -977,8 +965,6 @@ class Mode:
         self.started = False
         self.paused = False
         self.show_missed = False
-        self.game_select = False
-        self.image_select = False
         self.sound_select = False
         self.draw_graph = False
         self.saccadic = False
@@ -1446,10 +1432,22 @@ class TextInputScreen:
         self.callback(self.text)
         return pyglet.event.EVENT_HANDLED
       
-    
+
+class Cycler:
+    def __init__(self, values, default=0):
+        self.values = values
+        self.i = default
+    def nxt(self): # not named "next" to prevent using a Cycler as an iterator, which would hang
+        self.i = (self.i + 1) % len(self.values)
+        return self.value()
+    def value(self):
+        return self.values[self.i]      
+    def __str__(self):
+        return str(self.value())
+
 class Menu:
     """
-    Menu.__init__(self, options, values={}, actions={}, title='',  choose_once=False, 
+    Menu.__init__(self, options, values={}, actions={}, names={}, title='',  choose_once=False, 
                   default=0):
         
     A generic menu class.  The argument options is edited in-place.  Instancing
@@ -1464,7 +1462,7 @@ class Menu:
     titlesize = 18
     choicesize = 12
     
-    def __init__(self, options, values=None, actions={}, title='', choose_once=False, default=0):
+    def __init__(self, options, values=None, actions={}, names={}, title='', choose_once=False, default=0):
         self.bgcolor = (255 * int(not BLACK_BACKGROUND), )*3
         self.textcolor = (0,0,0,255)#(255 * int(BLACK_BACKGROUND), )*3
         self.markercolors = (255, 0, 0, 0, 255, 0, 0, 0, 255) # self.textcolor*3
@@ -1477,6 +1475,10 @@ class Menu:
             self.options = options
         self.values = values or vals # use values if there's anything in it
         self.actions = actions
+        for op in self.options:
+            if not op in names.keys():
+                names[op] = op
+        self.names = names
         self.choose_once = choose_once
         self.disppos = 0 # which item in options is the first on the screen                          
         self.selpos = default # may be offscreen?
@@ -1516,11 +1518,13 @@ class Menu:
         ending = int(di + self.pagesize < len(self.options))
         while i < self.pagesize-ending and i+self.disppos < len(self.options):
             k = self.options[i+di]
-            if k in self.values.keys() and not self.values[k] == None: 
+            if k == 'Blank line':
+                self.labels[i].text = ''
+            elif k in self.values.keys() and not self.values[k] == None: 
                 v = self.values[k]
-                self.labels[i].text = '%s:\t%s' % (str(k), self.textify(v))
+                self.labels[i].text = '%s:\t%s' % (self.names[k], self.textify(v))
             else:
-                self.labels[i].text = self.options[i+self.disppos]
+                self.labels[i].text = self.names[k]
             i += 1
         if ending:
             self.labels[i].text = '...'
@@ -1553,10 +1557,14 @@ class Menu:
     def select(self):
         k = self.options[self.selpos]
         i = self.selpos
-        if k in self.actions.keys():
+        if k == "Blank line":
+            pass
+        elif k in self.actions.keys():
             self.values[k] = self.actions[k](k)
         elif type(self.values[k]) == bool:
             self.values[k] = not self.values[k]  # todo: other data types
+        elif isinstance(self.values[k], Cycler):
+            self.values[k].nxt()
         elif self.values[k] == None:
             self.choose(k, i)
             self.close()
@@ -1612,115 +1620,95 @@ class GameSelect(Menu):
             mode.enforce_standard_mode()
             stats.retrieve_progress()
         
-class ImageSelect:
+class ImageSelect(Menu):
     def __init__(self):
-        
-        str_list = []
-        str_list.append('Type a number to choose images for the Image n-back task.\n\n')
-        
-        for index in range(0, len(IMAGE_SETS)):
-            if index > 9: break
-            str_list.append('  ')
-            str_list.append(str(index))
-            str_list.append(': ')
-            str_list.append(IMAGE_SETS[index])
-            str_list.append('\n')
-        
-        self.label = pyglet.text.Label(
-            ''.join(str_list), multiline = True, width = 450,
-            font_size = 16, bold=False, color = COLOR_TEXT,
-            x = window.width // 2, y = window.height - 50,
-            anchor_x='center', anchor_y='top')
-        
-    def draw(self):
-        self.label.draw()
+        imagesets = resourcepaths['sprites']
+        self.new_sets = {}
+        for image in imagesets:
+            self.new_sets[image] = image in IMAGE_SETS
+        options = self.new_sets.keys()
+        options.sort()
+        vals = self.new_sets
+        Menu.__init__(self, options, vals, title='Choose images to use for the Image n-back tasks.')
+
+    def close(self):
+        global IMAGE_SETS
+        while IMAGE_SETS:
+            IMAGE_SETS.remove(IMAGE_SETS[0])
+        for k,v in self.new_sets.items():
+            if v: IMAGE_SETS.append(k)
+        Menu.close(self)
+        update_all_labels()
+
+    def select(self):
+        Menu.select(self)
+        if not [val for val in self.values.values() if (val and not isinstance(val, Cycler))]:
+            i = 0
+            if self.selpos == 0:
+                i = random.randint(1, len(self.options)-1)
+            self.values[self.options[i]] = True
+            self.update_labels()
             
-class SoundSelect:
+            
+class SoundSelect(Menu):
     def __init__(self):
-                
-        str_list = []
-        str_list.append('Press a key to choose sounds for the Sound n-back tasks.\n\n')
-        str_list.append('If multiple sounds are selected, one will be randomly chosen each session.\n')
-        str_list.append('\n\n')
+        audiosets = resourcepaths['sounds'] # we don't want to delete 'operations' from resourcepaths['sounds']
+        self.new_sets = {}
+        for audio in audiosets:
+            if not audio == 'operations':
+                self.new_sets['1'+audio] = audio in AUDIO1_SETS
+                self.new_sets['2'+audio] = audio in AUDIO2_SETS
+        for audio in audiosets:
+            if not audio == 'operations':
+                self.new_sets['2'+audio] = audio in AUDIO2_SETS
+        options = self.new_sets.keys()
+        options.sort()
+        options.insert(len(self.new_sets)/2, "Blank line") # Menu.update_labels and .select will ignore this
+        options.append("Blank line")
+        options.extend(['CHANNEL_AUDIO1', 'CHANNEL_AUDIO2'])
+        lcr = ['left', 'right', 'center']
+        vals = self.new_sets
+        vals['CHANNEL_AUDIO1'] = Cycler(lcr, default=lcr.index(CHANNEL_AUDIO1))
+        vals['CHANNEL_AUDIO2'] = Cycler(lcr, default=lcr.index(CHANNEL_AUDIO2))
+        names = {}
+        for op in options:
+            if op.startswith('1') or op.startswith('2'):
+                names[op] = "Use sound set '%s' for channel %s" % (op[1:], op[0])
+            elif 'CHANNEL_AUDIO' in op:
+                names[op] = 'Channel %i is' % (op[-1]=='2' and 2 or 1)
+        Menu.__init__(self, options, vals, {}, names, title='Choose sound sets to Sound n-back tasks.')
         
-        self.label1 = pyglet.text.Label(
-            ''.join(str_list), multiline = True, width = 700,
-            font_size=14, bold=False, color = COLOR_TEXT,
-            x = window.width // 2, y = window.height - 25,
-            anchor_x='center', anchor_y='top')
+    def close(self):
+        global AUDIO1_SETS
+        global AUDIO2_SETS
+        global CHANNEL_AUDIO1
+        global CHANNEL_AUDIO2
+        while AUDIO1_SETS:
+            AUDIO1_SETS.remove(AUDIO1_SETS[0])
+        for k,v in self.new_sets.items():
+            if   k.startswith('1'): AUDIO1_SETS.append(k[1:])
+            elif k.startswith('2'): AUDIO2_SETS.append(k[1:])
+        CHANNEL_AUDIO1  = self.values['CHANNEL_AUDIO1'].value()
+        CHANNEL_AUDIO2 = self.values['CHANNEL_AUDIO2'].value()
+        Menu.close(self)
+        update_all_labels()
         
-        self.label2 = pyglet.text.Label(
-            '', multiline = True, width = 700,
-            font_size=14, bold=False, color = COLOR_TEXT,
-            x = window.width // 2, y = window.height - 125,
-            anchor_x='center', anchor_y='top')
-        
-    def draw(self):
-                
-        str_list = []
-        str_list.append('Sound task:\n\n')
-        
-        if('audio2' in mode.modalities[mode.mode]):
-            str_list.append('  L:  ')
-            str_list.append(CHANNEL_AUDIO)
-            str_list.append(' channel\n\n')
-        
-        if USE_LETTERS:
-            str_list.append('Yes')
-        else: str_list.append('No  ')
-        str_list.append('  1:  Letters\n')
-        if USE_NUMBERS:
-            str_list.append('Yes')
-        else: str_list.append('No  ')
-        str_list.append('  2:  Numbers\n')
-        if USE_NATO:
-            str_list.append('Yes')
-        else: str_list.append('No  ')
-        str_list.append('  3:  NATO Phonetic Alphabet\n')
-        if USE_PIANO:
-            str_list.append('Yes')
-        else: str_list.append('No  ')
-        str_list.append('  4:  Piano Notes\n')
-        if USE_MORSE:
-            str_list.append('Yes')
-        else: str_list.append('No  ')
-        str_list.append('  5:  Morse Code\n')
-        str_list.append('\n\n')
-        
-        if('audio2' in mode.modalities[mode.mode]):
-            str_list.append('Sound2 task:\n\n')
-            
-            str_list.append('  ;:  ')
-            str_list.append(CHANNEL_AUDIO2)
-            str_list.append(' channel\n\n')
-            
-            if USE_LETTERS_2:
-                str_list.append('Yes')
-            else: str_list.append('No  ')
-            str_list.append('  Q:  Letters\n')
-            if USE_NUMBERS_2:
-                str_list.append('Yes')
-            else: str_list.append('No  ')
-            str_list.append('  W:  Numbers\n')
-            if USE_NATO_2:
-                str_list.append('Yes')
-            else: str_list.append('No  ')
-            str_list.append('  E:  NATO Phonetic Alphabet\n')
-            if USE_PIANO_2:
-                str_list.append('Yes')
-            else: str_list.append('No  ')
-            str_list.append('  R:  Piano Notes\n')
-            if USE_MORSE_2:
-                str_list.append('Yes')
-            else: str_list.append('No  ')
-            str_list.append('  T:  Morse Code\n')
-            str_list.append('\n\n')
-        str_list.append('SPACE: Continue')
-        
-        self.label2.text = ''.join(str_list)
-        
-        self.label1.draw()
-        self.label2.draw()
+    def select(self):
+        Menu.select(self)
+        for c in ('1', '2'):
+            if not [v for k,v in self.values.items() if (k.startswith(c) and v and not isinstance(v, Cycler))]:
+                options = resourcepaths['sounds'].keys()
+                options.remove('operations')
+                i = 0
+                if self.selpos == 0:
+                    i = random.randint(1, len(options)-1)
+                elif self.selpos==len(options)+1:
+                    i = random.randint(len(options)+2, 2*len(options))
+                elif self.selpos > len(options)+1:
+                    i = len(options)+1
+                self.values[self.options[i]] = True
+            self.update_labels()
+
 
 # this class controls the field.
 # the field is the grid on which the squares appear
@@ -1802,12 +1790,16 @@ class Visual:
                               for path in resourcepaths['misc']['colored-squares']]
         self.spr_square_size = self.spr_square[0].width
         
-        # load default image set
-        self.load_set(0)
+        # load an image set
+        self.load_set()
         
-    def load_set(self, index):
+    def load_set(self, index=None):
+        if type(index) == int:
+            index = IMAGE_SETS[index]
+        if index == None:
+            index = random.choice(IMAGE_SETS)
         self.image_set = [pyglet.sprite.Sprite(pyglet.image.load(path))
-                          for path in resourcepaths['sprites'][IMAGE_SETS[index]]]
+                            for path in resourcepaths['sprites'][index]]
         self.image_set_size = self.image_set[0].width
         
     def choose_random_images(self, number):
@@ -2251,13 +2243,15 @@ class FeedbackLabel:
         total should be the total number of feedback labels for this mode.
         """
         self.modality = modality
-        self.letter = letter = eval('key.symbol_string(KEY_%s)' % modality.upper())        
+        self.letter = eval('key.symbol_string(KEY_%s)' % modality.upper())
+        if self.letter == 'SEMICOLON': 
+            self.letter = ';'      
         modalityname = modality
         if modalityname.endswith('vis'):
             modalityname = modalityname[:-3] + ' & n-vis'
         elif modalityname.endswith('audio') and not modalityname == 'audio':
             modalityname = modalityname[:-5] + ' & n-audio'
-        self.text = "%s: %s" % (letter.upper(), modalityname)
+        self.text = "%s: %s" % (self.letter.upper(), modalityname)
         if total < 4: self.text += ' match'
         if   total < 4: font_size = 16
         elif total < 5: font_size = 14
@@ -2474,11 +2468,11 @@ def check_match(input_type, check_missed = False):
     if len(stats.session['position']) < mode.back:
         return 'unknown'
     
-    if   input_type in ('visvis', 'visaudio'):
+    if   input_type in ('visvis', 'visaudio', 'image'):
         current = mode.current_stim['vis']
     elif input_type in ('audiovis', ):
         current = mode.current_stim['audio']
-    if   input_type in ('visvis', 'audiovis'):
+    if   input_type in ('visvis', 'audiovis', 'image'):
         back_data = 'vis'
     elif input_type in ('visaudio', ):
         back_data = 'audio'
@@ -2780,9 +2774,9 @@ class Panhandle:
         paragraphs = [ 
 """
 You have completed %i sessions with Brain Workshop.  Your perseverance suggests \
-that you either are finding some benefit from using the program or have a \
-very boring life.  If you have been benefiting from Brain Workshop, don't you \
-think you should give something back to the project?
+that you are finding some benefit from using the program.  If you have been \
+benefiting from Brain Workshop, don't you think you should give something \
+back to the project?
 """ % n, 
 """
 Brain Workshop is and always will be 100% free.  Up until now, Brain Workshop \
@@ -3157,42 +3151,16 @@ def new_session():
     mode.paused = False
     circles.update()
     
+    visual.load_set()
     
     # initialize sounds
-    choices = []
-    if USE_LETTERS:
-        choices.append('letters')
-    if USE_NUMBERS:
-        choices.append('numbers')
-    if USE_NATO:
-        choices.append('nato')
-    if USE_PIANO:
-        choices.append('piano')
-    if USE_MORSE:
-        choices.append('morse')
-    if not choices:
-        choices.append('letters')
-    mode.sound_mode = random.choice(choices)
+    mode.sound_mode  = random.choice(AUDIO1_SETS)
+    mode.sound2_mode = random.choice(AUDIO2_SETS)
     
-    choices = []
-    if USE_LETTERS_2:
-        choices.append('letters')
-    if USE_NUMBERS_2:
-        choices.append('numbers')
-    if USE_NATO_2:
-        choices.append('nato')
-    if USE_PIANO_2:
-        choices.append('piano')
-    if USE_MORSE_2:
-        choices.append('morse')
-    if not choices:
-        choices.append('letters')
-    mode.sound2_mode = random.choice(choices)
-    
-    visual.letters = random.sample(sounds[mode.sound_mode].keys(), 8)
+    visual.letters  = random.sample(sounds[mode.sound_mode ].keys(), 8)
     visual.letters2 = random.sample(sounds[mode.sound2_mode].keys(), 8)
     visual.choose_random_images(8)
-    mode.soundlist = [sounds[mode.sound_mode][l] for l in visual.letters]
+    mode.soundlist  = [sounds[mode.sound_mode][l] for l in visual.letters]
     mode.soundlist2 = [sounds[mode.sound2_mode][l] for l in visual.letters2]
             
     if JAEGGI_MODE:
@@ -3418,11 +3386,11 @@ def generate_stimulus():
         player = pyglet.media.ManagedSoundPlayer()
         player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.min_distance = 100.0
-        if CHANNEL_AUDIO == 'left':
+        if CHANNEL_AUDIO1 == 'left':
             player.position = (-99.0, 0.0, 0.0)
-        elif CHANNEL_AUDIO == 'right':
+        elif CHANNEL_AUDIO1 == 'right':
             player.position = (99.0, 0.0, 0.0)
-        elif CHANNEL_AUDIO == 'center':
+        elif CHANNEL_AUDIO1 == 'center':
             #player.position = (0.0, 0.0, 0.0)
             pass
         player.play()
@@ -3505,30 +3473,15 @@ def get_users():
 # --- BEGIN EVENT LOOP SECTION ----------------------------------------------
 #
 
-#soundchoices = dict((k, True) for k in sounds.keys()) # debugging
-#del soundchoices['operations']
 # this is where the keyboard keys are defined.
 @window.event
 def on_key_press(symbol, modifiers):
-    global CHANNEL_AUDIO
-    global USE_LETTERS
-    global USE_NUMBERS
-    global USE_NATO
-    global USE_PIANO
-    global USE_MORSE
-    global CHANNEL_AUDIO2
-    global USE_LETTERS_2
-    global USE_NUMBERS_2
-    global USE_NATO_2
-    global USE_PIANO_2
-    global USE_MORSE_2
     global VARIABLE_NBACK
-    global soundchoices
     
     if symbol == key.D and (modifiers & key.MOD_CTRL):
         dump_pyglet_info()
         
-    elif mode.title_screen and not mode.draw_graph and not mode.image_select and not mode.sound_select:
+    elif mode.title_screen and not mode.draw_graph:
         if symbol == key.ESCAPE or symbol == key.X:
             window.on_close()
             
@@ -3540,6 +3493,9 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.C and not JAEGGI_MODE:
             GameSelect()
                                     
+        elif symbol == key.I and not JAEGGI_MODE:
+            ImageSelect()
+
         elif symbol == key.H:
             webbrowser.open_new_tab(WEB_TUTORIAL)
                 
@@ -3552,11 +3508,6 @@ def on_key_press(symbol, modifiers):
             graph.graph = mode.mode
             mode.draw_graph = True
             
-#        elif symbol == key.V: # debugging
-#            Menu(soundchoices, title='Hello World!')
-#        elif symbol == key.B:
-#            print soundchoices
-
         elif symbol == key.U: 
             users = ["New user"] + get_users()
             userSwitchMenu = Menu(options=users, 
@@ -3566,12 +3517,9 @@ def on_key_press(symbol, modifiers):
                                default=users.index(USER))
 
                 
-        elif symbol == key.I and not JAEGGI_MODE:
-            mode.image_select = True
-
         elif symbol == key.S and not JAEGGI_MODE:
-            mode.sound_select = True
-    
+            SoundSelect()
+            
         elif symbol == key.F:
             webbrowser.open_new_tab(WEB_FORUM)
 
@@ -3587,81 +3535,7 @@ def on_key_press(symbol, modifiers):
             
         elif symbol == key.M:
             graph.next_style()
-                        
-    elif mode.image_select:        
-        if symbol in (key.ESCAPE, key.I, key.X, key.SPACE):
-            mode.image_select = False                   
-        
-        elif symbol in (key._0, key.NUM_0) and len(IMAGE_SETS) > 0:
-            visual.load_set(0)
-            mode.image_select = False
-        elif symbol in (key._1, key.NUM_1) and len(IMAGE_SETS) > 1:
-            visual.load_set(1)
-            mode.image_select = False
-        elif symbol in (key._2, key.NUM_2) and len(IMAGE_SETS) > 2:
-            visual.load_set(2)
-            mode.image_select = False
-        elif symbol in (key._3, key.NUM_3) and len(IMAGE_SETS) > 3:
-            visual.load_set(3)
-            mode.image_select = False
-        elif symbol in (key._4, key.NUM_4) and len(IMAGE_SETS) > 4:
-            visual.load_set(4)
-            mode.image_select = False
-        elif symbol in (key._5, key.NUM_5) and len(IMAGE_SETS) > 5:
-            visual.load_set(5)
-            mode.image_select = False
-        elif symbol in (key._6, key.NUM_6) and len(IMAGE_SETS) > 6:
-            visual.load_set(6)
-            mode.image_select = False
-        elif symbol in (key._7, key.NUM_7) and len(IMAGE_SETS) > 7:
-            visual.load_set(7)
-            mode.image_select = False
-        elif symbol in (key._8, key.NUM_8) and len(IMAGE_SETS) > 8:
-            visual.load_set(8)
-            mode.image_select = False
-        elif symbol in (key._9, key.NUM_9) and len(IMAGE_SETS) > 9:
-            visual.load_set(9)
-            mode.image_select = False
-            
-    elif mode.sound_select:
-        if symbol in (key.ESCAPE, key.S, key.X, key.SPACE):
-            mode.sound_select = False
-        elif symbol == key.L:
-            if CHANNEL_AUDIO == 'center':
-                CHANNEL_AUDIO = 'left'
-            elif CHANNEL_AUDIO == 'left':
-                CHANNEL_AUDIO = 'right'
-            elif CHANNEL_AUDIO == 'right':
-                CHANNEL_AUDIO = 'center'
-        elif symbol == key._1 or symbol == key.NUM_1:
-            USE_LETTERS = not USE_LETTERS
-        elif symbol == key._2 or symbol == key.NUM_2:
-            USE_NUMBERS = not USE_NUMBERS
-        elif symbol == key._3 or symbol == key.NUM_3:
-            USE_NATO = not USE_NATO
-        elif symbol == key._4 or symbol == key.NUM_4:
-            USE_PIANO = not USE_PIANO
-        elif symbol == key._5 or symbol == key.NUM_5:
-            USE_MORSE = not USE_MORSE
-        elif symbol == key.SEMICOLON:
-            if CHANNEL_AUDIO2 == 'center':
-                CHANNEL_AUDIO2 = 'left'
-            elif CHANNEL_AUDIO2 == 'left':
-                CHANNEL_AUDIO2 = 'right'
-            elif CHANNEL_AUDIO2 == 'right':
-                CHANNEL_AUDIO2 = 'center'
-        elif symbol == key.Q:
-            USE_LETTERS_2 = not USE_LETTERS_2
-        elif symbol == key.W:
-            USE_NUMBERS_2 = not USE_NUMBERS_2
-        elif symbol == key.E:
-            USE_NATO_2 = not USE_NATO_2
-        elif symbol == key.R:
-            USE_PIANO_2 = not USE_PIANO_2
-        elif symbol == key.T:
-            USE_MORSE_2 = not USE_MORSE_2
-            
-    
+                                                    
     elif mode.saccadic:
         if symbol in (key.ESCAPE, key.E, key.X, key.SPACE):
             saccadic.stop()
@@ -3747,13 +3621,13 @@ def on_key_press(symbol, modifiers):
             if JAEGGI_MODE:
                 jaeggiWarningLabel.show()
                 return
-            mode.image_select = True
+            ImageSelect()
 
         elif symbol == key.S:
             if JAEGGI_MODE:
                 jaeggiWarningLabel.show()
                 return
-            mode.sound_select = True
+            SoundSelect()
             
         elif symbol == key.W:
             webbrowser.open_new_tab(WEB_SITE)
@@ -3819,37 +3693,12 @@ def on_key_press(symbol, modifiers):
                 elif symbol == key._9 or symbol == key.NUM_9:
                     arithmeticAnswerLabel.input('9')
                     
-            if symbol == KEY_POSITION:
-                mode.inputs['position'] = True
-                update_input_labels()
-                
-            if symbol == KEY_VISVIS:
-                mode.inputs['visvis'] = True
-                update_input_labels()
-                
-            if symbol == KEY_VISAUDIO:
-                mode.inputs['visaudio'] = True
-                update_input_labels()
-                
-            if symbol == KEY_COLOR:
-                mode.inputs['color'] = True
-                update_input_labels()
-                
-            if symbol == KEY_AUDIOVIS:
-                mode.inputs['audiovis'] = True
-                update_input_labels()
-                
-            if symbol == KEY_IMAGE:
-                mode.inputs['image'] = True
-                update_input_labels()
-
-            if symbol == KEY_AUDIO:
-                mode.inputs['audio'] = True
-                update_input_labels()
-                
-            if symbol == KEY_AUDIO2:
-                mode.inputs['audio2'] = True
-                update_input_labels()
+            
+            for k in mode.modalities[mode.mode]:
+                keycode = eval('KEY_%s' % k.upper())
+                if symbol == keycode:
+                    mode.inputs[k] = True
+                    update_input_labels()
 
     return pyglet.event.EVENT_HANDLED
 # the loop where everything is drawn on the screen.
@@ -3860,10 +3709,6 @@ def on_draw():
     window.clear()
     if mode.draw_graph:
         graph.draw()
-    elif mode.image_select:
-        imageSelect.draw()
-    elif mode.sound_select:
-        soundSelect.draw()
     elif mode.saccadic:
         saccadic.draw()
     elif mode.title_screen:
@@ -3952,8 +3797,6 @@ graph = Graph()
 circles = Circles()
 saccadic = Saccadic()
 
-imageSelect = ImageSelect()
-soundSelect = SoundSelect()
 updateLabel = UpdateLabel()
 gameModeLabel = GameModeLabel()
 jaeggiWarningLabel = JaeggiWarningLabel()
