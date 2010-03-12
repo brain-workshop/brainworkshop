@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.5'
+VERSION = '4.7.6'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -106,9 +106,9 @@ CONFIGFILE_DEFAULT_CONTENTS = """
 # This mode allows access to Manual mode, the extra sound sets, and the
 # additional game modes of Brain Workshop while presenting the game in
 # the more challenging Jaeggi-style interface featured in the original study.
-# With the default BW scoring model, the visual and auditory sequences are
-# more randomized and unpredictable than they are in Jaeggi mode.
-# The only effect of this option is to set the following options:
+# With the default BW sequence generation model, the visual and auditory 
+# sequences are more randomized and unpredictable than they are in Jaeggi 
+# mode.  The only effect of this option is to set the following options:
 #   ANIMATE_SQUARES = False, OLD_STYLE_SQUARES = True,
 #   OLD_STYLE_SHARP_CORNERS = True, SHOW_FEEDBACK = False,
 #   GRIDLINES = False, CROSSHAIRS = True, BLACK_BACKGROUND = True,
@@ -122,12 +122,23 @@ JAEGGI_INTERFACE_DEFAULT_SCORING = False
 # It counts non-matches with no inputs as correct (instead of ignoring them).
 # It also forces 4 visual matches, 4 auditory matches, and 2 simultaneous
 # matches per session, resulting in less randomized and more predictable
-# sequences than in the default BW scoring model.
-# Different thresholds are used to reflect the modified scoring system.
-# Access to Manual mode, additional game modes and sound sets is disabled 
-# in Jaeggi mode.
+# sequences than in the default BW sequence generation model.  
+# Different thresholds are used to reflect the modified scoring system 
+# (see below).  Access to Manual mode, additional game modes and sound sets 
+# is disabled in Jaeggi mode.
 # Default: False
 JAEGGI_MODE = False
+
+# The default BW scoring system uses the following formula:
+#     score = TP / (TP + FP + FN)
+# where TP is a true positive response, FN is a false negative, etc.  All
+# stimulus modalities are summed together for this formula.  
+# The Jaeggi mode scoring system scores uses the following formula:
+#     score = (TP + TN) / (TP + TN + FP + FN)
+# Each modality is scored separately, and the score for the whole session
+# is equal to the lowest score of any modality.
+# Default: False
+JAEGGI_SCORING = False
 
 # In Jaeggi Mode, adjust the default appearance and sounds of Brain Workshop
 # to emulate the original software used in the study?
@@ -616,6 +627,7 @@ elif JAEGGI_INTERFACE_DEFAULT_SCORING:
 if JAEGGI_MODE and not JAEGGI_INTERFACE_DEFAULT_SCORING:
     GAME_MODE = 2
     VARIABLE_NBACK = 0
+    JAEGGI_SCORING = True
     if JAEGGI_FORCE_OPTIONS:
         AUDIO1_SETS = ['letters']
         ANIMATE_SQUARES = False
@@ -636,11 +648,11 @@ if JAEGGI_MODE and not JAEGGI_INTERFACE_DEFAULT_SCORING:
 if BLACK_BACKGROUND:
     COLOR_TEXT = COLOR_TEXT_BLK
 def get_threshold_advance():
-    if JAEGGI_MODE:
+    if JAEGGI_SCORING:
         return JAEGGI_ADVANCE
     return THRESHOLD_ADVANCE
 def get_threshold_fallback():
-    if JAEGGI_MODE:
+    if JAEGGI_SCORING:
         return JAEGGI_FALLBACK
     return THRESHOLD_FALLBACK
 
@@ -1026,14 +1038,29 @@ class Graph:
     def reset_percents(self):
         self.percents = dict([(k, dict([(i, []) for i in v])) for k,v in mode.modalities.items()])
 
+    def next_nonempty_mode(self):
+        self.next_mode()
+        mode1 = self.graph
+        mode2 = None    # to make sure the loop runs the first iteration    
+        while self.graph != mode2 and not self.dictionaries[self.graph]:
+            self.next_mode()
+            mode2 = mode1
     def next_mode(self):
+        if self.graph & 128:
+            crab = True
+            self.graph -= 128
+        else:
+            crab = False
         if self.graph == 28:
             self.graph = 100
         elif self.graph == 107:
             self.graph = 2
+            crab = not crab
         elif self.graph == 11:
             self.graph = 20
         else: self.graph += 1
+        if crab:
+            self.graph += 128
         self.batch = None
         
     def parse_stats(self):
@@ -1087,20 +1114,14 @@ class Graph:
                                 'Please fix, delete or rename the stats file.')
 
             def mean(x):
-                try:
-                    return sum(x)/float(len(x))
-                except TypeError: # don't know if this is necessary or not
-                    return x
+                return sum(x)/float(len(x))
             def cent(x):
-                try:
-                    return map(lambda y: .01*y, x)
-                except TypeError:
-                    return .01*x
+                return map(lambda y: .01*y, x)
             
             for dictionary in self.dictionaries.values():
                 for datestamp in dictionary.keys(): # this would be so much easier with numpy
                     entries = dictionary[datestamp]
-                    nonzeros = [[num for num in entry if num] for entry in entries]
+                    nonzeros = [[num for num in entry if num] for entry in entries] # fixme: assuming the person didn't get 0% for a modality
                     if self.styles[self.style] == 'N':
                         scores = [entry[0] for entry in entries]
                     elif self.styles[self.style] == '%':
@@ -1110,24 +1131,19 @@ class Graph:
                     elif self.styles[self.style] == 'N+2*%-1':
                         scores = [nonzero[0] - 1 + 2*mean(cent(nonzero[1:])) for nonzero in nonzeros]
                     elif self.styles[self.style] == 'N+10/3+4/3':
-                        scores = [nonzero[0] - 5./3. + 10./3.*mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                        adv, flb = get_threshold_advance(), get_threshold_fallback()
+                        m = 1./(adv - flb)
+                        b = -m*flb
+                        scores = [nonzero[0] + b + m*mean(nonzero[1:]) for nonzero in nonzeros]
                     dictionary[datestamp] = (mean(scores), max(scores))
                     
             for game in self.percents:
                 for category in self.percents[game]:
-                    summation = 0
-                    count = 0
-                    for index in range(0, len(self.percents[game][category])):
-                        if index < len(self.percents[game][category]) - 50:
-                            continue
-                        count += 1
-                        summation += self.percents[game][category][index]
-                    if count == 0:
-                        average = 0
+                    pcts = self.percents[game][category][-50:]
+                    if not pcts:
+                        self.percents[game][category].append(0)
                     else:
-                        average = int(summation / count)
-                    self.percents[game][category].append(average)
-                                    
+                        self.percents[game][category].append(sum(pcts)/len(pcts))                                    
                         
     #def export_data(self):       
         #dictionary = {}
@@ -1187,8 +1203,9 @@ class Graph:
         right = center_x + width // 2
         top = center_y + height // 2
         bottom = center_y - height // 2
-        
-        dictionary = self.dictionaries[self.graph]
+        try:
+            dictionary = self.dictionaries[self.graph]
+        except: print self.graph
         graph_title = mode.long_mode_names[self.graph] + ' N-Back'
         
         self.batch.add(3, GL_LINE_STRIP, 
@@ -2587,17 +2604,14 @@ class AnalysisLabel:
         for mod in mods:
             category_percents[mod] = calc_percent(rights[mod], wrongs[mod])
 
-        if not JAEGGI_MODE:
+        if JAEGGI_SCORING:
+            percent = min([category_percents[m] for m in mode.modalities[mode.mode]])
+            #percent = min(category_percents['position'], category_percents['audio']) # JAEGGI_MODE forces mode.mode==2
+            if not CLINICAL_MODE:
+                str_list += ['Lowest score: %i%%' % percent]
+        else:
             percent = calc_percent(right, wrong)
             str_list += ['Score: %i%%' % percent]
-        else:
-            percent = min(category_percents['position'], category_percents['audio'])
-            if CLINICAL_MODE:
-                #str_list += [' Position score: %i%%' % category_percents['position']]
-                #str_list += ['       Sound score: %i%%' % category_percents['audio']]
-                pass
-            else:
-                str_list += ['Lowest score: %i%%' % percent]
         
         self.label.text = ''.join(str_list)
         stats.submit_session(percent, category_percents)
@@ -2775,8 +2789,8 @@ class Panhandle:
 """
 You have completed %i sessions with Brain Workshop.  Your perseverance suggests \
 that you are finding some benefit from using the program.  If you have been \
-benefiting from Brain Workshop, don't you think you should give something \
-back to the project?
+benefiting from Brain Workshop, don't you think Brain Workshop should \
+benefit from you?
 """ % n, 
 """
 Brain Workshop is and always will be 100% free.  Up until now, Brain Workshop \
@@ -2806,12 +2820,18 @@ marketing.  Help us bridge that gap and improve social equality of \
 opportunity.  Donate.
 """,
 """
+Brain Workshop has many known bugs and missing features.  The developers \
+would like to fix these issues, but they also have to work in order to be \
+able to pay for rent and food.  If you think the developers' time is better \
+spent programming than serving coffee, then do something about it.  Donate.
+""",
+"""
 Press SPACE to continue, or press D to donate now.
 """]    # feel free to add more paragraphs or to change the chances for the 
         # paragraphs you like and dislike, etc.
-        chances = [-1, 10, 10, 10, 0] # if < 0, 100% chance of being included.  Otherwise, relative weight.
-                                     # if == 0, appended to end and not counted
-                                     # for target_len.
+        chances = [-1, 10, 10, 10, 10, 0] # if < 0, 100% chance of being included.  Otherwise, relative weight.
+                                         # if == 0, appended to end and not counted
+                                         # for target_len.
         assert len(chances) == len(paragraphs)
         target_len = 3
         text = []
@@ -3531,7 +3551,7 @@ def on_key_press(symbol, modifiers):
             #graph.export_data()
 
         elif symbol == key.N:
-            graph.next_mode()
+            graph.next_nonempty_mode()
             
         elif symbol == key.M:
             graph.next_style()
@@ -3591,7 +3611,6 @@ def on_key_press(symbol, modifiers):
             mode.num_trials_total = mode.num_trials + mode.num_trials_factor * \
                 mode.back ** mode.num_trials_exponent
             sessionInfoLabel.flash()            
-            
             
         elif symbol == key.F5 and mode.manual:
             if mode.ticks_per_trial < TICKS_MAX:
