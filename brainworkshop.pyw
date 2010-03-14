@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.6'
+VERSION = '4.7.7'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -279,6 +279,7 @@ BACK_8 = 1
 BACK_9 = 1
 BACK_10 = 2
 BACK_11 = 2
+BACK_12 = 2
 BACK_20 = 2
 BACK_21 = 2
 BACK_22 = 2
@@ -343,6 +344,7 @@ TICKS_8 = 40
 TICKS_9 = 40
 TICKS_10 = 30
 TICKS_11 = 30
+TICKS_12 = 30
 TICKS_20 = 30
 TICKS_21 = 30
 TICKS_22 = 30
@@ -861,6 +863,7 @@ class Mode:
                                  9:'TA',
                                  10:'Po',
                                  11:'Au',
+                                 12:'TCC',
                                  20:'PC',
                                  21:'PI',
                                  22:'CA',
@@ -890,6 +893,7 @@ class Mode:
                                  9:'Triple Arithmetic',
                                  10:'Position',
                                  11:'Sound',
+                                 12:'Tri Combination (Color)',
                                  20:'Position, Color',
                                  21:'Position, Image',
                                  22:'Color, Sound',
@@ -919,6 +923,7 @@ class Mode:
                             9:['position', 'arithmetic', 'color'],
                             10:['position'],
                             11:['audio'],
+                            12:['visvis', 'visaudio', 'color', 'audiovis', 'audio'],
                             20:['position', 'color'],
                             21:['position', 'image'],
                             22:['color', 'audio'],
@@ -1046,21 +1051,11 @@ class Graph:
             self.next_mode()
             mode2 = mode1
     def next_mode(self):
-        if self.graph & 128:
-            crab = True
-            self.graph -= 128
-        else:
-            crab = False
-        if self.graph == 28:
-            self.graph = 100
-        elif self.graph == 107:
-            self.graph = 2
-            crab = not crab
-        elif self.graph == 11:
-            self.graph = 20
-        else: self.graph += 1
-        if crab:
-            self.graph += 128
+        modes = mode.modalities.keys()
+        modes.sort()
+        i = modes.index(self.graph)
+        i = (i + 1) % len(modes)
+        self.graph = modes[i]
         self.batch = None
         
     def parse_stats(self):
@@ -1506,9 +1501,10 @@ class Menu:
             anchor_x='center', anchor_y='center')
         
         self.labels = [pyglet.text.Label('', font_size=self.choicesize,
-            bold=False, color=self.textcolor, batch=self.batch,
+            bold=True, color=self.textcolor, batch=self.batch,
             x=window.width/8, y=(window.height*8)/10 - i*(self.choicesize*3/2),
-            anchor_x='left', anchor_y='center') for i in range(self.pagesize)]
+            anchor_x='left', anchor_y='center', font_name=['Courier New', 
+            'Monospace']) for i in range(self.pagesize)]
         
         self.marker = self.batch.add(3, GL_POLYGON, None, ('v2i', (0,)*6,),
             ('c3b', self.markercolors))
@@ -1539,7 +1535,7 @@ class Menu:
                 self.labels[i].text = ''
             elif k in self.values.keys() and not self.values[k] == None: 
                 v = self.values[k]
-                self.labels[i].text = '%s:\t%s' % (self.names[k], self.textify(v))
+                self.labels[i].text = '%s:%7s' % (self.names[k].ljust(52), self.textify(v))
             else:
                 self.labels[i].text = self.names[k]
             i += 1
@@ -1613,6 +1609,104 @@ class Menu:
         
 
 class GameSelect(Menu):
+    def __init__(self):
+        modalities = ['position', 'color', 'image', 'audio', 'audio2', 'arithmetic']
+        options = [m for m in modalities]
+        names = dict([(m, "Use %s?")])
+        options.append('combination')
+        options.append('variable')
+        options.append('crab')      
+        names['combination'] = 'Combination N-back mode?'  
+        names['variable'] = 'Use Variable N-Back levels?'
+        names['crab'] = 'Crab-back mode?  (Reverse every N stimuli)'
+        vals = dict([[op, None] for op in options])
+        curmodes = mode.modalities[mode.mode]
+        vals['combination'] = 'visvis' in curmodes
+        vals['variable'] = bool(VARIABLE_NBACK)
+        vals['crab'] = bool(mode.flags[mode.mode]['crab'])
+        for m in modalities:
+            vals[m] = m in curmodes
+        Menu.__init__(self, options, vals, title='Choose your game mode')        
+        self.modelabel = pyglet.text.Label('', font_size=self.titlesize,
+            bold=False, color=(0,0,0,255), batch=self.batch,
+            x=window.width/2, y=(window.height*1)/10,
+            anchor_x='center', anchor_y='center')
+        self.update_labels()
+
+    def update_labels(self):
+        self.calc_mode()
+        try:
+            self.modelabel.text = mode.long_mode_names[mode.mode] + (self.values['variable'] and ' V.' or '') + ' N-Back'
+        except AttributeError:
+            pass
+        Menu.update_labels(self)
+        
+    def calc_mode(self):
+        modes = [k for (k, v) in self.values.items() if v]
+        crab = 'crab' in modes
+        if 'variable' in modes:  modes.remove('variable')
+        if 'combination' in modes:
+            modes.remove('combination')
+            modes.extend(['visvis', 'visaudio', 'audiovis']) # audio should already be there
+        if 'crab' in modes: modes.remove('crab')
+        candidates = [k for k,v in mode.modalities.items() if not 
+                        [True for m in modes if not m in v] and not
+                        [True for m in v if not m in modes]]
+        for c in candidates: 
+            if c & 128: candidates.remove(c)
+        #print modes, crab, candidates
+        assert len(candidates) == 1
+        candidate = candidates[0]
+        if crab: candidate = candidate | 128
+        mode.mode = candidate
+        
+    def close(self):
+        global VARIABLE_NBACK
+        VARIABLE_NBACK = self.values['variable']
+        self.calc_mode()
+        Menu.close(self)
+
+        if not mode.manual:
+            mode.enforce_standard_mode()
+            stats.retrieve_progress()
+        update_all_labels()
+        circles.update()
+        
+    def select(self):
+        choice = self.options[self.selpos]
+        if choice == 'combination':
+            self.values['arithmetic'] = False
+            self.values['image'] = False
+            self.values['audio2'] = False
+            self.values['audio'] = True
+        elif choice == 'arithmetic':
+            self.values['image'] = False
+            self.values['audio'] = False
+            self.values['audio2'] = False
+            self.values['combination'] = False
+        elif choice == 'audio':
+            self.values['arithmetic'] = False
+            if self.values['audio']: 
+                self.values['combination'] = False
+                self.values['audio2'] = False
+        elif choice == 'audio2':
+            self.values['audio'] = True
+            self.values['combination'] = False
+            self.values['arithmetic'] = False
+        elif choice == 'image':
+            self.values['combination'] = False
+            self.values['arithmetic'] = False
+                            
+        Menu.select(self)
+        modes = [k for k,v in self.values.items() if v]
+        if not [v for k,v in self.values.items() 
+                  if v and not k in ('crab', 'combination', 'variable')] \
+           or len(modes) == 1 and modes[0] in ['image', 'color']:
+            self.values['position'] = True
+            self.update_labels()
+        self.calc_mode()
+        
+class OldGameSelect(Menu):
     def __init__(self):
         modes = mode.long_mode_names.items()
         modes.sort()
