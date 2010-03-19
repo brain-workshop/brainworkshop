@@ -1760,8 +1760,7 @@ class ImageSelect(Menu):
             self.values[self.options[i]] = True
             self.update_labels()
             
-            
-class SoundSelect(Menu):
+class SoundSelect(Menu):            
     def __init__(self):
         audiosets = resourcepaths['sounds'] # we don't want to delete 'operations' from resourcepaths['sounds']
         self.new_sets = {}
@@ -1819,7 +1818,6 @@ class SoundSelect(Menu):
                     i = len(options)+1
                 self.values[self.options[i]] = True
             self.update_labels()
-
 
 # this class controls the field.
 # the field is the grid on which the squares appear
@@ -2195,7 +2193,7 @@ class KeysListLabel:
                 self.label.y = window.height - 10
             else:
                 self.label.y = window.height - 40
-            if USE_MORSE:
+            if 'morse' in AUDIO1_SETS or 'morse' in AUDIO2_SETS:
                 str_list.append('J: Morse Code Reference\n')
                 str_list.append('\n')
             str_list.append('H: Help / Tutorial\n')
