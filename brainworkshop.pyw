@@ -2265,7 +2265,7 @@ class TitleKeysLabel:
             ''.join(str_list),
             multiline = True, width = 260,
             font_size = 12, bold = True, color = COLOR_TEXT,
-            x = window.width // 2, y = 180,
+            x = window.width // 2, y = 220,
             anchor_x = 'center', anchor_y = 'top')
         
         self.space = pyglet.text.Label(
