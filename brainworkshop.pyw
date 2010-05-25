@@ -1503,8 +1503,9 @@ class Menu:
         self.labels = [pyglet.text.Label('', font_size=self.choicesize,
             bold=True, color=self.textcolor, batch=self.batch,
             x=window.width/8, y=(window.height*8)/10 - i*(self.choicesize*3/2),
-            anchor_x='left', anchor_y='center', font_name=['Courier New', 
-            'Monospace']) for i in range(self.pagesize)]
+            anchor_x='left', anchor_y='center', font_name=['Courier New', # try fixed width fonts first
+            'Monospace', 'Terminal', 'fixed', 'Fixed', 'Times New Roman', 
+            'Helvetica', 'Arial']) for i in range(self.pagesize)]
         
         self.marker = self.batch.add(3, GL_POLYGON, None, ('v2i', (0,)*6,),
             ('c3b', self.markercolors))
@@ -1793,13 +1794,19 @@ class SoundSelect(Menu):
         global AUDIO2_SETS
         global CHANNEL_AUDIO1
         global CHANNEL_AUDIO2
-        while AUDIO1_SETS:
-            AUDIO1_SETS.remove(AUDIO1_SETS[0])
+        AUDIO1_SETS = []
+        AUDIO2_SETS = []
+        print self.new_sets
         for k,v in self.new_sets.items():
-            if   k.startswith('1'): AUDIO1_SETS.append(k[1:])
-            elif k.startswith('2'): AUDIO2_SETS.append(k[1:])
+            if   k.startswith('1') and v: AUDIO1_SETS.append(k[1:])
+            elif k.startswith('2') and v: AUDIO2_SETS.append(k[1:])
         CHANNEL_AUDIO1  = self.values['CHANNEL_AUDIO1'].value()
         CHANNEL_AUDIO2 = self.values['CHANNEL_AUDIO2'].value()
+        if DEBUG:
+            print "AUDIO1_SETS:", AUDIO1_SETS
+            print "AUDIO2_SETS:", AUDIO2_SETS
+            print "CHANNEL_AUDIO1:", CHANNEL_AUDIO1
+            print "CHANNEL_AUDIO2:", CHANNEL_AUDIO2
         Menu.close(self)
         update_all_labels()
         
@@ -2651,7 +2658,7 @@ class AnalysisLabel:
                 if mod in ['position', 'audio', 'audio2', 'color', 'image']:
                     rights[mod] += int((data[mod][x] == data[mod][x-back]) and data[mod+'_input'][x])
                     wrongs[mod] += int((data[mod][x] == data[mod][x-back])  ^  data[mod+'_input'][x]) # XOR
-                    if JAEGGI_MODE: 
+                    if JAEGGI_SCORING: 
                         rights[mod] += int(data[mod][x] != data[mod][x-back]  and not data[mod+'_input'][x])
                 
                 if mod in ['visvis', 'visaudio', 'audiovis']:
@@ -2659,7 +2666,7 @@ class AnalysisLabel:
                     modthn = mod.endswith('vis')   and 'vis' or 'audio' # of 'vis' if mod.startswith('vis') else 'audio'
                     rights[mod] += int((data[modnow][x] == data[modthn][x-back]) and data[mod+'_input'][x])
                     wrongs[mod] += int((data[modnow][x] == data[modthn][x-back])  ^  data[mod+'_input'][x]) 
-                    if JAEGGI_MODE: 
+                    if JAEGGI_SCORING: 
                         rights[mod] += int(data[modnow][x] != data[modthn][x-back]  and not data[mod+'_input'][x])
                     
                 if mod in ['arithmetic']:
