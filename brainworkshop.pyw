@@ -552,6 +552,31 @@ if '--dump' in sys.argv:
 try: CONFIGFILE = sys.argv[sys.argv.index('--configfile') + 1]
 except: pass
 
+
+def load_last_user(lastuserpath):
+    if os.path.isfile(os.path.join(get_data_dir(), lastuserpath)):
+        f = file(os.path.join(get_data_dir(), lastuserpath), 'r')
+        p = pickle.Unpickler(f)
+        options = p.load()
+        del p
+        f.close()
+        if not options['USER'].lower() == 'default':
+            global USER
+            global STATS_BINARY
+            global CONFIGFILE
+            USER = options['USER']
+            CONFIGFILE = USER + '-config.ini'
+            STATS_BINARY = USER + '-logfile.dat'
+
+def save_last_user(lastuserpath):
+    try:
+        f = file(os.path.join(get_data_dir(), lastuserpath), 'w')
+        p = pickle.Pickler(f)
+        p.dump({'USER': USER})
+        # also do date of last session?
+    except:
+        pass
+    
 def parse_config(configpath):
     if CLINICAL_MODE and configpath == 'config.ini':
         pass
@@ -610,6 +635,8 @@ def parse_config(configpath):
     except:
         pass
     return cfg
+
+load_last_user('defaults.ini')
 
 cfg = parse_config(CONFIGFILE)
 
@@ -817,9 +844,9 @@ if CLINICAL_MODE:
 else:
     caption.append('Brain Workshop ')
 caption.append(VERSION)
-if cfg.STATSFILE != 'stats.txt':
+if USER != 'default':
     caption.append(' - ')
-    caption.append(cfg.STATSFILE)
+    caption.append(USER)
 if cfg.WINDOW_FULLSCREEN:
     style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
 else:
@@ -1614,6 +1641,15 @@ class Menu:
         self.batch.draw()
         return pyglet.event.EVENT_HANDLED
         
+class OptionsScreen(Menu):
+    def __init__(self):
+        """
+        Sorta works.  Not yet useful, though.
+        """        
+        options = cfg.keys()
+        options.sort()
+        Menu.__init__(self, options=options, values=cfg, title='Configuration')
+
 
 class GameSelect(Menu):
     def __init__(self):
@@ -2995,6 +3031,7 @@ class Stats:
         self.sessions_today = 0
         
     def parse_statsfile(self):
+        self.history = []
         if os.path.isfile(os.path.join(get_data_dir(), cfg.STATSFILE)):
             try:
                 last_session = []
@@ -3037,30 +3074,22 @@ class Stats:
                     if not newmanual:
                         last_session = self.history[-1]
                 statsfile.close()
-                if last_session:
-                    self.retrieve_progress(newmode=last_session[1])
+                self.retrieve_progress()
+                
             except:
                 quit_with_error('Error parsing stats file\n%s' %
                                 os.path.join(get_data_dir(), cfg.STATSFILE),
                                 '\nPlease fix, delete or rename the stats file.',
                                 quit=False)
     
-    def retrieve_progress(self, newmode=None):
-        if newmode:
-            mode.mode = newmode
-        else:
-            newmode = mode.mode
-        sessions = [s for s in self.history if s[1] == newmode]
+    def retrieve_progress(self):
+        sessions = [s for s in self.history if s[1] == mode.mode]
         mode.enforce_standard_mode()
         if sessions:
             ls = sessions[-1]
-            mode.mode = ls[1]
-            if cfg.JAEGGI_MODE:
-                mode.mode = 2
             mode.back = ls[2]
             if ls[3] >= get_threshold_advance():
                 mode.back += 1
-            mode.num_trials_total = mode.num_trials + mode.num_trials_factor * mode.back ** mode.num_trials_exponent
             mode.session_number = ls[0]
             mode.progress = 0
             for s in sessions:
@@ -3073,6 +3102,8 @@ class Stats:
                 mode.back -= 1
                 if mode.back < 1:
                     mode.back = 1
+        else: # no sessions today for this user and this mode
+            mode.back = cfg['BACK_%i' % mode.mode]
 
     def initialize_session(self):
         self.session = {}
@@ -3278,7 +3309,7 @@ def new_session():
     visual.letters  = random.sample(sounds[mode.sound_mode ].keys(), 8)
     visual.letters2 = random.sample(sounds[mode.sound2_mode].keys(), 8)
     visual.choose_random_images(8)
-    mode.soundlist  = [sounds[mode.sound_mode][l] for l in visual.letters]
+    mode.soundlist  = [sounds[mode.sound_mode][l]  for l in visual.letters]
     mode.soundlist2 = [sounds[mode.sound2_mode][l] for l in visual.letters2]
             
     if cfg.JAEGGI_MODE:
@@ -3298,7 +3329,7 @@ def new_session():
     pyglet.clock.schedule_interval(fade_out, 0.05)
 
 # this function handles the finish or cancellation of a session.
-def end_session(cancelled = False):
+def end_session(cancelled=False):
     for label in input_labels: 
         label.delete()
     while input_labels:
@@ -3550,16 +3581,27 @@ def toggle_manual_mode():
     update_all_labels()
 
 def set_user(newuser):
-    global STATSFILE
     global USER
     global STATS_BINARY
+    global CONFIGFILE
+    global cfg
     USER = newuser
     if USER.lower() == 'default':
+        CONFIGFILE = 'config.ini'
         cfg.STATSFILE = 'stats.txt'      # FIXME: will do strange things if config.ini
         STATS_BINARY = 'logfile.dat' # or cmd-line-opts use non-default files
     else:
+        CONFIGFILE = USER + '-config.ini'
         cfg.STATSFILE = USER + '-stats.txt'
-        STATS_BINARY = USER + '-logfile.dat'
+        try:
+            os.stat(os.path.join(get_data_dir(), CONFIGFILE))
+        except OSError:
+            f = file(os.path.join(get_data_dir(), CONFIGFILE), 'w')
+            newconfigfile_contents = CONFIGFILE_DEFAULT_CONTENTS.replace('stats.txt', cfg.STATSFILE)
+            f.write(newconfigfile_contents)
+            f.close()
+        cfg = parse_config(CONFIGFILE)
+        STATS_BINARY = cfg.STATSFILE.replace('-stats.txt', '-logfile.dat') # let's hope nobody uses '-stats.txt' in their username
         try:
             os.stat(os.path.join(get_data_dir(), cfg.STATSFILE))
         except OSError:
@@ -3570,12 +3612,18 @@ def set_user(newuser):
         except OSError:
             f = file(os.path.join(get_data_dir(), STATS_BINARY), 'w')
             f.close()
+    stats.initialize_session()
+    stats.parse_statsfile()
+    update_all_labels()
+    save_last_user('defaults.ini')
+
             
 def choose_user(newuser):
     if newuser == "New user":
         textInput = TextInputScreen("Enter new user name:", USER, callback=set_user, catch='u')
     else:
         set_user(newuser)
+    
 
 def get_users():
     users = ['default'] + [fn.split('-')[0] for fn in os.listdir(get_data_dir()) if '-stats.txt' in fn]
@@ -3618,6 +3666,9 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.D and not CLINICAL_MODE:
             webbrowser.open_new_tab(WEB_DONATE)
             
+        elif symbol == key.V and DEBUG:
+            OptionsScreen()
+
         elif symbol == key.G:
 #            sound_stop()
             graph.parse_stats()
@@ -3732,6 +3783,14 @@ def on_key_press(symbol, modifiers):
                 return
             GameSelect()
         
+        elif symbol == key.U: 
+            users = ["New user"] + get_users()
+            userSwitchMenu = Menu(options=users, 
+                               actions=dict([(user, choose_user) for user in users]),
+                               title="Please select your user account",
+                               choose_once=True,
+                               default=users.index(USER))
+
         elif symbol == key.I:
             if cfg.JAEGGI_MODE:
                 jaeggiWarningLabel.show()
@@ -3810,10 +3869,11 @@ def on_key_press(symbol, modifiers):
                     
             
             for k in mode.modalities[mode.mode]:
-                keycode = cfg['KEY_%s' % k.upper()]
-                if symbol == keycode:
-                    mode.inputs[k] = True
-                    update_input_labels()
+                if not k == 'arithmetic':
+                    keycode = cfg['KEY_%s' % k.upper()]
+                    if symbol == keycode:
+                        mode.inputs[k] = True
+                        update_input_labels()
 
     return pyglet.event.EVENT_HANDLED
 # the loop where everything is drawn on the screen.
