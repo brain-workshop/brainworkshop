@@ -1000,7 +1000,16 @@ class Mode:
                        'audiovis': False,
                        'audio':    False,
                        'audio2':   False}
-        
+
+        self.input_rts = {'position': 0.,
+                          'color':    0.,
+                          'image':    0.,
+                          'visvis':   0., 
+                          'visaudio': 0.,
+                          'audiovis': 0.,
+                          'audio':    0.,
+                          'audio2':   0.}
+                            
         self.hide_text = cfg.HIDE_TEXT
         
         self.current_stim = {'position': 0,
@@ -1831,17 +1840,11 @@ class SoundSelect(Menu):
     def close(self):
         cfg.AUDIO1_SETS = []
         cfg.AUDIO2_SETS = []
-        print self.new_sets
         for k,v in self.new_sets.items():
             if   k.startswith('1') and v: cfg.AUDIO1_SETS.append(k[1:])
             elif k.startswith('2') and v: cfg.AUDIO2_SETS.append(k[1:])
         cfg.CHANNEL_AUDIO1  = self.values['cfg.CHANNEL_AUDIO1'].value()
         cfg.CHANNEL_AUDIO2 = self.values['cfg.CHANNEL_AUDIO2'].value()
-        if DEBUG:
-            print "cfg.AUDIO1_SETS:", cfg.AUDIO1_SETS
-            print "cfg.AUDIO2_SETS:", cfg.AUDIO2_SETS
-            print "cfg.CHANNEL_AUDIO1:", cfg.CHANNEL_AUDIO1
-            print "cfg.CHANNEL_AUDIO2:", cfg.CHANNEL_AUDIO2
         Menu.close(self)
         update_all_labels()
         
@@ -3126,6 +3129,16 @@ class Stats:
         self.session['audio2_input'] = []
         self.session['arithmetic_input'] = []
 
+        self.session['position_rt'] = [] # reaction times
+        self.session['visvis_rt'] = []
+        self.session['visaudio_rt'] = []
+        self.session['color_rt'] = []
+        self.session['audiovis_rt'] = []
+        self.session['image_rt'] = []
+        self.session['audio_rt'] = []
+        self.session['audio2_rt'] = []
+        #self.session['arithmetic_rt'] = []
+
     def save_input(self):
         self.session['position'].append(mode.current_stim['position'])
         self.session['color'].append(mode.current_stim['color'])
@@ -3145,6 +3158,17 @@ class Stats:
         self.session['audio_input'].append(mode.inputs['audio'])
         self.session['audio2_input'].append(mode.inputs['audio2'])
         self.session['arithmetic_input'].append(arithmeticAnswerLabel.parse_answer())
+
+        self.session['position_rt'].append(mode.input_rts['position'])
+        self.session['visvis_rt'].append(mode.input_rts['visvis'])
+        self.session['visaudio_rt'].append(mode.input_rts['visaudio'])
+        self.session['color_rt'].append(mode.input_rts['color'])
+        self.session['audiovis_rt'].append(mode.input_rts['audiovis'])
+        self.session['image_rt'].append(mode.input_rts['image'])
+        self.session['audio_rt'].append(mode.input_rts['audio'])
+        self.session['audio2_rt'].append(mode.input_rts['audio2'])
+        #FIXME: arithmetic?
+    
 
     def submit_session(self, percent, category_percents):
         global musicplayer
@@ -3191,6 +3215,22 @@ class Stats:
                                  category_percents['visaudio'], category_percents['audio2']],
                                 picklefile, protocol=2)
                     picklefile.close()
+                cfg.SAVE_SESSIONS = True # FIXME: put this where it belongs
+                cfg.SESSION_STATS = USER + '-sessions.dat' # FIXME: default user; configurability
+                if cfg.SAVE_SESSIONS:
+                    picklefile = open(os.path.join(get_data_dir(), cfg.SESSION_STATS), 'ab')
+                    session = {} # it's not a dotdict because we want to pickle it
+                    session['summary'] = outlist # that's what goes into stats.txt
+                    session['cfg'] = cfg.__dict__
+                    session['timestamp'] = strftime("%Y-%m-%d %H:%M:%S")
+                    session['mode'] = mode.mode
+                    session['n'] = mode.back
+                    session['manual'] = mode.manual
+                    session['trial_duration'] = mode.ticks_per_trial * TICK_DURATION
+                    session['trials'] = mode.num_trials_total
+                    session['session'] = self.session
+                    pickle.dump(session, picklefile)
+                    picklefile.close()
             except:
                 quit_with_error('Error writing to stats file\n%s' % 
                                 os.path.join(get_data_dir(), cfg.STATSFILE),
@@ -3236,7 +3276,7 @@ class Stats:
             elif percent >= get_threshold_fallback(): good = True
             congratsLabel.update(True, advance, fallback, awesome, great, good, perfect)
         
-        if mode.manual and not cfg.USE_MUSIC_cfg.MANUAL:
+        if mode.manual and not cfg.USE_MUSIC_MANUAL:
             return
         
         if cfg.USE_MUSIC:
@@ -3363,6 +3403,7 @@ def end_session(cancelled=False):
 def reset_input():
     for k in mode.inputs.keys():
         mode.inputs[k] = False
+        mode.input_rts[k] = 0.
     arithmeticAnswerLabel.reset_input()
     update_input_labels()
 
@@ -3873,6 +3914,7 @@ def on_key_press(symbol, modifiers):
                     keycode = cfg['KEY_%s' % k.upper()]
                     if symbol == keycode:
                         mode.inputs[k] = True
+                        mode.input_rts[k] = time.time() - mode.trial_starttime
                         update_input_labels()
 
     return pyglet.event.EVENT_HANDLED
@@ -3915,6 +3957,7 @@ def update(dt):
             if mode.trial_number > 0:
                 stats.save_input()
             mode.trial_number += 1
+            mode.trial_starttime = time.time()
             trialsRemainingLabel.update()
             if mode.trial_number > mode.num_trials_total:
                 end_session()
