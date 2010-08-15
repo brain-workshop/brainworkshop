@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.7'
+VERSION = '4.7.8'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -218,6 +218,13 @@ AUDIO2_SETS = ['letters']
 CHANNEL_AUDIO1 = 'left'
 CHANNEL_AUDIO2 = 'right'
 
+# In multiple-stimulus modes, more than one visual stimulus is presented at
+# the same time.  Each of the simultaneous visual stimuli has an ID number
+# associated with either its color or its image.  Which should we use, by
+# default?  
+# Options: 'color' or 'image'
+MULTI_MODE = 'color'
+
 # Animate squares?
 ANIMATE_SQUARES = False
 
@@ -262,68 +269,31 @@ USE_MUSIC_MANUAL = False
 #  106:'C-I-A-A',
 #  107:'P-C-I-A-A' (Pentuple)
 #  128+x:  Crab mode
+#  256+x:  Double mode (can be combined with crab mode)
+#  512+x:  Triple mode
+#  768+x:  Quadruple mode
+
 # Note: if JAEGGI_MODE is True, only Dual N-Back will be available.
 # Default: 2
 GAME_MODE = 2
 
 # Default starting n-back levels.
 # must be greater than or equal to 1.
-# Look above to find the corresponding mode number.
-BACK_2 = 2
-BACK_3 = 2
+# Look above to find the corresponding mode number.  Add a line for the mode
+# if it doesn't already exist.  Modes not specifically listed here will
+# use BACK_DEFAULT instead.
+#
+# Crab and multi-modes will default to the level associated with the modes 
+# they're based on (if it's listed) or to BACK_DEFAULT (if it's not listed).
+
+BACK_DEFAULT = 2
+
 BACK_4 = 1
 BACK_5 = 1
 BACK_6 = 1
 BACK_7 = 1
 BACK_8 = 1
 BACK_9 = 1
-BACK_10 = 2
-BACK_11 = 2
-BACK_12 = 2
-BACK_20 = 2
-BACK_21 = 2
-BACK_22 = 2
-BACK_23 = 2
-BACK_24 = 2
-BACK_25 = 2
-BACK_26 = 2
-BACK_27 = 2
-BACK_28 = 2
-BACK_100 = 2
-BACK_101 = 2
-BACK_102 = 2
-BACK_103 = 2
-BACK_104 = 2
-BACK_105 = 2
-BACK_106 = 2
-BACK_107 = 2
-BACK_130 = 2
-BACK_131 = 2
-BACK_132 = 1
-BACK_133 = 1
-BACK_134 = 1
-BACK_135 = 1
-BACK_136 = 1
-BACK_137 = 1
-BACK_138 = 2
-BACK_139 = 2
-BACK_148 = 2
-BACK_149 = 2
-BACK_150 = 2
-BACK_151 = 2
-BACK_152 = 2
-BACK_153 = 2
-BACK_154 = 2
-BACK_155 = 2
-BACK_156 = 2
-BACK_228 = 2
-BACK_229 = 2
-BACK_230 = 2
-BACK_231 = 2
-BACK_232 = 2
-BACK_233 = 2
-BACK_234 = 2
-BACK_235 = 2
 
 # Use Variable N-Back by default?
 # 0 = static n-back (default)
@@ -332,64 +302,28 @@ VARIABLE_NBACK = 0
 
 # Number of 0.1 second intervals per trial.
 # Must be greater than or equal to 4 (ie, 0.4 seconds)
-# Look above to find the corresponding mode number.
-# Default: 30 (40 for the Arithmetic modes)
-TICKS_2 = 30
-TICKS_3 = 30
-TICKS_4 = 30
-TICKS_5 = 30
-TICKS_6 = 30
+# Look above to find the corresponding mode number.  Add a line for the mode
+# if it doesn't already exist.  Modes not specifically listed here will
+# use TICKS_DEFAULT instead.
+# 
+# Crab and multi-modes will default to the ticks associated with the modes 
+# they're based on, *plus an optional bonus*, unless you add a line here to 
+# give it a specific value.  Any bonuses will be ignored for specified modes.
+TICKS_DEFAULT = 30
+TICKS_4 = 35
+TICKS_5 = 35
+TICKS_6 = 35
 TICKS_7 = 40
 TICKS_8 = 40
 TICKS_9 = 40
-TICKS_10 = 30
-TICKS_11 = 30
-TICKS_12 = 30
-TICKS_20 = 30
-TICKS_21 = 30
-TICKS_22 = 30
-TICKS_23 = 30
-TICKS_24 = 30
-TICKS_25 = 30
-TICKS_26 = 30
-TICKS_27 = 30
-TICKS_28 = 30
-TICKS_100 = 30
-TICKS_101 = 30
-TICKS_102 = 30
-TICKS_103 = 30
-TICKS_104 = 30
-TICKS_105 = 30
-TICKS_106 = 30
-TICKS_107 = 30
-TICKS_130 = 30
-TICKS_131 = 30
-TICKS_132 = 30
-TICKS_133 = 30
-TICKS_134 = 30
-TICKS_135 = 30
-TICKS_136 = 30
-TICKS_137 = 30
-TICKS_138 = 30
-TICKS_139 = 30
-TICKS_148 = 30
-TICKS_149 = 30
-TICKS_150 = 30
-TICKS_151 = 30
-TICKS_152 = 30
-TICKS_153 = 30
-TICKS_154 = 30
-TICKS_155 = 30
-TICKS_156 = 30
-TICKS_228 = 30
-TICKS_229 = 30
-TICKS_230 = 30
-TICKS_231 = 30
-TICKS_232 = 30
-TICKS_233 = 30
-TICKS_234 = 30
-TICKS_235 = 30
 
+# Tick bonuses for crab and multi-modes not listed above.  Can be negative
+# if you're a masochist.
+
+BONUS_TICKS_CRAB = 0
+BONUS_TICKS_MULTI_2 = 5
+BONUS_TICKS_MULTI_3 = 10
+BONUS_TICKS_MULTI_4 = 15
 
 # The number of trials per session equals
 # NUM_TRIALS + NUM_TRIALS_FACTOR * n ^ NUM_TRIALS_EXPONENT,
@@ -832,10 +766,25 @@ def get_color(color):
     return cfg['COLOR_%i' % color]
 
 def default_nback_mode(mode):
-    return cfg['BACK_%i' % mode]
+    if ('BACK_%i' % mode) in cfg:
+        return cfg['BACK_%i' % mode]
+    elif mode > 127:  # try to use the base mode for crab, multi
+        return default_nback_mode(mode % 128)
+    else:
+        return cfg.BACK_DEFAULT
+        
 
 def default_ticks(mode):
-    return cfg['TICKS_%i' % mode]     
+    if ('TICKS_%i' % mode) in cfg:
+        return cfg['TICKS_%i' % mode]
+    elif mode > 127:
+        bonus = ((mode & 128)/128) * cfg.BONUS_TICKS_CRAB
+        if mode & 256:
+            bonus += cfg['BONUS_TICKS_MULTI_%i' % ((mode & 768)/256+1)]
+        if DEBUG: print "Adding a bonus of %i ticks for mode %i" % (bonus, mode)
+        return bonus + default_ticks(mode % 128)
+    else:
+        return cfg.TICKS_DEFAULT
 
 #Create the game window
 caption = []
@@ -978,14 +927,30 @@ class Mode:
         
         self.flags = {}
         for m in self.short_mode_names.keys():
-            nm = m | 128                # newmode; Crab DNB = 2 | 128 = 130
-            self.flags[m] = {'crab':0}  # forwards
-            self.flags[nm] = {'crab':1} # every (self.back) stimuli are reversed for matching
+            nm = m | 128                          # newmode; Crab DNB = 2 | 128 = 130
+            self.flags[m]  = {'crab':0, 'multi':1}# forwards
+            self.flags[nm] = {'crab':1, 'multi':1}# every (self.back) stimuli are reversed for matching
             self.short_mode_names[nm] = 'C' + self.short_mode_names[m]
             self.long_mode_names[nm] = 'Crab ' + self.long_mode_names[m]
             self.modalities[nm] = self.modalities[m][:] # the [:] at the end is
             # so we take a copy of the list, in case we want to change it later
-            
+
+        for m in self.short_mode_names.keys():
+            for n, s in [(2, 'Double'), (3, 'Triple'), (4, 'Quadruple')]:
+                if set(['color', 'image']).issubset(self.modalities[m]) \
+                  or not 'position' in self.modalities[m] \
+                  or set(['visvis', 'arithmetic']).intersection(self.modalities[m]):  # AAAH! Scary! 
+                    continue
+                nm = m | 256 * (n-1)                 # newmode; 3xDNB = 2 | 512 = 514
+                self.flags[nm] = dict(self.flags[m]) # take a copy
+                self.flags[nm]['multi'] = n          
+                self.short_mode_names[nm] = `n` + 'x' + self.short_mode_names[m]
+                self.long_mode_names[nm] = s + ' ' + self.long_mode_names[m]
+                self.modalities[nm] = self.modalities[m][:] # take a copy ([:])
+                for k in self.modalities[m]:
+                    if k in ('position', 'color', 'image'):
+                        for i in range(2, n+1):
+                            self.modalities[nm].append(k + `i`)
         self.variable_list = []
         
         self.manual = cfg.MANUAL
@@ -1490,12 +1455,14 @@ class TextInputScreen:
 class Cycler:
     def __init__(self, values, default=0):
         self.values = values
+        if type(default) is not int or default > len(values):
+            default = values.index(default)
         self.i = default
     def nxt(self): # not named "next" to prevent using a Cycler as an iterator, which would hang
         self.i = (self.i + 1) % len(self.values)
         return self.value()
     def value(self):
-        return self.values[self.i]      
+        return self.values[self.i]
     def __str__(self):
         return str(self.value())
 
@@ -1682,14 +1649,20 @@ class GameSelect(Menu):
         options.append('combination')
         options.append('variable')
         options.append('crab')      
+        options.append('multi')
+        options.append('multimode')
         names['combination'] = 'Combination N-back mode?'  
         names['variable'] = 'Use Variable N-Back levels?'
         names['crab'] = 'Crab-back mode?  (Reverse every N stimuli)'
+        names['multi'] = 'How many simultaneous visual stimuli?'
+        names['multimode'] = 'Use image or color to differentiate simult. stim.?'
         vals = dict([[op, None] for op in options])
         curmodes = mode.modalities[mode.mode]
         vals['combination'] = 'visvis' in curmodes
         vals['variable'] = bool(cfg.VARIABLE_NBACK)
         vals['crab'] = bool(mode.flags[mode.mode]['crab'])
+        vals['multi'] = Cycler(values=[1,2,3,4], default=mode.flags[mode.mode]['multi']-1)
+        vals['multimode'] = Cycler(values=['color', 'image'], default=cfg.MULTI_MODE)
         for m in modalities:
             vals[m] = m in curmodes
         Menu.__init__(self, options, vals, title='Choose your game mode')        
@@ -1713,25 +1686,30 @@ class GameSelect(Menu):
         Menu.update_labels(self)
         
     def calc_mode(self):
-        modes = [k for (k, v) in self.values.items() if v]
+        modes = [k for (k, v) in self.values.items() if v and not isinstance(v, Cycler)]
         crab = 'crab' in modes
         if 'variable' in modes:  modes.remove('variable')
         if 'combination' in modes:
             modes.remove('combination')
             modes.extend(['visvis', 'visaudio', 'audiovis']) # audio should already be there
-        if 'crab' in modes: modes.remove('crab')
-        candidates = [k for k,v in mode.modalities.items() if not 
-                        [True for m in modes if not m in v] and not
-                        [True for m in v if not m in modes]]
-        for c in candidates: 
-            if c & 128: candidates.remove(c)
-        #print modes, crab, candidates
-        if len(candidates) == 1: # FIXME:  print "invalid mode selected", etc
-            candidate = candidates[0]
-            if crab: candidate = candidate | 128
-            self.newmode = candidate
+        base = 0
+        base += 256 * (self.values['multi'].value()-1)
+        if 'crab' in modes: 
+            modes.remove('crab')
+            base += 128
+        
+        candidates = set([k for k,v in mode.modalities.items() if not 
+                         [True for m in modes if not m in v] and not
+                         [True for m in v if not m in modes]])
+        candidates = candidates & set(range(0, 128))
+        if len(candidates) == 1: 
+            candidate = list(candidates)[0] + base
+            if candidate in mode.modalities:
+                self.newmode = candidate
+            else: self.newmode = False
         else:
-            self.newmode = False
+            if DEBUG: print candidates, base
+            self.newmode = False # FIXME:  Should trigger an "invalid mode" message
     def close(self):
         cfg.VARIABLE_NBACK = self.values['variable']
         self.calc_mode()
@@ -1780,30 +1758,6 @@ class GameSelect(Menu):
             self.values['position'] = True
             self.update_labels()
         self.calc_mode()
-        
-class OldGameSelect(Menu):
-    def __init__(self):
-        modes = mode.long_mode_names.items()
-        modes.sort()
-        self.modes = modes
-        options = [m[1] + ' N-Back' for m in modes]
-        options.append('Use Variable N-Back levels?')
-        vals = dict([[op, None] for op in options])
-        vals[options[-1]] = bool(cfg.VARIABLE_NBACK)
-        default = modes.index((mode.mode, mode.long_mode_names[mode.mode]))
-        Menu.__init__(self, options, vals, title='Choose your game mode', default=default)
-    
-    def close(self):
-        cfg.VARIABLE_NBACK = self.values[self.options[-1]]
-        Menu.close(self)
-        update_all_labels()
-        circles.update()
-        
-    def choose(self, k, i):
-        mode.mode = self.modes[i][0]
-        if not mode.manual:
-            mode.enforce_standard_mode()
-            stats.retrieve_progress()
         
 class ImageSelect(Menu):
     def __init__(self):
@@ -3130,7 +3084,7 @@ class Stats:
                 if mode.back < 1:
                     mode.back = 1
         else: # no sessions today for this user and this mode
-            mode.back = cfg['BACK_%i' % mode.mode]
+            mode.back = default_nback_mode(mode.mode)
 
     def initialize_session(self):
         self.session = {}
@@ -3502,6 +3456,7 @@ def generate_stimulus():
     mode.current_stim['vis'] = random.randint(1, 8)
     mode.current_stim['audio'] = random.randint(1, 8)
     mode.current_stim['audio2'] = random.randint(1, 8)
+    
     
     # treat arithmetic specially
     operations = []
