@@ -1515,12 +1515,15 @@ class Menu:
     """
     titlesize = 18
     choicesize = 12
+    footnotesize = 10
     
-    def __init__(self, options, values=None, actions={}, names={}, title='', choose_once=False, default=0):
+    def __init__(self, options, values=None, actions={}, names={}, title='', 
+                 footnote = 'Esc: cancel     Space: modify option     Enter: apply', 
+                 choose_once=False, default=0):
         self.bgcolor = (255 * int(not cfg.BLACK_BACKGROUND), )*3
         self.textcolor = (0,0,0,255)#(255 * int(cfg.BLACK_BACKGROUND), )*3
         self.markercolors = (255, 0, 0, 0, 255, 0, 0, 0, 255) # self.textcolor*3
-        self.pagesize = min(len(options), (window.height*7/10) / (self.choicesize*3/2))
+        self.pagesize = min(len(options), (window.height*6/10) / (self.choicesize*3/2))
         if type(options) == dict:
             vals = options
             self.options = options.keys()
@@ -1540,6 +1543,10 @@ class Menu:
         self.title = pyglet.text.Label(title, font_size=self.titlesize,
             bold=True, color=self.textcolor, batch=self.batch,
             x=window.width/2, y=(window.height*9)/10,
+            anchor_x='center', anchor_y='center')
+        self.footnote = pyglet.text.Label(footnote, font_size=self.footnotesize,
+            bold=True, color=self.textcolor, batch=self.batch,
+            x=window.width/2, y=(window.height*2)/10,
             anchor_x='center', anchor_y='center')
         
         self.labels = [pyglet.text.Label('', font_size=self.choicesize,
@@ -1607,6 +1614,9 @@ class Menu:
         if sym == key.ESCAPE:
             self.close()
         elif sym in (key.RETURN, key.ENTER):
+            self.save()
+            self.close()
+        elif sym == key.SPACE:
             self.select()
         return pyglet.event.EVENT_HANDLED
     
@@ -1634,6 +1644,10 @@ class Menu:
     def close(self):
         return window.remove_handlers(self.on_key_press, self.on_text, 
                                       self.on_text_motion, self.on_draw)
+        
+    def save(self):
+        "Override me in subclasses."
+        return
     
     def on_text_motion(self, evt):
         if evt == key.MOTION_UP:            self.move_selection(steps=-1)
@@ -1684,11 +1698,16 @@ class GameSelect(Menu):
             x=window.width/2, y=(window.height*1)/10,
             anchor_x='center', anchor_y='center')
         self.update_labels()
+        self.newmode = mode.mode # self.newmode will be False if an invalid mode is chosen
 
     def update_labels(self):
         self.calc_mode()
         try:
-            self.modelabel.text = mode.long_mode_names[mode.mode] + (self.values['variable'] and ' V.' or '') + ' N-Back'
+            if self.newmode:
+                self.modelabel.text = mode.long_mode_names[self.newmode] + \
+                    (self.values['variable'] and ' V.' or '') + ' N-Back'
+            else:
+                self.modelabel.text = "An invalid mode has been selected."
         except AttributeError:
             pass
         Menu.update_labels(self)
@@ -1707,11 +1726,12 @@ class GameSelect(Menu):
         for c in candidates: 
             if c & 128: candidates.remove(c)
         #print modes, crab, candidates
-        assert len(candidates) == 1
-        candidate = candidates[0]
-        if crab: candidate = candidate | 128
-        mode.mode = candidate
-        
+        if len(candidates) == 1: # FIXME:  print "invalid mode selected", etc
+            candidate = candidates[0]
+            if crab: candidate = candidate | 128
+            self.newmode = candidate
+        else:
+            self.newmode = False
     def close(self):
         cfg.VARIABLE_NBACK = self.values['variable']
         self.calc_mode()
@@ -1722,6 +1742,10 @@ class GameSelect(Menu):
             stats.retrieve_progress()
         update_all_labels()
         circles.update()
+
+    def save(self):
+        if self.newmode:
+            mode.mode = self.newmode
         
     def select(self):
         choice = self.options[self.selpos]
