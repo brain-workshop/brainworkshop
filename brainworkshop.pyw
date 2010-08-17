@@ -196,8 +196,8 @@ CROSSHAIRS = True
 # This also affects Dual Combination N-Back and Arithmetic N-Back.
 # 1 = blue, 2 = cyan, 3 = green, 4 = grey,
 # 5 = magenta, 6 = red, 7 = white, 8 = yellow
-# Default: 1
-VISUAL_COLOR = 1
+# Default: [1, 3, 8, 6]
+VISUAL_COLORS = [1, 3, 8, 6]
 
 # Specify image sets here. This is a list of subfolders in the res\sprites\
 # folder which may be selected in Image mode.
@@ -378,7 +378,7 @@ VERSION_CHECK_ON_STARTUP = True
 # Increasing this value will make the n-back task significantly easier.
 # Note: this option has no effect in Jaeggi mode.
 # Default: 0.25
-CHANCE_OF_GUARANTEED_MATCH = 0.25
+CHANCE_OF_GUARANTEED_MATCH = 0.125
 
 # How often should Brain Workshop panhandle for a donation?  After every
 # PANHANDLE_FREQUENCY sessions, Brain Workshop will annoy you slightly by 
@@ -436,9 +436,9 @@ SACCADIC_REPETITIONS = 60
 # http://pyglet.org/doc/api/pyglet.window.key-module.html
 ######################################################################
 
-# These are used in Dual N-Back, the default game mode.
 # Position match. Default: 97 (A)
-KEY_POSITION = 97
+KEY_POSITION1 = 97
+
 # Sound match. Default: 108 (L)
 KEY_AUDIO = 108
 
@@ -449,6 +449,21 @@ KEY_AUDIO2 = 59
 KEY_COLOR = 102
 # Image match. Default: 106 (J)
 KEY_IMAGE = 106
+
+# Position match, multiple-stimulus mode.  
+# Defaults:  115 (S), 100 (D), 102 (F)
+KEY_POSITION2 = 115
+KEY_POSITION3 = 100
+KEY_POSITION4 = 102
+
+# Color/image match, multiple-stimulus mode.  KEY_VIS1 will be used instead
+# of KEY_COLOR or KEY_IMAGE.
+# Defaults: 103 (G), 104 (H), 106 (J), 107 (K)
+KEY_VIS1 = 103
+KEY_VIS2 = 104
+KEY_VIS3 = 106
+KEY_VIS4 = 107
+
 
 # These are used in the Combination N-Back modes.
 # Visual & n-visual match. Default: 115 (S)
@@ -895,37 +910,39 @@ class Mode:
                                  107:'Pentuple'
                                  }
         
-        self.modalities = { 2:['position', 'audio'],
-                            3:['position', 'color', 'audio'],
+        self.modalities = { 2:['position1', 'audio'],
+                            3:['position1', 'color', 'audio'],
                             4:['visvis', 'visaudio', 'audiovis', 'audio'],
-                            5:['position', 'visvis', 'visaudio', 'audiovis', 'audio'],
-                            6:['position', 'visvis', 'visaudio', 'color', 'audiovis', 'audio'],
+                            5:['position1', 'visvis', 'visaudio', 'audiovis', 'audio'],
+                            6:['position1', 'visvis', 'visaudio', 'color', 'audiovis', 'audio'],
                             7:['arithmetic'],
-                            8:['position', 'arithmetic'],
-                            9:['position', 'arithmetic', 'color'],
-                            10:['position'],
+                            8:['position1', 'arithmetic'],
+                            9:['position1', 'arithmetic', 'color'],
+                            10:['position1'],
                             11:['audio'],
                             12:['visvis', 'visaudio', 'color', 'audiovis', 'audio'],
-                            20:['position', 'color'],
-                            21:['position', 'image'],
+                            20:['position1', 'color'],
+                            21:['position1', 'image'],
                             22:['color', 'audio'],
                             23:['image', 'audio'],
                             24:['color', 'image'],
-                            25:['position', 'color', 'image'],
-                            26:['position', 'image', 'audio'],
+                            25:['position1', 'color', 'image'],
+                            26:['position1', 'image', 'audio'],
                             27:['color', 'image', 'audio'],
-                            28:['position', 'color', 'image', 'audio'],
+                            28:['position1', 'color', 'image', 'audio'],
                             100:['audio', 'audio2'],
-                            101:['position', 'audio', 'audio2'],
+                            101:['position1', 'audio', 'audio2'],
                             102:['color', 'audio', 'audio2'],
                             103:['image', 'audio', 'audio2'],
-                            104:['position', 'color', 'audio', 'audio2'],
-                            105:['position', 'image', 'audio', 'audio2'],
+                            104:['position1', 'color', 'audio', 'audio2'],
+                            105:['position1', 'image', 'audio', 'audio2'],
                             106:['color', 'image', 'audio', 'audio2'],
-                            107:['position', 'color', 'image', 'audio', 'audio2']
+                            107:['position1', 'color', 'image', 'audio', 'audio2']
                             }
         
         self.flags = {}
+        
+        # generate crab modes
         for m in self.short_mode_names.keys():
             nm = m | 128                          # newmode; Crab DNB = 2 | 128 = 130
             self.flags[m]  = {'crab':0, 'multi':1}# forwards
@@ -935,10 +952,11 @@ class Mode:
             self.modalities[nm] = self.modalities[m][:] # the [:] at the end is
             # so we take a copy of the list, in case we want to change it later
 
+        # generate multi-stim modes
         for m in self.short_mode_names.keys():
-            for n, s in [(2, 'Double'), (3, 'Triple'), (4, 'Quadruple')]:
+            for n, s in [(2, 'Double-stim'), (3, 'Triple-stim'), (4, 'Quadruple-stim')]:
                 if set(['color', 'image']).issubset(self.modalities[m]) \
-                  or not 'position' in self.modalities[m] \
+                  or not 'position1' in self.modalities[m] \
                   or set(['visvis', 'arithmetic']).intersection(self.modalities[m]):  # AAAH! Scary! 
                     continue
                 nm = m | 256 * (n-1)                 # newmode; 3xDNB = 2 | 512 = 514
@@ -947,42 +965,65 @@ class Mode:
                 self.short_mode_names[nm] = `n` + 'x' + self.short_mode_names[m]
                 self.long_mode_names[nm] = s + ' ' + self.long_mode_names[m]
                 self.modalities[nm] = self.modalities[m][:] # take a copy ([:])
-                for k in self.modalities[m]:
-                    if k in ('position', 'color', 'image'):
-                        for i in range(2, n+1):
-                            self.modalities[nm].append(k + `i`)
+                for i in range(2, n+1):
+                    self.modalities[nm].append('position'+`i`)
+                if 'color' in self.modalities[m] or 'image' in self.modalities[m]:
+                    for i in range(1, n+1):
+                        self.modalities[nm].append('vis'+`i`)
+
         self.variable_list = []
         
         self.manual = cfg.MANUAL
         if not self.manual:
             self.enforce_standard_mode()
                     
-        self.inputs = {'position': False,
-                       'color':    False,
-                       'image':    False,
-                       'visvis':   False, 
-                       'visaudio': False,
-                       'audiovis': False,
-                       'audio':    False,
-                       'audio2':   False}
+        self.inputs = {'position1': False,
+                       'position2': False,
+                       'position3': False,
+                       'position4': False,
+                       'color':     False,
+                       'image':     False,
+                       'vis1':      False,
+                       'vis2':      False,
+                       'vis3':      False,
+                       'vis4':      False,
+                       'visvis':    False, 
+                       'visaudio':  False,
+                       'audiovis':  False,
+                       'audio':     False,
+                       'audio2':    False}
 
-        self.input_rts = {'position': 0.,
-                          'color':    0.,
-                          'image':    0.,
-                          'visvis':   0., 
-                          'visaudio': 0.,
-                          'audiovis': 0.,
-                          'audio':    0.,
-                          'audio2':   0.}
+        self.input_rts = {'position1': 0.,
+                          'position2': 0.,
+                          'position3': 0.,
+                          'position4': 0.,
+                          'color':     0.,
+                          'image':     0.,
+                          'vis1':      0.,
+                          'vis2':      0.,
+                          'vis3':      0.,
+                          'vis4':      0.,
+                          'visvis':    0., 
+                          'visaudio':  0.,
+                          'audiovis':  0.,
+                          'audio':     0.,
+                          'audio2':    0.}
                             
         self.hide_text = cfg.HIDE_TEXT
         
-        self.current_stim = {'position': 0,
-                             'color':    0,
-                             'vis':      0, 
-                             'audio':    0,
-                             'audio2':   0,
-                             'number':   0}
+        self.current_stim = {'position1': 0,
+                             'position2': 0,
+                             'position3': 0,
+                             'position4': 0,
+                             'color':     0,
+                             'vis':       0, # image or letter for non-multi mode
+                             'vis1':      0, # image or color for multi mode
+                             'vis2':      0,                              
+                             'vis3':      0,                              
+                             'vis4':      0,                              
+                             'audio':     0,
+                             'audio2':    0,
+                             'number':    0}
         
         self.current_operation = 'none'
         
@@ -1070,8 +1111,11 @@ class Graph:
         self.reset_dictionaries()
         self.reset_percents()
         ind = {'date':0, 'modename':1, 'percent':2, 'mode':3, 'n':4, 'ticks':5,
-               'trials':6, 'manual':7, 'session':8, 'position':9, 'audio':10,
-               'color':11, 'visvis':12, 'audiovis':13, 'arithmetic':14, 'image':15, 'visaudio':16, 'audio2':17}
+               'trials':6, 'manual':7, 'session':8, 'position1':9, 'audio':10,
+               'color':11, 'visvis':12, 'audiovis':13, 'arithmetic':14, 
+               'image':15, 'visaudio':16, 'audio2':17, 'position2':18, 
+               'position3':19, 'position4':20, 'vis1':21, 'vis2':22, 'vis3':23,
+               'vis4':24}
                     
         if os.path.isfile(os.path.join(get_data_dir(), cfg.STATSFILE)):
             try:
@@ -1097,7 +1141,7 @@ class Graph:
                     newmode = int(newline[3])
                     newback = int(newline[4])
                     
-                    while len(newline) < 18:
+                    while len(newline) < 24:
                         newline.append('0') # make it work for image mode, missing visaudio and audio2
                     if len(newline) >= 16:
                         for m in mode.modalities[newmode]:
@@ -1381,11 +1425,14 @@ class Graph:
         
         pyglet.clock.tick(poll=True) # Prevent music skipping 4
 
-        labelstrings = {'position':'Position: ','visvis':'Vis & nvis: ', 
-                        'visaudio':'Vis & n-sound: ', 'color':'Color: ', 
+        labelstrings = {'position1':'Position: '  , 'position2':'Position 2: ', 
+                        'position3':'Position 3: ', 'position4':'Position 4: ',
+                        'vis1':'Color/Image 1: ', 'vis2':'Color/Image 2: ', 
+                        'vis1':'Color/Image 3: ', 'vis4':'Color/Image 4: ',
+                        'visvis':'Vis & nvis: ', 'visaudio':'Vis & n-sound: ', 
                         'audiovis':'Sound & n-vis: ', 'audio':'Sound: ',
-                        'arithmetic':'Arithmetic: ', 'image':'Image: ',
-                        'audio2':'Sound2: '}       
+                        'color':'Color: ', 'image':'Image: ',
+                        'arithmetic':'Arithmetic: ', 'audio2':'Sound2: '}       
         str_list = ['Last 50 rounds:   ']
         for m in mode.modalities[self.graph]:
             str_list.append(labelstrings[m] + '%i%% ' % self.percents[self.graph][m][-1]
@@ -1643,7 +1690,7 @@ class OptionsScreen(Menu):
 
 class GameSelect(Menu):
     def __init__(self):
-        modalities = ['position', 'color', 'image', 'audio', 'audio2', 'arithmetic']
+        modalities = ['position1', 'color', 'image', 'audio', 'audio2', 'arithmetic']
         options = [m for m in modalities]
         names = dict([(m, "Use %s?")])
         options.append('combination')
@@ -1755,7 +1802,7 @@ class GameSelect(Menu):
         if not [v for k,v in self.values.items() 
                   if v and not k in ('crab', 'combination', 'variable')] \
            or len(modes) == 1 and modes[0] in ['image', 'color']:
-            self.values['position'] = True
+            self.values['position1'] = True
             self.update_labels()
         self.calc_mode()
         
@@ -1889,7 +1936,7 @@ class Field:
     def crosshair_update(self):
         if not cfg.CROSSHAIRS:
             return
-        if (not mode.paused) and 'position' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
+        if (not mode.paused) and 'position1' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
             if self.crosshair_visible: return
             else:
                 self.v_crosshair = batch.add(4, GL_LINES, None, ('v2i', (
@@ -2383,6 +2430,8 @@ class FeedbackLabel:
             modalityname = modalityname[:-3] + ' & n-vis'
         elif modalityname.endswith('audio') and not modalityname == 'audio':
             modalityname = modalityname[:-5] + ' & n-audio'
+        if mode.flags[mode.mode]['multi'] == 1 and modalityname == 'position1':
+                modalityname = 'position'
         self.text = "%s: %s" % (self.letter.upper(), modalityname)
         if total < 4: self.text += ' match'
         if   total < 4: font_size = 16
@@ -2437,6 +2486,7 @@ def generate_input_labels():
     total = len(modalities)
     for m in modalities:
         if m != 'arithmetic':
+
             labels.append(FeedbackLabel(m, pos, total))
         pos += 1
     return labels
@@ -2597,7 +2647,7 @@ def check_match(input_type, check_missed = False):
     else:
         nback_trial = mode.trial_number - back - 1
         
-    if len(stats.session['position']) < mode.back:
+    if len(stats.session['position1']) < mode.back:
         return 'unknown'
     
     if   input_type in ('visvis', 'visaudio', 'image'):
@@ -2652,16 +2702,16 @@ class AnalysisLabel:
             self.label.text = ''
             return
         
-        rights = {'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'image':0, 'audio':0, 'audio2':0, 'arithmetic':0}
-        wrongs = {'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'image':0, 'audio':0, 'audio2':0, 'arithmetic':0}
+        rights = {'position1':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'image':0, 'audio':0, 'audio2':0, 'arithmetic':0}
+        wrongs = {'position1':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'image':0, 'audio':0, 'audio2':0, 'arithmetic':0}
         category_percents = {
-                  'position':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'image':0, 'audio':0, 'audio2':0, 'arithmetic':0}
+                  'position1':0, 'color':0, 'visvis':0, 'visaudio':0, 'audiovis':0, 'image':0, 'audio':0, 'audio2':0, 'arithmetic':0}
 
         mods = mode.modalities[mode.mode]
         data = stats.session
 
         for mod in mods:
-            for x in range(mode.back, len(data['position'])):
+            for x in range(mode.back, len(data['position1'])):
 
                 if mode.flags[mode.mode]['crab'] == 1:
                     back = 1 + 2*(x % mode.back)
@@ -2671,7 +2721,7 @@ class AnalysisLabel:
                     back = mode.variable_list[x - back]
                                 
                 # data is a dictionary of lists.
-                if mod in ['position', 'audio', 'audio2', 'color', 'image']:
+                if mod in ['position1', 'audio', 'audio2', 'color', 'image']:
                     rights[mod] += int((data[mod][x] == data[mod][x-back]) and data[mod+'_input'][x])
                     wrongs[mod] += int((data[mod][x] == data[mod][x-back])  ^  data[mod+'_input'][x]) # XOR
                     if cfg.JAEGGI_SCORING: 
@@ -2695,11 +2745,11 @@ class AnalysisLabel:
         if not CLINICAL_MODE:
             str_list += ['Correct-Errors:   ']
             sep = '   '
-            keys = {'position':cfg.KEY_POSITION, 'visvis':cfg.KEY_VISVIS, 'visaudio':cfg.KEY_VISAUDIO, 
+            keys = {'position1':cfg.KEY_POSITION, 'visvis':cfg.KEY_VISVIS, 'visaudio':cfg.KEY_VISAUDIO, 
                     'color':cfg.KEY_COLOR, 'audiovis':cfg.KEY_AUDIOVIS, 'image':cfg.KEY_IMAGE, 'audio':cfg.KEY_AUDIO,
                     'audio2':cfg.KEY_AUDIO2}
             
-            for mod in ['position', 'visvis', 'visaudio', 'color', 'audiovis', 'image', 'audio', 'audio2']:
+            for mod in ['position1', 'visvis', 'visaudio', 'color', 'audiovis', 'image', 'audio', 'audio2']:
                 if mod in mods:
                     if mod == 'audio2':
                         keytext = ';'
@@ -2721,7 +2771,7 @@ class AnalysisLabel:
 
         if cfg.JAEGGI_SCORING:
             percent = min([category_percents[m] for m in mode.modalities[mode.mode]])
-            #percent = min(category_percents['position'], category_percents['audio']) # cfg.JAEGGI_MODE forces mode.mode==2
+            #percent = min(category_percents['position1'], category_percents['audio']) # cfg.JAEGGI_MODE forces mode.mode==2
             if not CLINICAL_MODE:
                 str_list += ['Lowest score: %i%%' % percent]
         else:
@@ -3088,7 +3138,14 @@ class Stats:
 
     def initialize_session(self):
         self.session = {}
-        self.session['position'] = []
+        self.session['position1'] = []
+        self.session['position2'] = []
+        self.session['position3'] = []
+        self.session['position4'] = []
+        self.session['vis1'] = []
+        self.session['vis2'] = []
+        self.session['vis3'] = []
+        self.session['vis4'] = []
         self.session['color'] = []
         self.session['image'] = []
         self.session['audio'] = []
@@ -3097,7 +3154,14 @@ class Stats:
         self.session['numbers'] = []
         self.session['operation'] = []
         
-        self.session['position_input'] = []
+        self.session['position1_input'] = []
+        self.session['position2_input'] = []
+        self.session['position3_input'] = []
+        self.session['position4_input'] = []
+        self.session['vis1_input'] = []
+        self.session['vis2_input'] = []
+        self.session['vis3_input'] = []
+        self.session['vis4_input'] = []
         self.session['visvis_input'] = []
         self.session['visaudio_input'] = []
         self.session['color_input'] = []
@@ -3107,7 +3171,14 @@ class Stats:
         self.session['audio2_input'] = []
         self.session['arithmetic_input'] = []
 
-        self.session['position_rt'] = [] # reaction times
+        self.session['position1_rt'] = [] # reaction times
+        self.session['position2_rt'] = [] 
+        self.session['position3_rt'] = [] 
+        self.session['position4_rt'] = [] 
+        self.session['vis1_rt'] = []
+        self.session['vis2_rt'] = []
+        self.session['vis3_rt'] = []
+        self.session['vis4_rt'] = []
         self.session['visvis_rt'] = []
         self.session['visaudio_rt'] = []
         self.session['color_rt'] = []
@@ -3118,33 +3189,46 @@ class Stats:
         #self.session['arithmetic_rt'] = []
 
     def save_input(self):
-        self.session['position'].append(mode.current_stim['position'])
-        self.session['color'].append(mode.current_stim['color'])
-        self.session['image'].append(mode.current_stim['vis'])
-        self.session['audio'].append(mode.current_stim['audio'])
-        self.session['audio2'].append(mode.current_stim['audio2'])
-        self.session['vis'].append(mode.current_stim['vis'])
-        self.session['numbers'].append(mode.current_stim['number'])
+        for k, v in mode.current_stim.items():
+            if k == 'number':
+                self.session['numbers'].append(v)
+            else:
+                self.session[k].append(v)
+        for k, v in mode.inputs.items():
+            self.session[k + '_input'].append(v)
+        for k, v in mode.input_rts.items():
+            self.session[k + '_rt'].append(v)
+
         self.session['operation'].append(mode.current_operation)
-
-        self.session['position_input'].append(mode.inputs['position'])
-        self.session['visvis_input'].append(mode.inputs['visvis'])
-        self.session['visaudio_input'].append(mode.inputs['visaudio'])
-        self.session['color_input'].append(mode.inputs['color'])
-        self.session['audiovis_input'].append(mode.inputs['audiovis'])
-        self.session['image_input'].append(mode.inputs['image'])
-        self.session['audio_input'].append(mode.inputs['audio'])
-        self.session['audio2_input'].append(mode.inputs['audio2'])
         self.session['arithmetic_input'].append(arithmeticAnswerLabel.parse_answer())
-
-        self.session['position_rt'].append(mode.input_rts['position'])
-        self.session['visvis_rt'].append(mode.input_rts['visvis'])
-        self.session['visaudio_rt'].append(mode.input_rts['visaudio'])
-        self.session['color_rt'].append(mode.input_rts['color'])
-        self.session['audiovis_rt'].append(mode.input_rts['audiovis'])
-        self.session['image_rt'].append(mode.input_rts['image'])
-        self.session['audio_rt'].append(mode.input_rts['audio'])
-        self.session['audio2_rt'].append(mode.input_rts['audio2'])
+        
+##        self.session['position1'].append(mode.current_stim['position1'])
+##        self.session['color'].append(mode.current_stim['color'])
+##        self.session['image'].append(mode.current_stim['vis'])
+##        self.session['audio'].append(mode.current_stim['audio'])
+##        self.session['audio2'].append(mode.current_stim['audio2'])
+##        self.session['vis'].append(mode.current_stim['vis'])
+##        self.session['numbers'].append(mode.current_stim['number'])
+##        self.session['operation'].append(mode.current_operation)
+##
+##        self.session['position_input'].append(mode.inputs['position1'])
+##        self.session['visvis_input'].append(mode.inputs['visvis'])
+##        self.session['visaudio_input'].append(mode.inputs['visaudio'])
+##        self.session['color_input'].append(mode.inputs['color'])
+##        self.session['audiovis_input'].append(mode.inputs['audiovis'])
+##        self.session['image_input'].append(mode.inputs['image'])
+##        self.session['audio_input'].append(mode.inputs['audio'])
+##        self.session['audio2_input'].append(mode.inputs['audio2'])
+##        self.session['arithmetic_input'].append(arithmeticAnswerLabel.parse_answer())
+##
+##        self.session['position_rt'].append(mode.input_rts['position1'])
+##        self.session['visvis_rt'].append(mode.input_rts['visvis'])
+##        self.session['visaudio_rt'].append(mode.input_rts['visaudio'])
+##        self.session['color_rt'].append(mode.input_rts['color'])
+##        self.session['audiovis_rt'].append(mode.input_rts['audiovis'])
+##        self.session['image_rt'].append(mode.input_rts['image'])
+##        self.session['audio_rt'].append(mode.input_rts['audio'])
+##        self.session['audio2_rt'].append(mode.input_rts['audio2'])
         #FIXME: arithmetic?
     
 
@@ -3167,7 +3251,7 @@ class Stats:
                            str(mode.num_trials_total),
                            str(int(mode.manual)),
                            str(mode.session_number),
-                           str(category_percents['position']),
+                           str(category_percents['position1']),
                            str(category_percents['audio']),
                            str(category_percents['color']),
                            str(category_percents['visvis']),
@@ -3176,21 +3260,31 @@ class Stats:
                            str(category_percents['image']),
                            str(category_percents['visaudio']),
                            str(category_percents['audio2']),
+                           str(category_percents['position2']),
+                           str(category_percents['position3']),
+                           str(category_percents['position4']),
+                           str(category_percents['vis1']),
+                           str(category_percents['vis2']),
+                           str(category_percents['vis3']),
+                           str(category_percents['vis4']),
                            ]
                 statsfile.write(sep.join(outlist)) # adds sep between each element
                 statsfile.write('\n')  # but we don't want a sep before '\n'
                 statsfile.close()
                 if CLINICAL_MODE:
-                    #picklefile = open(statsfile_path.replace('.txt', '.dat'), 'ab')
                     picklefile = open(os.path.join(get_data_dir(), STATS_BINARY), 'ab')
                     pickle.dump([strftime("%Y-%m-%d %H:%M:%S"), mode.short_name(), 
                                  percent, mode.mode, mode.back, mode.ticks_per_trial,
                                  mode.num_trials_total, int(mode.manual),
-                                 mode.session_number, category_percents['position'],
+                                 mode.session_number, category_percents['position1'],
                                  category_percents['audio'], category_percents['color'],
                                  category_percents['visvis'], category_percents['audiovis'],
                                  category_percents['arithmetic'], category_percents['image'],
-                                 category_percents['visaudio'], category_percents['audio2']],
+                                 category_percents['visaudio'], category_percents['audio2'] 
+                                 category_percents['position2'], category_percents['position3'],
+                                 category_percents['position4'], 
+                                 category_percents['vis1'], category_percents['vis2'], 
+                                 category_percents['vis3'], category_percents['vis4']],
                                 picklefile, protocol=2)
                     picklefile.close()
                 cfg.SAVE_SESSIONS = True # FIXME: put this where it belongs
@@ -3451,7 +3545,12 @@ def compute_bt_sequence():
 # responsible for the random generation of each new stimulus (audio, color, position)
 def generate_stimulus():
     # first, randomly generate all stimuli
-    mode.current_stim['position'] = random.randint(1, 8)
+    positions = random.sample(range(1,9), 4)   # sample without replacement
+    for s, p in zip(range(1, 5), positions):
+        mode.current_stim['position' + `s`] = p
+        mode.current_stim['vis' + `s`] = random.randint(1, 8)
+
+    #mode.current_stim['position1'] = random.randint(1, 8)
     mode.current_stim['color'] = random.randint(1, 8)
     mode.current_stim['vis'] = random.randint(1, 8)
     mode.current_stim['audio'] = random.randint(1, 8)
@@ -3473,7 +3572,7 @@ def generate_stimulus():
     max_number = cfg.ARITHMETIC_MAX_NUMBER
     
     if mode.current_operation == 'divide' and 'arithmetic' in mode.modalities[mode.mode]:
-        if len(stats.session['position']) >= mode.back:
+        if len(stats.session['position1']) >= mode.back:
             number_nback = stats.session['numbers'][mode.trial_number - mode.back - 1]
             possibilities = []
             for x in range(min_number, max_number + 1):
@@ -3493,51 +3592,63 @@ def generate_stimulus():
     else:
         mode.current_stim['number'] = random.randint(min_number, max_number)
     
-    # force a match?
-    if mode.mode != 7 and mode.modalities[mode.mode] != ['arithmetic'] and mode.trial_number > mode.back and random.random() < cfg.CHANCE_OF_GUARANTEED_MATCH:
-        # A match of a randomly chosen input type is guaranteed this trial.
-        input_types = mode.modalities[mode.mode][:] # take a deep copy of the list
-        if 'arithmetic' in input_types:
-            input_types.remove('arithmetic')
+    multi = mode.flags[mode.mode]['multi']
 
-        choice = random.choice(input_types)
-        if   choice in ('visvis', 'visaudio'):
-            current = mode.current_stim['vis']
-        elif choice in ('audiovis', ):
-            current = mode.current_stim['audio']
-        else:
-            current = choice
-        if   choice in ('visvis', 'audiovis'):
-            back_data = 'vis'
-        elif choice in ('visaudio', ):
-            back_data = 'audio'
-        else:
-            back_data = choice
+    if mode.modalities[mode.mode] != ['arithmetic'] and mode.trial_number > mode.back:
+        for mod in mode.modalities[mode.mode]:
+            if  mod != 'arithmetic' and random.random() < cfg.CHANCE_OF_GUARANTEED_MATCH:
+                if   mod in ('visvis', 'visaudio'):
+                    current = 'vis'
+                elif mod in ('audiovis', ):
+                    current = 'audio'
+                else:
+                    current = mod
+                if   mod in ('visvis', 'audiovis'):
+                    back_data = 'vis'
+                elif mod in ('visaudio', ):
+                    back_data = 'audio'
+                else:
+                    back_data = mod
+                
+                if mode.flags[mode.mode]['crab'] == 1:
+                    back = 1 + 2*((mode.trial_number-1) % mode.back)
+                else:
+                    back = mode.back
+                if cfg.VARIABLE_NBACK:
+                    nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - back - 1] - 1
+                else:
+                    nback_trial = mode.trial_number - back - 1
             
-        if mode.flags[mode.mode]['crab'] == 1:
-            back = 1 + 2*((mode.trial_number-1) % mode.back)
-        else:
-            back = mode.back
-        if cfg.VARIABLE_NBACK:
-            nback_trial = mode.trial_number - mode.variable_list[mode.trial_number - back - 1] - 1
-        else:
-            nback_trial = mode.trial_number - back - 1
-        
-        mode.current_stim[current] = stats.session[back_data][nback_trial]
+                matching_stim = stats.session[back_data][nback_trial]
+                # check for collisions in multi-stim mode
+                if multi > 1 and mod.startswith('position'): 
+                    potential_conflicts = set(range(1, multi+1)) - set([int(mod[-1])])
+                    conflict_positions = [positions[i] for i in potential_conflicts]
+                    if matching_stim in conflict_positions: # swap 'em
+                        mode.current_stim['positions' + `conflict_positions.index(matching_stim)+1`] = mode.current_stim[mod]
+                        
+                mode.current_stim[current] = stats.session[back_data][nback_trial]
+ 
         
     # set static stimuli according to mode.
     # default position is 0 (center)
     # default color is 1 (red) or 2 (black)
     # default vis is 0 (square)
     # audio is never static so it doesn't have a default.
-    if not 'color'    in mode.modalities[mode.mode]: mode.current_stim['color'] = cfg.VISUAL_COLOR
-    if not 'position' in mode.modalities[mode.mode]: mode.current_stim['position'] = 0
-    if not set(['visvis', 'arithmetic', 'image']).intersection(mode.modalities[mode.mode]):
+    if not 'color'     in mode.modalities[mode.mode]: mode.current_stim['color'] = cfg.VISUAL_COLORS[0]
+    if not 'position1' in mode.modalities[mode.mode]: mode.current_stim['position1'] = 0
+    if not set(['visvis', 'arithmetic', 'image']).intersection( mode.modalities[mode.mode] ):
         mode.current_stim['vis'] = 0
-
+    if multi > 1 and not  set(['color', 'image']).intersection( mode.modalities[mode.mode] ) and not cfg.MULTI_MODE == 'image':
+        for i in range(1, 5):
+            mode.current_stim['vis'+`i`] = 0
+    elif multi > 1 and cfg.MULTI_MODE == 'image':
+        for i in range(1, 5):
+            mode.current_stim['vis'+`i`] = i
+        
     # in jaeggi mode, set using the predetermined sequence.
     if cfg.JAEGGI_MODE:
-        mode.current_stim['position'] = mode.bt_sequence[0][mode.trial_number - 1]
+        mode.current_stim['position1'] = mode.bt_sequence[0][mode.trial_number - 1]
         mode.current_stim['audio'] = mode.bt_sequence[1][mode.trial_number - 1]
     
     # initiate the chosen stimuli.
@@ -3583,12 +3694,24 @@ def generate_stimulus():
         variable = 0
     if DEBUG:
         print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
-                (mode.trial_number, mode.current_stim['position'], mode.current_stim['audio'], 
+                (mode.trial_number, mode.current_stim['position1'], mode.current_stim['audio'], 
                  mode.current_stim['color'], mode.current_stim['vis'], \
                  mode.current_stim['number'], mode.current_operation, variable)
-
-    visual.spawn(mode.current_stim['position'], mode.current_stim['color'], mode.current_stim['vis'], mode.current_stim['number'], mode.current_operation, variable)
-
+    if multi == 1:
+        visual.spawn(mode.current_stim['position1'], mode.current_stim['color'], 
+                     mode.current_stim['vis'], mode.current_stim['number'], 
+                     mode.current_operation, variable)
+    else: # multi > 1
+        for i in range(1, multi+1):
+            if cfg.MULTI_MODE == 'color':
+                visual.spawn(mode.current_stim['position'+`i`], cfg.VISUAL_COLORS[i-1], 
+                             mode.current_stim['vis'+`i`], mode.current_stim['number'], 
+                             mode.current_operation, variable)
+            else:
+                visual.spawn(mode.current_stim['position'+`i`], mode.current_stim['vis'+`i`], 
+                             i, mode.current_stim['number'], 
+                             mode.current_operation, variable)
+                
 def toggle_manual_mode():
     if mode.manual:
         mode.manual = False
