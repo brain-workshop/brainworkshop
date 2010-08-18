@@ -1783,7 +1783,7 @@ class GameSelect(Menu):
             else: self.newmode = False
         else:
             if DEBUG: print candidates, base
-            self.newmode = False # FIXME:  Should trigger an "invalid mode" message
+            self.newmode = False 
 
     def close(self):
         Menu.close(self)
@@ -1984,7 +1984,7 @@ class Field:
     def crosshair_update(self):
         if not cfg.CROSSHAIRS:
             return
-        if (not mode.paused) and 'position1' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK: # and mode.mode != 12 and mode.mode != 13 and mode.mode != 14:
+        if (not mode.paused) and 'position1' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK: 
             if self.crosshair_visible: return
             else:
                 self.v_crosshair = batch.add(4, GL_LINES, None, ('v2i', (
@@ -2101,7 +2101,9 @@ class Visual:
             self.label.x = self.center_x
             self.label.y = self.center_y + 4
             self.label.color = self.color
-        elif 'image' in mode.modalities[mode.mode]: # display a pictogram
+        elif 'image' in mode.modalities[mode.mode] \
+              or 'vis1' in mode.modalities[mode.mode] \
+              or (mode.flags[mode.mode]['multi'] > 1 and cfg.MULTI_MODE == 'image'): # display a pictogram
             self.square = self.images[vis-1]
             self.square.opacity = 255
             self.square.color = self.color[:3]
@@ -2157,7 +2159,9 @@ class Visual:
         if self.visible:
             self.label.text = ''
             self.variable_label.text = ''
-            if 'image' in mode.modalities[mode.mode]:
+            if 'image' in mode.modalities[mode.mode] \
+                  or 'vis1' in mode.modalities[mode.mode] \
+                  or (mode.flags[mode.mode]['multi'] > 1 and cfg.MULTI_MODE == 'image'): # display a pictogram
                 self.square.batch = None
                 pyglet.clock.unschedule(self.animate_square)
             elif self.vis == 0:
@@ -3696,12 +3700,12 @@ def generate_stimulus():
     if not 'position1' in mode.modalities[mode.mode]: mode.current_stim['position1'] = 0
     if not set(['visvis', 'arithmetic', 'image']).intersection( mode.modalities[mode.mode] ):
         mode.current_stim['vis'] = 0
-    if multi > 1 and not 'vis1' in mode.modalities[mode.mode] and cfg.MULTI_MODE == 'color':
+    if multi > 1 and not 'vis1' in mode.modalities[mode.mode]:
         for i in range(1, 5):
-            mode.current_stim['vis'+`i`] = 0 # use squares
-    elif multi > 1 and cfg.MULTI_MODE == 'image':
-        for i in range(1, 5):
-            mode.current_stim['vis'+`i`] = i
+            if cfg.MULTI_MODE == 'color':
+                mode.current_stim['vis'+`i`] = 0 # use squares
+            elif cfg.MULTI_MODE == 'image':
+                mode.current_stim['vis'+`i`] = cfg.VISUAL_COLORS[0]
         
     # in jaeggi mode, set using the predetermined sequence.
     if cfg.JAEGGI_MODE:
@@ -3761,10 +3765,22 @@ def generate_stimulus():
     else: # multi > 1
         for i in range(1, multi+1):
             if cfg.MULTI_MODE == 'color':
+                if DEBUG:
+                    print 'color'
+                    print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+                        (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
+                        cfg.VISUAL_COLORS[i-1], mode.current_stim['vis'+`i`], \
+                        mode.current_stim['number'], mode.current_operation, variable)
                 visuals[i-1].spawn(mode.current_stim['position'+`i`], cfg.VISUAL_COLORS[i-1], 
                                    mode.current_stim['vis'+`i`], mode.current_stim['number'], 
                                    mode.current_operation, variable)
             else:
+                if DEBUG:
+                    print 'image'
+                    print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+                        (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
+                        mode.current_stim['vis'+`i`], i, \
+                        mode.current_stim['number'], mode.current_operation, variable)
                 visuals[i-1].spawn(mode.current_stim['position'+`i`], mode.current_stim['vis'+`i`], 
                                    i,                            mode.current_stim['number'], 
                                    mode.current_operation, variable)
