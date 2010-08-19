@@ -14,25 +14,27 @@ in the data folder. This file is created the when the program is
 first launched. Windows users can access this file via the
 'Configuration' item in the Brain Workshop group in the Start Menu.
 
-Let me know if you have any comments or suggestions:
+Let us know if you have any comments or suggestions:
 
    plhosk@gmail.com
+   jtoomim@jtoomim.org
 
 Enjoy!
 
 ----------------------------------------------------------------------
-*** NOTE TO MAC OS X, LINUX AND WIN32 SOURCE USERS: ***
+*** NOTE TO LINUX AND SOURCE-CODE USERS: ***
 
-Python 2.5 or 2.6 is required to run Brain Workshop on Mac OS X
-and Linux. Python 2.4 may also work as long as the python-ctypes
-package is installed.
-[Note: Windows versions of Brain Workshop have python included.]
+Python 2.5 or later is required to run Brain Workshop on Linux. Python 2.4 
+may also work as long as the python-ctypes package is installed.
+[Note: Windows versions and Mac OS X .app bundled versions of Brain 
+Workshop have python included.]
 
-Python 2.6 can be downloaded here:
+The latest version of python can be downloaded here:
       http://www.python.org/download/releases/
 
 Music support requires AVBin (highly recommended!)
-Download AVBin here:
+AVBin is included in binary distributions of Brain Workshop, but source
+code users will want to download AVBin here:
       http://code.google.com/p/avbin/
 
 Detailed instructions and links for Mac OS X, Linux and win32 source
@@ -42,6 +44,37 @@ installation are available on the Brain Workshop web site:
 
 ----------------------------------------------------------------------
 Change Log:
+
+4.8 (work in progress):
+* Changed config.ini file format.  Existing config.ini files will be
+   renamed and replaced.  Users will have to migrate their 
+   customizations manually.
+* Added Multi-stim modes, whereby objects appear in two to four places
+   in the 3x3 grid at the same time.  Objects can be differentiated 
+   either by image or by color.
+* Added Crab modes.  In crab modes, you have to reverse every N stimuli
+   when matching, so that in 3-back, if the stimuli you saw were the
+   first line below, then you would be matching them against the 
+   second line, like thus:
+        ABCDEFGHIJKLMNO
+        ---CBAFEDIHGLKJ
+* Full support for multiple users and/or profiles.  This lets you 
+   easily keep separate statistics for different settings (for example,
+   with different timings or with JAEGGI_SCORING in the config file) or
+   for different users.
+* New mode-, sound-, and user-selection screens.   
+* Changed how often matches are generated for modes other than Dual
+  N-back.
+* Made Brain Workshop ask for donations, by default every 100 sessions.
+   You should do as the program asks.  (This behavior can be
+   changed in the config.ini file.)
+* Trial-by-trial session data are now recorded to disk in Python's
+   pickle format.
+* Changed how scores are calculated in graphing; the percentage of 
+   items correct now affects the exact score in addition to the
+   N-back level.
+* All of the music files and some of the other media files have been 
+   removed for copyright reasons and replaced with free alternatives.
 
 4.7:
 * Added Dual Audio n-back modes. Go to the Sound Selection screen to
