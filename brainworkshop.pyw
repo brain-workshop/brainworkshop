@@ -586,26 +586,26 @@ def rewrite_configfile(configfile, overwrite=False):
         STATS_BINARY = 'logfile.dat' # or cmd-line-opts use non-default files
     else:
         statsfile = USER + '-stats.txt'
-        try:
-            os.stat(os.path.join(get_data_dir(), configfile))
-        except OSError:
-            overwrite = True
-        if overwrite:
-            f = file(os.path.join(get_data_dir(), configfile), 'w')
-            newconfigfile_contents = CONFIGFILE_DEFAULT_CONTENTS.replace('stats.txt', statsfile)
-            f.write(newconfigfile_contents)
-            f.close()
-        STATS_BINARY = statsfile.replace('-stats.txt', '-logfile.dat') # let's hope nobody uses '-stats.txt' in their username
-        try:
-            os.stat(os.path.join(get_data_dir(), statsfile))
-        except OSError:
-            f = file(os.path.join(get_data_dir(), statsfile), 'w')
-            f.close()
-        try:
-            os.stat(os.path.join(get_data_dir(), STATS_BINARY))
-        except OSError:
-            f = file(os.path.join(get_data_dir(), STATS_BINARY), 'w')
-            f.close()
+    try:
+        os.stat(os.path.join(get_data_dir(), configfile))
+    except OSError:
+        overwrite = True
+    if overwrite:
+        f = file(os.path.join(get_data_dir(), configfile), 'w')
+        newconfigfile_contents = CONFIGFILE_DEFAULT_CONTENTS.replace('stats.txt', statsfile)
+        f.write(newconfigfile_contents)
+        f.close()
+    STATS_BINARY = statsfile.replace('-stats.txt', '-logfile.dat') # let's hope nobody uses '-stats.txt' in their username
+    try:
+        os.stat(os.path.join(get_data_dir(), statsfile))
+    except OSError:
+        f = file(os.path.join(get_data_dir(), statsfile), 'w')
+        f.close()
+    try:
+        os.stat(os.path.join(get_data_dir(), STATS_BINARY))
+    except OSError:
+        f = file(os.path.join(get_data_dir(), STATS_BINARY), 'w')
+        f.close()
 
 load_last_user('defaults.ini')
 
