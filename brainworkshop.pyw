@@ -3314,6 +3314,8 @@ class Stats:
                 self.session['numbers'].append(v)
             else:
                 self.session[k].append(v)
+            if k == 'vis': # goes to both self.session['vis'] and ['image']
+                self.session['image'].append(v)
         for k, v in mode.inputs.items():
             self.session[k + '_input'].append(v)
         for k, v in mode.input_rts.items():
@@ -3754,15 +3756,17 @@ def generate_stimulus():
                     back = mode.variable_list[mode.trial_number - back - 1]
 
             if  (r1 >= cfg.CHANCE_OF_GUARANTEED_MATCH  \
-             and r2 <  cfg.CHANCE_OF_INTERFERENCE) and mode.back > 2:
+             and r2 <  cfg.CHANCE_OF_INTERFERENCE) and mode.back > 1:
                 interference = [-1, 1, mode.back]
-                if back == 1: interference = interference[1:] # for crab mode
+                if back < 3: interference = interference[1:] # for crab mode and 2-back
                 random.shuffle(interference)
                 real_back = back
                 for i in interference: # we'll just take the last one that works.
-                    if stats.session[back_data][mode.trial_number - (real_back+i) - 1] != \
-                       stats.session[back_data][mode.trial_number -  real_back    - 1]:
-                       back = real_back + i
+                    if mode.trial_number - (real_back+i) - 1 >= 0 and \
+                         stats.session[back_data][mode.trial_number - (real_back+i) - 1] != \
+                         stats.session[back_data][mode.trial_number -  real_back    - 1]:
+                        back = real_back + i
+                        
                 if back == real_back: back = None # if none of the above worked
                 
             if back:
