@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.8'
+VERSION = '4.7.8.4'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -4037,13 +4037,8 @@ def on_key_press(symbol, modifiers):
             GameSelect()
         
         elif symbol == key.U: 
-            users = ["New user"] + get_users()
-            userSwitchMenu = Menu(options=users, 
-                               actions=dict([(user, choose_user) for user in users]),
-                               title="Please select your user account",
-                               choose_once=True,
-                               default=users.index(USER))
-
+            UserScreen()
+            
         elif symbol == key.I:
             if cfg.JAEGGI_MODE:
                 jaeggiWarningLabel.show()
