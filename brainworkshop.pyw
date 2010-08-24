@@ -2846,7 +2846,7 @@ class AnalysisLabel:
                 if mod in ['position1', 'position2', 'position3', 'position4', 
                            'vis1', 'vis2', 'vis3', 'vis4', 'audio', 'audio2', 'color', 'image']:
                     rights[mod] += int((data[mod][x] == data[mod][x-back]) and data[mod+'_input'][x])
-                    wrongs[mod] += int((data[mod][x] == data[mod][x-back])  ^  data[mod+'_input'][x]) # XOR
+                    wrongs[mod] += int((data[mod][x] == data[mod][x-back])  ^  data[mod+'_input'][x]) # ^ is XOR
                     if cfg.JAEGGI_SCORING: 
                         rights[mod] += int(data[mod][x] != data[mod][x-back]  and not data[mod+'_input'][x])
                 
@@ -2899,6 +2899,15 @@ class AnalysisLabel:
             str_list += ['Score: %i%%' % percent]
         
         self.label.text = ''.join(str_list)
+        if DEBUG: 
+            print percent, category_percents
+            print rights
+            print wrongs
+            foo = data.items()
+            foo.sort()
+            for k,v in foo:
+                print k, len(v), v
+                
         stats.submit_session(percent, category_percents)
                     
 # this controls the title of the session history chart.
@@ -3323,36 +3332,7 @@ class Stats:
 
         self.session['operation'].append(mode.current_operation)
         self.session['arithmetic_input'].append(arithmeticAnswerLabel.parse_answer())
-        
-##        self.session['position1'].append(mode.current_stim['position1'])
-##        self.session['color'].append(mode.current_stim['color'])
-##        self.session['image'].append(mode.current_stim['vis'])
-##        self.session['audio'].append(mode.current_stim['audio'])
-##        self.session['audio2'].append(mode.current_stim['audio2'])
-##        self.session['vis'].append(mode.current_stim['vis'])
-##        self.session['numbers'].append(mode.current_stim['number'])
-##        self.session['operation'].append(mode.current_operation)
-##
-##        self.session['position_input'].append(mode.inputs['position1'])
-##        self.session['visvis_input'].append(mode.inputs['visvis'])
-##        self.session['visaudio_input'].append(mode.inputs['visaudio'])
-##        self.session['color_input'].append(mode.inputs['color'])
-##        self.session['audiovis_input'].append(mode.inputs['audiovis'])
-##        self.session['image_input'].append(mode.inputs['image'])
-##        self.session['audio_input'].append(mode.inputs['audio'])
-##        self.session['audio2_input'].append(mode.inputs['audio2'])
-##        self.session['arithmetic_input'].append(arithmeticAnswerLabel.parse_answer())
-##
-##        self.session['position_rt'].append(mode.input_rts['position1'])
-##        self.session['visvis_rt'].append(mode.input_rts['visvis'])
-##        self.session['visaudio_rt'].append(mode.input_rts['visaudio'])
-##        self.session['color_rt'].append(mode.input_rts['color'])
-##        self.session['audiovis_rt'].append(mode.input_rts['audiovis'])
-##        self.session['image_rt'].append(mode.input_rts['image'])
-##        self.session['audio_rt'].append(mode.input_rts['audio'])
-##        self.session['audio2_rt'].append(mode.input_rts['audio2'])
-        #FIXME: arithmetic?
-    
+            
 
     def submit_session(self, percent, category_percents):
         global musicplayer
@@ -3730,13 +3710,13 @@ def generate_stimulus():
 
     if mode.modalities[mode.mode] != ['arithmetic'] and mode.trial_number > mode.back:
         for mod in mode.modalities[mode.mode]:
-            if   mod in ('visvis', 'visaudio'):
+            if   mod in ('visvis', 'visaudio', 'image'):
                 current = 'vis'
             elif mod in ('audiovis', ):
                 current = 'audio'
             else:
                 current = mod
-            if   mod in ('visvis', 'audiovis'):
+            if   mod in ('visvis', 'audiovis', 'image'):
                 back_data = 'vis'
             elif mod in ('visaudio', ):
                 back_data = 'audio'
@@ -3747,7 +3727,7 @@ def generate_stimulus():
             r1, r2 = random.random(), random.random()
 
             if  (r1 < cfg.CHANCE_OF_GUARANTEED_MATCH \
-              or r2 < cfg.CHANCE_OF_INTERFERENCE): # and mode.flags[mode.mode]['interference']?
+              or (r2 < cfg.CHANCE_OF_INTERFERENCE and mode.back > 1)): # and mode.flags[mode.mode]['interference']?
                 if mode.flags[mode.mode]['crab'] == 1:
                     back = 1 + 2*((mode.trial_number-1) % mode.back)
                 else:
@@ -4093,7 +4073,7 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.D and not CLINICAL_MODE:
             webbrowser.open_new_tab(WEB_DONATE)
 
-        elif symbol == key.J and USE_MORSE:
+        elif symbol == key.J and 'morse' in cfg.AUDIO1_SETS or 'morse' in cfg.AUDIO2_SETS:
             webbrowser.open_new_tab(WEB_MORSE)
                             
                         
