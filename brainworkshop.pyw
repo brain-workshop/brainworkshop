@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.8.4'
+VERSION = '4.7.8.5'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -2899,15 +2899,7 @@ class AnalysisLabel:
             str_list += ['Score: %i%%' % percent]
         
         self.label.text = ''.join(str_list)
-        if DEBUG: 
-            print percent, category_percents
-            print rights
-            print wrongs
-            foo = data.items()
-            foo.sort()
-            for k,v in foo:
-                print k, len(v), v
-                
+
         stats.submit_session(percent, category_percents)
                     
 # this controls the title of the session history chart.
@@ -3758,9 +3750,14 @@ def generate_stimulus():
                     potential_conflicts = set(range(1, multi+1)) - set([int(mod[-1])])
                     conflict_positions = [positions[i-1] for i in potential_conflicts]
                     if matching_stim in conflict_positions: # swap 'em
-                        mode.current_stim['position' + `conflict_positions.index(matching_stim)+1`] = mode.current_stim[mod]
-                        positions[conflict_positions.index(matching_stim)] = mode.current_stim[mod]
-                mode.current_stim[current] = stats.session[back_data][nback_trial]
+                        i = positions.index(matching_stim)
+                        if DEBUG:
+                            print "moving position%i from %i to %i for %s" % (i+1, positions[i], mode.current_stim[current], current)
+                        mode.current_stim['position' + `i+1`] = mode.current_stim[current]
+                        positions[i] = mode.current_stim[current]
+                        
+                mode.current_stim[current] = matching_stim
+                
         
     # set static stimuli according to mode.
     # default position is 0 (center)
@@ -3824,7 +3821,7 @@ def generate_stimulus():
         variable = mode.variable_list[mode.trial_number - 1 - mode.back]
     else:
         variable = 0
-    if DEBUG:
+    if DEBUG and multi < 2:
         print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
                 (mode.trial_number, mode.current_stim['position1'], mode.current_stim['audio'], 
                  mode.current_stim['color'], mode.current_stim['vis'], \
@@ -3837,7 +3834,6 @@ def generate_stimulus():
         for i in range(1, multi+1):
             if cfg.MULTI_MODE == 'color':
                 if DEBUG:
-                    print 'color'
                     print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
                         (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
                         cfg.VISUAL_COLORS[i-1], mode.current_stim['vis'+`i`], \
@@ -3847,7 +3843,6 @@ def generate_stimulus():
                                    mode.current_operation, variable)
             else:
                 if DEBUG:
-                    print 'image'
                     print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
                         (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
                         mode.current_stim['vis'+`i`], i, \
