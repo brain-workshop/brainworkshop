@@ -3699,6 +3699,14 @@ def generate_stimulus():
         mode.current_stim['number'] = random.randint(min_number, max_number)
     
     multi = mode.flags[mode.mode]['multi']
+    
+    real_back = mode.back
+    if mode.flags[mode.mode]['crab'] == 1:
+        real_back = 1 + 2*((mode.trial_number-1) % mode.back)
+    else:
+        real_back = mode.back
+    if cfg.VARIABLE_NBACK:
+        real_back = mode.variable_list[mode.trial_number - real_back - 1]
 
     if mode.modalities[mode.mode] != ['arithmetic'] and mode.trial_number > mode.back:
         for mod in mode.modalities[mode.mode]:
@@ -3706,6 +3714,8 @@ def generate_stimulus():
                 current = 'vis'
             elif mod in ('audiovis', ):
                 current = 'audio'
+            elif mod == 'arithmetic':
+                continue
             else:
                 current = mod
             if   mod in ('visvis', 'audiovis', 'image'):
@@ -3717,32 +3727,28 @@ def generate_stimulus():
 
             back = None
             r1, r2 = random.random(), random.random()
+            if multi > 1: 
+                r2 = 3./2. * r2 # 33% chance of multi-stim reversal
 
             if  (r1 < cfg.CHANCE_OF_GUARANTEED_MATCH \
               or (r2 < cfg.CHANCE_OF_INTERFERENCE and mode.back > 1)): # and mode.flags[mode.mode]['interference']?
-                if mode.flags[mode.mode]['crab'] == 1:
-                    back = 1 + 2*((mode.trial_number-1) % mode.back)
-                else:
-                    back = mode.back
-                if cfg.VARIABLE_NBACK:
-                    back = mode.variable_list[mode.trial_number - back - 1]
+                back = real_back
 
             if  (r1 >= cfg.CHANCE_OF_GUARANTEED_MATCH  \
              and r2 <  cfg.CHANCE_OF_INTERFERENCE) and mode.back > 1:
                 interference = [-1, 1, mode.back]
                 if back < 3: interference = interference[1:] # for crab mode and 2-back
                 random.shuffle(interference)
-                real_back = back
                 for i in interference: # we'll just take the last one that works.
                     if mode.trial_number - (real_back+i) - 1 >= 0 and \
                          stats.session[back_data][mode.trial_number - (real_back+i) - 1] != \
                          stats.session[back_data][mode.trial_number -  real_back    - 1]:
                         back = real_back + i
-                        
                 if back == real_back: back = None # if none of the above worked
-                
-            if back:
+                elif DEBUG:
+                    print 'Forcing interference for %s' % current
             
+            if back:            
                 nback_trial = mode.trial_number - back - 1
                 matching_stim = stats.session[back_data][nback_trial]
                 # check for collisions in multi-stim mode
@@ -3755,9 +3761,22 @@ def generate_stimulus():
                             print "moving position%i from %i to %i for %s" % (i+1, positions[i], mode.current_stim[current], current)
                         mode.current_stim['position' + `i+1`] = mode.current_stim[current]
                         positions[i] = mode.current_stim[current]
-                        
+                    positions[int(current[-1])-1] = matching_stim
+                if DEBUG:
+                    print "setting %s to %i" % (current, matching_stim)
                 mode.current_stim[current] = matching_stim
-                
+
+        if multi > 1:
+            if random.random() < cfg.CHANCE_OF_INTERFERENCE / 3.:
+                mod = 'position'
+                if 'vis1' in mode.modalities[mode.mode] and random.random() < .5:
+                    mod = 'vis'
+                offset = random.choice(range(1, multi))
+                for i in range(multi):
+                    mode.current_stim[mod + `i+1`] = stats.session[mod + `((i+offset)%multi) + 1`][real_back]
+                    if mod == 'position':
+                        positions[i] = mod.current_stim[mod + `i+1`]
+
         
     # set static stimuli according to mode.
     # default position is 0 (center)
