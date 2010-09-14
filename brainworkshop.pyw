@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.8.5'
+VERSION = '4.7.8.6'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -3775,7 +3775,7 @@ def generate_stimulus():
                 for i in range(multi):
                     mode.current_stim[mod + `i+1`] = stats.session[mod + `((i+offset)%multi) + 1`][real_back]
                     if mod == 'position':
-                        positions[i] = mod.current_stim[mod + `i+1`]
+                        positions[i] = mode.current_stim[mod + `i+1`]
 
         
     # set static stimuli according to mode.
