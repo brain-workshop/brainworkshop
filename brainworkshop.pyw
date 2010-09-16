@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.8.6'
+VERSION = '4.7.8.7'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -388,7 +388,7 @@ CHANCE_OF_GUARANTEED_MATCH = 0.125
 # in the case of repeating stimuli if it can be avoided.
 # Default:  0.125
 
-CHANCE_OF_INTERFERENCE = 0.125
+DEFAULT_CHANCE_OF_INTERFERENCE = 0.125
 
 # How often should Brain Workshop panhandle for a donation?  After every
 # PANHANDLE_FREQUENCY sessions, Brain Workshop will annoy you slightly by 
@@ -583,7 +583,9 @@ def parse_config(configpath):
     for config in configs: # load defaultconfig first, in case of incomplete user's config.ini
         config_items = [(k.upper(), try_eval(v)) for k, v in config.items('DEFAULT')]
         cfg.update(config_items)        
-
+    
+    if not 'CHANCE_OF_INTERFERENCE' in cfg:
+        cfg.CHANCE_OF_INTERFERENCE = cfg.DEFAULT_CHANCE_OF_INTERFERENCE
     try: cfg.STATSFILE = sys.argv[sys.argv.index('--statsfile') + 1]
     except:
         pass
@@ -1551,6 +1553,14 @@ class Cycler:
         return self.values[self.i]
     def __str__(self):
         return str(self.value())
+    
+class PercentCycler(Cycler):
+    def __str__(self):
+        v = self.value()
+        if type(v) == float and (v < .1 or v > .9) and not v in (0., 1.):
+            return "%2.2f%%" % (v*100.)
+        else:
+            return "%2.1f%%"   % (v*100.)
 
 class Menu:
     """
@@ -1661,6 +1671,9 @@ class Menu:
         if self.disppos <= self.selpos - self.pagesize +1\
           and not self.disppos == len(self.options) - self.pagesize:
             self.disppos = max(0, min(len(self.options), self.selpos+1) - self.pagesize + 1)
+            
+        if not self.selpos in (0, len(self.options)-1) and self.options[self.selpos] == 'Blank line':
+            self.move_selection(int(steps > 0)*2-1)
         self.update_labels()
         
     def on_key_press(self, sym, mod):
@@ -1755,18 +1768,33 @@ class GameSelect(Menu):
         options = modalities[:]
         names = dict([(m, "Use %s" % m) for m in modalities])
         names['position1'] = "Use position"
+        options.append("Blank line")
         options.append('combination')
+        options.append("Blank line")
         options.append('variable')
         options.append('crab')      
+        options.append("Blank line")
         options.append('multi')
         options.append('multimode')
+        options.append("Blank line")
+        options.append('interference')
         names['combination'] = 'Combination N-back mode'  
-        names['variable'] = 'Use Variable N-Back levels'
-        names['crab'] = 'Crab-back mode (Reverse every N stimuli)'
+        names['variable'] = 'Use variable N-Back levels'
+        names['crab'] = 'Crab-back mode (reverse order of sets of N stimuli)'
         names['multi'] = 'Simultaneous visual stimuli'
         names['multimode'] = 'Simultaneous stimuli differentiated by'
+        names['interference'] = 'Interference (tricky stimulus generation)'
         vals = dict([[op, None] for op in options])
         curmodes = mode.modalities[mode.mode]
+        interference_options = [i / 8. for i in range(0, 9)]
+        if not cfg.DEFAULT_CHANCE_OF_INTERFERENCE in interference_options:
+            interference_options.append(cfg.DEFAULT_CHANCE_OF_INTERFERENCE)
+        interference_options.sort()
+        if cfg.CHANCE_OF_INTERFERENCE in interference_options:
+            interference_default = interference_options.index(cfg.CHANCE_OF_INTERFERENCE)
+        else:
+            interference_default = 3
+        vals['interference'] = PercentCycler(values=interference_options, default=interference_default)
         vals['combination'] = 'visvis' in curmodes
         vals['variable'] = bool(cfg.VARIABLE_NBACK)
         vals['crab'] = bool(mode.flags[mode.mode]['crab'])
@@ -1832,6 +1860,7 @@ class GameSelect(Menu):
         self.calc_mode()
         cfg.VARIABLE_NBACK = self.values['variable']
         cfg.MULTI_MODE = self.values['multimode'].value()
+        cfg.CHANCE_OF_INTERFERENCE = self.values['interference'].value()
         if self.newmode:
             mode.mode = self.newmode
         
@@ -2159,7 +2188,7 @@ class Visual:
             # display variable n-back level
             self.variable_label.text = str(variable)
 
-            if mode.mode == 4 or mode.mode == 7 or mode.mode == 11:
+            if not 'position1' in mode.modalities[mode.mode]:
                 self.variable_label.x = field.center_x
                 self.variable_label.y = field.center_y - field.size//3 + 4
             else:
@@ -2536,7 +2565,7 @@ class FeedbackLabel:
             anchor_x='left', anchor_y='center', batch=batch, font_size=font_size)
         #w = self.label.width  # this doesn't work; how are you supposed to find the width of a label texture?
         w = (len(self.text) * font_size*4)/5
-        dis = (window.width-60) / float(total-.99)
+        dis = (window.width-100) / float(total-.99)
         x = 30 + int( pos*dis - w*pos/(total-.5) )
 
         # draw an icon next to the label for multi-stim mode
@@ -2575,7 +2604,7 @@ class FeedbackLabel:
             self.label.text = ''
         if cfg.SHOW_FEEDBACK and mode.inputs[self.modality]:
             result = check_match(self.modality)
-            self.label.bold = True
+            #self.label.bold = True
             if result == 'correct':
                 self.label.color = cfg.COLOR_LABEL_CORRECT
             elif result == 'unknown':
@@ -2586,7 +2615,7 @@ class FeedbackLabel:
             result = check_match(self.modality, check_missed=True)
             if result == 'missed':
                 self.label.color = cfg.COLOR_LABEL_OOPS
-                self.label.bold = True
+                #self.label.bold = True
         else:
             self.label.color = cfg.COLOR_TEXT
             self.label.bold = False
@@ -3180,6 +3209,7 @@ class Stats:
         # set up data variables
         self.initialize_session()
         self.history = []
+        self.full_history = [] # not just today
         self.sessions_today = 0
         
     def parse_statsfile(self):
@@ -3192,6 +3222,7 @@ class Stats:
                 last_back = 0
                 statsfile_path = os.path.join(get_data_dir(), cfg.STATSFILE)
                 statsfile = open(statsfile_path, 'r')
+                is_today = False
                 today = date.today()
                 yesterday = date.fromordinal(today.toordinal() - 1)
                 tomorrow = date.fromordinal(today.toordinal() + 1)
@@ -3202,14 +3233,11 @@ class Stats:
                     datestamp = date(int(line[:4]), int(line[5:7]), int(line[8:10]))
                     hour = int(line[11:13])
                     if int(strftime('%H')) < cfg.ROLLOVER_HOUR:
-                        if datestamp == today:
-                            pass
-                        elif datestamp == yesterday and hour >= cfg.ROLLOVER_HOUR:
-                            pass
-                        else: continue
+                        if datestamp == today or (datestamp == yesterday and hour >= cfg.ROLLOVER_HOUR):
+                            is_today = True
                     elif datestamp == today and hour >= cfg.ROLLOVER_HOUR:
-                        pass
-                    else: continue
+                        is_today = True
+                    
                     if '\t' in line:
                         separator = '\t'
                     else: separator = ','
@@ -3222,8 +3250,10 @@ class Stats:
                     newsession_number = int(newline[8])
                     if newmanual:
                         newsession_number = 0
-                    self.history.append([newsession_number, newmode, newback, newpercent, newmanual])
-                    if not newmanual:
+                    self.full_history.append([newsession_number, newmode, newback, newpercent, newmanual])
+                    if is_today:
+                        self.history.append([newsession_number, newmode, newback, newpercent, newmanual])
+                    if not newmanual and is_today:
                         last_session = self.history[-1]
                 statsfile.close()
                 self.retrieve_progress()
@@ -3773,7 +3803,7 @@ def generate_stimulus():
                     mod = 'vis'
                 offset = random.choice(range(1, multi))
                 for i in range(multi):
-                    mode.current_stim[mod + `i+1`] = stats.session[mod + `((i+offset)%multi) + 1`][real_back]
+                    mode.current_stim[mod + `i+1`] = stats.session[mod + `((i+offset)%multi) + 1`][mode.trial_number - real_back - 1]
                     if mod == 'position':
                         positions[i] = mode.current_stim[mod + `i+1`]
 
@@ -3894,6 +3924,8 @@ def set_user(newuser):
     cfg = parse_config(CONFIGFILE)
     stats.initialize_session()
     stats.parse_statsfile()
+    if len(stats.full_history) > 0:
+        mode.mode = stats.full_history[-1][1]
     update_all_labels()
     save_last_user('defaults.ini')
 
@@ -4260,6 +4292,13 @@ arithmeticAnswerLabel = ArithmeticAnswerLabel()
 input_labels = []
 
 update_all_labels()
+
+# load last game mode
+stats.initialize_session()
+stats.parse_statsfile()
+if len(stats.full_history) > 0:
+    mode.mode = stats.full_history[-1][1]
+
 
 # Initialize brain sprite
 brain_icon = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
