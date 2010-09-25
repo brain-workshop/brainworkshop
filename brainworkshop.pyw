@@ -3926,6 +3926,7 @@ def set_user(newuser):
     stats.parse_statsfile()
     if len(stats.full_history) > 0:
         mode.mode = stats.full_history[-1][1]
+    stats.retrieve_progress()
     update_all_labels()
     save_last_user('defaults.ini')
 
@@ -4291,13 +4292,15 @@ trialsRemainingLabel = TrialsRemainingLabel()
 arithmeticAnswerLabel = ArithmeticAnswerLabel()
 input_labels = []
 
-update_all_labels()
 
 # load last game mode
 stats.initialize_session()
 stats.parse_statsfile()
 if len(stats.full_history) > 0:
     mode.mode = stats.full_history[-1][1]
+stats.retrieve_progress()
+
+update_all_labels()
 
 
 # Initialize brain sprite
