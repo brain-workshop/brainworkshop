@@ -739,7 +739,7 @@ if pyglet.version < '1.1':
                     'Please visit %s' % WEB_PYGLET_DOWNLOAD, trace=False)
 
 supportedtypes = {'sounds' :['wav'],
-                  'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a', 'mp2'], # what else?
+                  'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a'], # what else?
                   'sprites':['png', 'jpg', 'bmp']}
 
 if pyglet.media.have_avbin: supportedtypes['sounds'] = supportedtypes['music']
