@@ -828,7 +828,7 @@ def default_ticks(mode):
         return cfg['TICKS_%i' % mode]
     elif mode > 127:
         bonus = ((mode & 128)/128) * cfg.BONUS_TICKS_CRAB
-        if mode & 256:
+        if mode & 768:
             bonus += cfg['BONUS_TICKS_MULTI_%i' % ((mode & 768)/256+1)]
         if DEBUG: print "Adding a bonus of %i ticks for mode %i" % (bonus, mode)
         return bonus + default_ticks(mode % 128)

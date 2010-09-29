@@ -43,7 +43,7 @@ Example line:
 	? + 128 = C???#B = crab ??? #-back
 	? + 256 = 2x???#B = double-stim ??? #-back
 	? + 512 = 3x???#B = triple-stim ??? #-back
-	? + 1024 = 4x???#B = quadruple-stim ??? #-back
+	? + 768 = 4x???#B = quadruple-stim ??? #-back
     For example, 386 = 2 + 128 + 256 = Double-stim crab dual n-back.
 
 4. The n-back number. for example, 3 = 3-Back
