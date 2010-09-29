@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.7.8.7'
+VERSION = '4.8'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -28,7 +28,7 @@ from datetime import date
 CLINICAL_MODE = False
 
 # Internal static options not available in config file.
-CONFIG_OVERWRITE_IF_OLDER_THAN = '4.7.8' 
+CONFIG_OVERWRITE_IF_OLDER_THAN = '4.8' 
 NOVBO = True
 VSYNC = False
 DEBUG = False
