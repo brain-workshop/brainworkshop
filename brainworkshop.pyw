@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.8'
+VERSION = '4.8.1'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -1584,7 +1584,7 @@ class Menu:
                  footnote = 'Esc: cancel     Space: modify option     Enter: apply', 
                  choose_once=False, default=0):
         self.bgcolor = (255 * int(not cfg.BLACK_BACKGROUND), )*3
-        self.textcolor = (0,0,0,255)#(255 * int(cfg.BLACK_BACKGROUND), )*3
+        self.textcolor = (255 * int(cfg.BLACK_BACKGROUND), )*3 + (255,)
         self.markercolors = (255, 0, 0, 0, 255, 0, 0, 0, 255) # self.textcolor*3
         self.pagesize = min(len(options), (window.height*6/10) / (self.choicesize*3/2))
         if type(options) == dict:
