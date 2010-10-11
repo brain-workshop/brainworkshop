@@ -355,6 +355,10 @@ THRESHOLD_FALLBACK_SESSIONS = 3
 JAEGGI_ADVANCE = 90
 JAEGGI_FALLBACK = 75
 
+# Show feedback regarding session performance.
+# If False, forces USE_MUSIC and USE_APPLAUSE to also be False.
+USE_SESSION_FEEDBACK = True
+
 # Music/SFX options.
 # Volumes are from 0.0 (silent) to 1.0 (full)
 # Defaults: True, True, 1.0, 1.0
@@ -666,6 +670,10 @@ if cfg.JAEGGI_MODE and not cfg.JAEGGI_INTERFACE_DEFAULT_SCORING:
         cfg.HIDE_TEXT = True
         cfg.FIELD_EXPAND = True
 
+if not cfg.USE_SESSION_FEEDBACK:
+    cfg.USE_MUSIC = False
+    cfg.USE_APPLAUSE = False
+
 if cfg.BLACK_BACKGROUND:
     cfg.COLOR_TEXT = cfg.COLOR_TEXT_BLK
 def get_threshold_advance():
@@ -705,9 +713,7 @@ try:
     if NOVBO: pyglet.options['graphics_vbo'] = False
     from pyglet.window import key
 except:
-    quit_with_error(_('Error: unable to load pyglet.  \
-If you already installed pyglet, please ensure \
-ctypes is installed.  Please visit %s') % WEB_PYGLET_DOWNLOAD)
+    quit_with_error(_('Error: unable to load pyglet.  If you already installed pyglet, please ensure ctypes is installed.  Please visit %s') % WEB_PYGLET_DOWNLOAD)
 try:
     pyglet.options['audio'] = ('directsound', 'openal', 'alsa', )
     # use in pyglet 1.2: pyglet.options['audio'] = ('directsound', 'pulse', 'openal', )
@@ -1200,7 +1206,10 @@ class Graph:
                                 _('Please fix, delete or rename the stats file.'))
 
             def mean(x):
-                return sum(x)/float(len(x))
+                if len(x):
+                    return sum(x)/float(len(x))
+                else:
+                    return 0.
             def cent(x):
                 return map(lambda y: .01*y, x)
             
@@ -2522,7 +2531,7 @@ class CongratsLabel:
         self.update()
     def update(self, show=False, advance=False, fallback=False, awesome=False, great=False, good=False, perfect = False):
         str_list = []
-        if show and not CLINICAL_MODE:
+        if show and not CLINICAL_MODE and cfg.USE_SESSION_FEEDBACK:
             if perfect: str_list.append(_('Perfect score! '))
             elif awesome: str_list.append(_('Awesome score! '))
             elif great: str_list.append(_('Great score! '))
