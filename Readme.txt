@@ -10,7 +10,7 @@ Or visit:
    http://brainworkshop.sourceforge.net
 
 Configuration options are available in the file 'config.ini'
-in the data folder. This file is created the when the program is
+in the data folder. This file is created when the program is
 first launched. Windows users can access this file via the
 'Configuration' item in the Brain Workshop group in the Start Menu.
 Mac OS X users will need to right-click on the brainworkshop icon,
