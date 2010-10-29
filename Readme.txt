@@ -47,6 +47,13 @@ installation are available on the Brain Workshop web site:
 ----------------------------------------------------------------------
 Change Log:
 
+4.8.1:
+* Bugfix release.  Text shows up properly on Menu screens with
+   BLACK_BACKGROUND=True.  Bug in graphing code fixed which caused some
+   stats.txt files to not be graphable.  Option added to remove post-
+   session feedback (requested by a researcher).  Daily session counter
+   fixed.  Trials per session at startup fixed.
+
 4.8:
 * Changed config.ini file format.  Existing config.ini files will be
    renamed and replaced.  Users will have to migrate their 

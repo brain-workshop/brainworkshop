@@ -1592,6 +1592,10 @@ class Menu:
     titlesize = 18
     choicesize = 12
     footnotesize = 10
+    fontlist = ['Courier New', # try fixed width fonts first
+                'Monospace', 'Terminal', 'fixed', 'Fixed', 'Times New Roman', 
+                'Helvetica', 'Arial']
+            
     
     def __init__(self, options, values=None, actions={}, names={}, title='', 
                  footnote = _('Esc: cancel     Space: modify option     Enter: apply'), 
@@ -1628,9 +1632,8 @@ class Menu:
         self.labels = [pyglet.text.Label('', font_size=self.choicesize,
             bold=True, color=self.textcolor, batch=self.batch,
             x=window.width/8, y=(window.height*8)/10 - i*(self.choicesize*3/2),
-            anchor_x='left', anchor_y='center', font_name=['Courier New', # try fixed width fonts first
-            'Monospace', 'Terminal', 'fixed', 'Fixed', 'Times New Roman', 
-            'Helvetica', 'Arial']) for i in range(self.pagesize)]
+            anchor_x='left', anchor_y='center', font_name=self.fontlist) 
+                       for i in range(self.pagesize)]
         
         self.marker = self.batch.add(3, GL_POLYGON, None, ('v2i', (0,)*6,),
             ('c3B', self.markercolors))
@@ -1743,10 +1746,26 @@ class Menu:
         self.batch.draw()
         return pyglet.event.EVENT_HANDLED
     
+class MainMenu(Menu):
+    def __init__(self):
+        def NotImplemented():
+            raise NotImplementedError
+        ops = [('game', _('Choose Game Mode'), GameSelect),
+               ('sounds', _('Choose Sounds'), SoundSelect),
+               ('images', _('Choose Images'), ImageSelect),
+               ('user', _('Choose User'), UserScreen),
+               ('graph', _('Daily Progress Graph'), NotImplemented),
+               ('help', _('Help / Tutorial'), NotImplemented),
+               ('donate', _('Donate'), Notimplemented)
+               ('forum', _('Go to Forum / Mailing List'), NotImplemented)]
+        options =       [  op[0]         for op in ops]
+        names   = dict( [ (op[0], op[1]) for op in ops])
+        actions = dict( [ (op[0], op[2]) for op in ops])
+        
 class UserScreen(Menu):
     def __init__(self):
     
-        self.users = users = [_("New user")] + get_users()
+        self.users = users = [_("New user"), 'Blank line'] + get_users()
         Menu.__init__(self, options=users, 
                       #actions=dict([(user, choose_user) for user in users]),
                       title=_("Please select your user profile"),
@@ -1763,6 +1782,7 @@ class UserScreen(Menu):
             textInput = TextInputScreen(_("Enter new user name:"), USER, callback=set_user, catch=' ')
         else:
             set_user(newuser)
+            
 
         
 class OptionsScreen(Menu):
@@ -3941,6 +3961,11 @@ def set_user(newuser):
     if len(stats.full_history) > 0:
         mode.mode = stats.full_history[-1][1]
     stats.retrieve_progress()
+    #if cfg.BLACK_BACKGROUND: # text labels also need to be remade
+    #    glClearColor(0, 0, 0, 1)
+    #else:
+    #    glClearColor(1, 1, 1, 1)
+    #window.set_fullscreen(cfg.WINDOW_FULLSCREEN) # window size needs to be changed
     update_all_labels()
     save_last_user('defaults.ini')
 

@@ -16,10 +16,14 @@ for combination N-back modes.  All existing sound sets can be
 modified or (with the possible exception of 'letters') deleted.
 
 To add new image sets, create a subfolder under res/sprites/ and add
-at least eight image files to that folder.  Instructions for the 
-specific format for the image files will come soon, but for now,
-take a look at the files there already and try to mimic them
-(png, greyscale or BW, alpha channel?).  Note that the 'colored-squares'
+at least eight image files to that folder.  The images should be 
+square .png of any size (the program will scale them appropriately), 
+but 256 pixels seems to be a good tradeoff between size and quality. 
+The sprites are processed for the color n-back task by applying a 
+colored filter, so the images should be mostly white clipart-style 
+shapes with a transparent background. In order to reduce pixellation 
+the edges of the shapes are slightly blended into the transparent 
+background using the alpha channel.  Note that the 'colored-squares'
 image set is treated specially by Brain Workshop, and is stored
 in the 'misc' folder instead of the 'sprites' folder because of this.
 
