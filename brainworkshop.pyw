@@ -9,12 +9,12 @@
 #
 # Also see Readme.txt.
 #
-# Copyright (C) 2009-2010: Paul Hoskinson (plhosk@gmail.com) 
+# Copyright (C) 2009-2011: Paul Hoskinson (plhosk@gmail.com) 
 #
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.8.1'
+VERSION = '4.8.2'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback
 import cPickle as pickle
@@ -23,7 +23,7 @@ from time import strftime
 from datetime import date
 
 import gettext
-gettext.install('brainworkshop', localedir='.', unicode=True)
+gettext.install('messages', localedir='res/i18n', unicode=True)
 
 # Clinical mode?  Clinical mode sets cfg.JAEGGI_MODE = True, enforces a minimal user
 # interface, and saves results into a binary file (default 'logfile.dat') which
@@ -67,16 +67,46 @@ def get_main_dir():
     if main_is_frozen():
         return os.path.dirname(sys.executable)
     return sys.path[0]    
+
+def get_settings_path(name):
+    '''Get a directory to save user preferences.
+    Copied from pyglet.resource so we don't have to load that module 
+    (which recursively indexes . on loading -- wtf?).'''
+    if sys.platform in ('cygwin', 'win32'):
+        if 'APPDATA' in os.environ:
+            return os.path.join(os.environ['APPDATA'], name)
+        else:
+            return os.path.expanduser('~/%s' % name)
+    elif sys.platform == 'darwin':
+        return os.path.expanduser('~/Library/Application Support/%s' % name)
+    else:
+        return os.path.expanduser('~/.%s' % name)
+
+def get_old_data_dir():
+    return os.path.join(get_main_dir(), FOLDER_DATA)
 def get_data_dir():
     try:
         return sys.argv[sys.argv.index('--datadir') + 1]
     except:
-        return os.path.join(get_main_dir(), FOLDER_DATA)
+        return os.path.join(get_settings_path('Brain Workshop'), FOLDER_DATA)
 def get_res_dir():
     try:
         return sys.argv[sys.argv.index('--resdir') + 1]
     except:
         return os.path.join(get_main_dir(), FOLDER_RES)
+def edit_config_ini():
+    if sys.platform == 'win32':
+        cmd = 'notepad'
+    elif sys.platform == 'darwin':
+        cmd = 'open'
+    else:
+        cmd = 'xdg-open'
+    print (cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"')
+    window.on_close()
+    import subprocess
+    subprocess.call((cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"'), shell=True)
+    sys.exit(0)
+
 def quit_with_error(message='', postmessage='', quit=True, trace=True):
     if message:     print >> sys.stderr, message + '\n'
     if trace:       
@@ -102,6 +132,7 @@ CONFIGFILE_DEFAULT_CONTENTS = """
 #
 # The configuration options begin below.
 ######################################################################
+
 [DEFAULT]
 
 # Jaeggi-style interface with default scoring model? 
@@ -524,6 +555,53 @@ if '--dump' in sys.argv:
 try: CONFIGFILE = sys.argv[sys.argv.index('--configfile') + 1]
 except: pass
 
+messagequeue = [] # add messages generated during loading here
+class Message:
+    def __init__(self, msg):
+        if not 'window' in globals():
+            print msg                # dump it to console just in case
+            messagequeue.append(msg) # but we'll display this later
+            return
+        self.batch = pyglet.graphics.Batch()
+        self.label = pyglet.text.Label(msg, 
+                            font_name='Times New Roman',
+                            color=cfg.COLOR_TEXT,
+                            batch=self.batch,
+                            multiline=True,
+                            width=(4*window.width)/5,
+                            font_size=14,
+                            x=window.width//2, y=window.height//2,
+                            anchor_x='center', anchor_y='center')
+        window.push_handlers(self.on_key_press, self.on_draw)
+        self.on_draw()
+
+    def on_key_press(self, sym, mod):
+        if sym in (key.SPACE, key.ESCAPE):
+            self.close()
+        return pyglet.event.EVENT_HANDLED
+            
+    def close(self):
+        return window.remove_handlers(self.on_key_press, self.on_draw)    
+    
+    def on_draw(self):
+        window.clear()
+        self.batch.draw()
+        return pyglet.event.EVENT_HANDLED
+ 
+def check_and_move_user_data():
+    if not '--datadir' in sys.argv and \
+      (not os.path.exists(get_data_dir()) or len(os.listdir(get_data_dir())) < 1):
+        import shutil
+        shutil.copytree(get_old_data_dir(), get_data_dir())
+        if len(os.listdir(get_old_data_dir())) > 2:
+            Message(
+"""Starting with version 4.8.2, Brain Workshop stores its user profiles \
+(statistics and configuration data) in "%s", rather than the old location, "%s". \
+Your configuration data has been copied to the new location. The files in the \
+old location have not been deleted. If you want to edit your config.ini, \
+make sure you look in "%s".
+
+Press space to continue.""" % (get_data_dir(),  get_old_data_dir(),  get_data_dir()))
 
 def load_last_user(lastuserpath):
     if os.path.isfile(os.path.join(get_data_dir(), lastuserpath)):
@@ -632,6 +710,7 @@ def rewrite_configfile(configfile, overwrite=False):
         f = file(os.path.join(get_data_dir(), STATS_BINARY), 'w')
         f.close()
 
+check_and_move_user_data()
 load_last_user('defaults.ini')
 
 cfg = parse_config(CONFIGFILE)
@@ -874,7 +953,7 @@ class MyWindow(pyglet.window.Window):
 window = MyWindow(cfg.WINDOW_WIDTH, cfg.WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
 #if DEBUG: 
 #    window.push_handlers(pyglet.window.event.WindowEventLogger())
-if sys.platform == 'darwin': # and cfg.WINDOW_FULLSCREEN:
+if sys.platform == 'darwin' and cfg.WINDOW_FULLSCREEN:
     window.set_exclusive_keyboard()
 if sys.platform == 'linux2':
     window.set_icon(pyglet.image.load(resourcepaths['misc']['brain'][0]))
@@ -887,6 +966,8 @@ else:
 if cfg.WINDOW_FULLSCREEN:
     window.maximize()
     window.set_mouse_visible(False)
+    
+
 # All changeable game state variables are located in an instance of the Mode class
 class Mode:
     def __init__(self):
@@ -1202,7 +1283,7 @@ class Graph:
                     dictionary = self.dictionaries[newmode]
                     if datestamp not in dictionary:
                         dictionary[datestamp] = []
-                    dictionary[datestamp].append([newback] + \
+                    dictionary[datestamp].append([newback] + [int(newline[2])] + \
                         [self.percents[newmode][n][-1] for n in mode.modalities[newmode]])
 
                 statsfile.close()
@@ -1222,20 +1303,19 @@ class Graph:
             for dictionary in self.dictionaries.values():
                 for datestamp in dictionary.keys(): # this would be so much easier with numpy
                     entries = dictionary[datestamp]
-                    nonzeros = [[num for num in entry if num] for entry in entries] # fixme: assuming the person didn't get 0% for a modality
                     if self.styles[self.style] == 'N':
                         scores = [entry[0] for entry in entries]
                     elif self.styles[self.style] == '%':
-                        scores = [mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                        scores = [.01*entry[1] for entry in entries]
                     elif self.styles[self.style] == 'N.%':
-                        scores = [nonzero[0] + mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                        scores = [entry[0] + .01*entry[1] for entry in entries]
                     elif self.styles[self.style] == 'N+2*%-1':
-                        scores = [nonzero[0] - 1 + 2*mean(cent(nonzero[1:])) for nonzero in nonzeros]
+                        scores = [entry[0] - 1 + 2*.01*entry[1] for entry in entries]
                     elif self.styles[self.style] == 'N+10/3+4/3':
                         adv, flb = get_threshold_advance(), get_threshold_fallback()
                         m = 1./(adv - flb)
                         b = -m*flb
-                        scores = [nonzero[0] + b + m*mean(nonzero[1:]) for nonzero in nonzeros]
+                        scores = [entry[0] + b + m*(entry[1]) for entry in entries]
                     dictionary[datestamp] = (mean(scores), max(scores))
                     
             for game in self.percents:
@@ -1348,7 +1428,7 @@ class Graph:
             x = left - 60, y = center_y + 25,
             anchor_x = 'right', anchor_y = 'center')
 
-        pyglet.text.Label(_('N-Back'), width=1,
+        pyglet.text.Label(_('Score'), width=1,
         batch=self.batch,
         font_size = 12, bold=True, color=cfg.COLOR_TEXT,
         x = left - 60, y = center_y,
@@ -1552,7 +1632,7 @@ class TextInputScreen:
                 self.text = self.document.text
             window.pop_handlers()
             window.pop_handlers()
-        self.callback(self.text)
+        self.callback(self.text.strip())
         return pyglet.event.EVENT_HANDLED
       
 
@@ -1793,7 +1873,7 @@ class LanguageScreen(Menu):
     def __init__(self):
         self.languages = languages = [fn for fn in os.listdir(os.path.join('res', 'i18n')) if fn.lower().endswith('mo')]
         try:
-            default = languages.index(cfg.LANGUAGE + '.po')
+            default = languages.index(cfg.LANGUAGE + '.mo')
         except:
             default = 0
         Menu.__init__(self, options=languages,
@@ -1801,7 +1881,7 @@ class LanguageScreen(Menu):
                       choose_once=True,
                       default=default)
     def save(self):
-        self.select() # Enter should choose a user too
+        self.select() 
         Menu.save(self)
         
     def choose(self, k, i):
@@ -2481,7 +2561,7 @@ class TitleMessageLabel:
             x = window.width // 2, y = window.height - 35,
             anchor_x = 'center', anchor_y = 'center')
         self.label2 = pyglet.text.Label(
-            'Version ' + str(VERSION),
+            _('Version ') + str(VERSION),
             font_size = 14, bold = False, color = cfg.COLOR_TEXT,
             x = window.width // 2, y = window.height - 75,
             anchor_x = 'center', anchor_y = 'center')
@@ -2503,13 +2583,14 @@ class TitleKeysLabel:
         str_list.append(_('H: Help / Tutorial\n'))
         if not CLINICAL_MODE:
             str_list.append(_('D: Donate\n'))
-            str_list.append(_('F: Go to Forum / Mailing List'))
+            str_list.append(_('F: Go to Forum / Mailing List\n'))
+            str_list.append(_('O: Edit configuration file'))
         
         self.keys = pyglet.text.Label(
             ''.join(str_list),
             multiline = True, width = 260,
             font_size = 12, bold = True, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = 220,
+            x = window.width // 2, y = 230,
             anchor_x = 'center', anchor_y = 'top')
         
         self.space = pyglet.text.Label(
@@ -3153,6 +3234,7 @@ class Saccadic:
 
 #                    self.square = batch.add(40, GL_POLYGON, None, 
 #                                            ('v2i', xy), ('c4B', self.color * 40))
+       
 
 class Panhandle:
     def __init__(self, n=-1):
@@ -3820,12 +3902,11 @@ def generate_stimulus():
             if multi > 1: 
                 r2 = 3./2. * r2 # 33% chance of multi-stim reversal
 
-            if  (r1 < cfg.CHANCE_OF_GUARANTEED_MATCH \
-              or (r2 < cfg.CHANCE_OF_INTERFERENCE and mode.back > 1)): # and mode.flags[mode.mode]['interference']?
+            if  (r1 < cfg.CHANCE_OF_GUARANTEED_MATCH):
                 back = real_back
 
-            if  (r1 >= cfg.CHANCE_OF_GUARANTEED_MATCH  \
-             and r2 <  cfg.CHANCE_OF_INTERFERENCE) and mode.back > 1:
+            elif r2 < cfg.CHANCE_OF_INTERFERENCE and mode.back > 1:
+                back = real_back
                 interference = [-1, 1, mode.back]
                 if back < 3: interference = interference[1:] # for crab mode and 2-back
                 random.shuffle(interference)
@@ -4057,6 +4138,9 @@ def on_key_press(symbol, modifiers):
             
         elif symbol == key.F:
             webbrowser.open_new_tab(WEB_FORUM)
+        
+        elif symbol == key.O:
+            edit_config_ini()
 
     elif mode.draw_graph:
         if symbol == key.ESCAPE or symbol == key.G or symbol == key.X:
@@ -4370,7 +4454,6 @@ stats.retrieve_progress()
 
 update_all_labels()
 
-
 # Initialize brain sprite
 brain_icon = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
 brain_icon.set_position(field.center_x - brain_icon.width//2,
@@ -4396,9 +4479,14 @@ def shrink_brain(dt):
                            field.center_y - brain_graphic.height//2 + 40)
         
 
+# If we had messages queued during loading (like from moving our data files), display them now
+messagequeue.reverse()
+for msg in messagequeue:
+    Message(msg)
+
 # start the event loops!
 if __name__ == '__main__':
-    
+
     pyglet.app.run()
 
 # nothing below the line "pyglet.app.run()" will be executed until the
