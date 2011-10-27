@@ -805,17 +805,6 @@ try:
     import pyglet.media
 except:
     quit_with_error(_('No suitable audio driver could be loaded.'))
-
-try:
-    from pyglet.media import avbin
-    if pyglet.version >= '1.2':  # temporary workaround for defect in pyglet svn 2445
-        pyglet.media.have_avbin = True
-except:
-    cfg.USE_MUSIC = False
-    if pyglet.version >= '1.2':  
-        pyglet.media.have_avbin = False
-    print _('AVBin not detected. Music disabled.')
-    print _('Download AVBin from: http://code.google.com/p/avbin/')
         
 # Initialize resources (sounds and images)
 #
@@ -836,6 +825,72 @@ supportedtypes = {'sounds' :['wav'],
                   'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a'], # what else?
                   'sprites':['png', 'jpg', 'bmp']}
 
+def test_avbin():
+    try:
+        import pyglet
+        from pyglet.media import avbin
+        if pyglet.version >= '1.2':  # temporary workaround for defect in pyglet svn 2445
+            pyglet.media.have_avbin = True
+            
+        # On Windows with Data Execution Protection enabled (on by default on Vista),
+        # an exception will be raised when use of avbin is attempted:
+        #   WindowsError: exception: access violation writing [ADDRESS]
+        # The file doesn't need to be in a avbin-specific format, 
+        # since pyglet will use avbin over riff whenever it's detected.
+        # Let's find an audio file and try to load it to see if avbin works.
+        opj = os.path.join
+        def look_for_music(path):
+            files = [p for p in os.listdir(path) if not p.startswith('.') and not os.path.isdir(opj(path, p))]
+            for f in files:
+                ext = f.lower()[-3:]
+                if ext in supportedtypes['music'] and not ext in supportedtypes['sounds']:
+                    return opj(path, f)
+            dirs  = [p for p in os.listdir(path) if not p.startswith('.') and not os.path.isdir(opj(path, p))]
+            for d in dirs:
+                result = look_for_music(d)
+                if result: return result
+            return None
+        music_file = look_for_music(res_path)
+        print music_file
+        # The first time we load a file should trigger the exception
+        loaded_music = pyglet.media.load(music_file, streaming=False)
+        del loaded_music
+        
+    except WindowsError:
+        cfg.USE_MUSIC = False
+        pyglet.media.have_avbin = False 
+        if hasattr(pyglet.media, '_source_class'): # pyglet v1.1
+            import pyglet.media.riff
+            pyglet.media._source_class = pyglet.media.riff.WaveSource
+        elif hasattr(pyglet.media, '_source_loader'): # pyglet v1.2 and development branches
+            import pyglet.media.riff
+            pyglet.media._source_loader = pyglet.media.RIFFSourceLoader()
+        Message("""Warning: Could not load AVbin. Music disabled.
+
+This is usually due to Windows Data Execution Prevention (DEP). Due to a bug in 
+AVbin, a library used for decoding sound files, music is not available when \
+DEP is enabled. To enable music, disable DEP for Brain Workshop. To simply get \
+rid of this message, set USE_MUSIC = False in your config.ini file.
+
+To disable DEP:
+
+1. Open Control Panel -> System
+2. Select Advanced System Settings
+3. Click on Performance -> Settings
+4. Click on the Data Execution Prevention tab
+5. Either select the "Turn on DEP for essential Windows programs and services \
+only" option, or add an exception for Brain Workshop.
+   
+Press any key to continue without music support.
+""")
+    except ImportError:
+        cfg.USE_MUSIC = False
+        if pyglet.version >= '1.2':  
+            pyglet.media.have_avbin = False
+        print _('AVBin not detected. Music disabled.')
+        print _('Download AVBin from: http://code.google.com/p/avbin/')
+
+test_avbin()
 if pyglet.media.have_avbin: supportedtypes['sounds'] = supportedtypes['music']
 elif cfg.USE_MUSIC:         supportedtypes['music'] = supportedtypes['sounds']
 else:                       del supportedtypes['music']
@@ -3588,7 +3643,7 @@ class Stats:
                 mode.progress = 0
                 circles.update()
                 if cfg.USE_APPLAUSE:
-                    applauseplayer = pyglet.media.ManagedSoundPlayer()
+                    #applauseplayer = pyglet.media.ManagedSoundPlayer()
                     applauseplayer.queue(random.choice(applausesounds))
                     applauseplayer.volume = cfg.SFX_VOLUME
                     applauseplayer.play()
@@ -4068,11 +4123,12 @@ def set_user(newuser):
     if len(stats.full_history) > 0 and not cfg.JAEGGI_MODE:
         mode.mode = stats.full_history[-1][1]
     stats.retrieve_progress()
-    #if cfg.BLACK_BACKGROUND: # text labels also need to be remade
+    # text labels also need to be remade; until that's done, this remains commented out
+    #if cfg.BLACK_BACKGROUND: 
     #    glClearColor(0, 0, 0, 1)
     #else:
     #    glClearColor(1, 1, 1, 1)
-    #window.set_fullscreen(cfg.WINDOW_FULLSCREEN) # window size needs to be changed
+    window.set_fullscreen(cfg.WINDOW_FULLSCREEN) # window size needs to be changed
     update_all_labels()
     save_last_user('defaults.ini')
 
