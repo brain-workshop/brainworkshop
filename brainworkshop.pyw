@@ -79,8 +79,8 @@ def get_settings_path(name):
             return os.path.expanduser('~/%s' % name)
     elif sys.platform == 'darwin':
         return os.path.expanduser('~/Library/Application Support/%s' % name)
-    else:
-        return os.path.expanduser('~/.%s' % name)
+    else: # on *nix, we want it to be lowercase and without spaces (~/.brainworkshop/data)
+        return os.path.expanduser('~/.%s' % (name.lower().replace(' ', ''))
 
 def get_old_data_dir():
     return os.path.join(get_main_dir(), FOLDER_DATA)
