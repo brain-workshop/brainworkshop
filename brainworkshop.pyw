@@ -80,7 +80,7 @@ def get_settings_path(name):
     elif sys.platform == 'darwin':
         return os.path.expanduser('~/Library/Application Support/%s' % name)
     else: # on *nix, we want it to be lowercase and without spaces (~/.brainworkshop/data)
-        return os.path.expanduser('~/.%s' % (name.lower().replace(' ', ''))
+        return os.path.expanduser('~/.%s' % (name.lower().replace(' ', '')))
 
 def get_old_data_dir():
     return os.path.join(get_main_dir(), FOLDER_DATA)
@@ -576,7 +576,7 @@ class Message:
         self.on_draw()
 
     def on_key_press(self, sym, mod):
-        if sym in (key.SPACE, key.ESCAPE):
+        if sym:
             self.close()
         return pyglet.event.EVENT_HANDLED
             
@@ -2881,9 +2881,10 @@ class ArithmeticAnswerLabel:
             if self.negative:
                 self.negative = False
             else: self.negative = True
-        elif input == '.' and not self.decimal:
-            self.decimal = True
-            self.answer.append(input)
+        elif input == '.':
+            if not self.decimal:
+                self.decimal = True
+                self.answer.append(input)
         else:
             self.answer.append(input)
         self.update()
