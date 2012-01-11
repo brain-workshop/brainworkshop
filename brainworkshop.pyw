@@ -2288,12 +2288,18 @@ class Visual:
             index = cfg.IMAGE_SETS[index]
         if index == None:
             index = random.choice(cfg.IMAGE_SETS)
+        self.image_set_index = index
         self.image_set = [pyglet.sprite.Sprite(pyglet.image.load(path))
                             for path in resourcepaths['sprites'][index]]
         self.image_set_size = self.image_set[0].width
         
     def choose_random_images(self, number):
+        self.image_indices = random.sample(range(len(self.image_set)), number)
         self.images = random.sample(self.image_set, number)
+    
+    def choose_indicated_images(self, indices):
+        self.image_indices = indices
+        self.images = [self.image_set[i] for i in indices]
         
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
 
@@ -3795,10 +3801,9 @@ def new_session():
     
 
     for i in range(1, 4):
-        visuals[i].image_set = visuals[0].image_set
-        visuals[i].image_set_size = visuals[i].image_set_size
-        visuals[i].images   = visuals[0].images
-        visuals[i].letters  = visuals[0].letters
+        visuals[i].load_set(visuals[0].image_set_index)
+        visuals[i].choose_indicated_images(visuals[0].image_indices)
+        visuals[i].letters  = visuals[0].letters  # I don't think these are used for anything, but I'm not sure
         visuals[i].letters2 = visuals[0].letters2
 
     global input_labels
@@ -4492,7 +4497,9 @@ def update(dt):
             else: generate_stimulus()
             reset_input()
         # Hide square at either the 0.5 second mark or sooner
-        if mode.tick == 6 or mode.tick == mode.ticks_per_trial - 1:
+        positions = len([mod for mod in mode.modalities[mode.mode] if mod.startswith('position')])
+        positions = max(0, positions-1)
+        if mode.tick == (6+positions) or mode.tick == mode.ticks_per_trial - 1:
             for visual in visuals: visual.hide()
         if mode.tick == mode.ticks_per_trial - 2:  # display feedback for 200 ms
             mode.tick = 0
