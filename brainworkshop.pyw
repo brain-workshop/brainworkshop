@@ -193,6 +193,10 @@ JAEGGI_FORCE_OPTIONS = True
 # Default: True
 JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
 
+# Allow Mouse to be used for input?
+# Only for dual n-back. Automatically disabled in JAEGGI_MODE.
+ENABLE_MOUSE = True
+
 # Background color: True = black, False = white.
 # Default: False
 BLACK_BACKGROUND = False
@@ -628,9 +632,7 @@ def save_last_user(lastuserpath):
         pass
 
 def parse_config(configpath):
-    if CLINICAL_MODE and configpath == 'config.ini':
-        pass
-    else:
+    if not (CLINICAL_MODE and configpath == 'config.ini'):
         fullpath = os.path.join(get_data_dir(), configpath)
         if not os.path.isfile(fullpath):
             rewrite_configfile(configpath, overwrite=False)
@@ -2748,15 +2750,17 @@ class FeedbackLabel:
             modalityname = modalityname[:-5] + ' & n-audio'
         if mode.flags[mode.mode]['multi'] == 1 and modalityname == 'position1':
             modalityname = 'position'
-
             
-        self.text = "%s: %s" % (self.letter.upper(), _(modalityname)) # FIXME: will this break pygettext?
+	if total == 2 and not cfg.JAEGGI_MODE and cfg.ENABLE_MOUSE:
+	    if pos == 0:
+		self.mousetext = "Left-click or"
+	    if pos == 1:
+		self.mousetext = "Right-click or"
+	else:
+	    self.mousetext = ""
 
-        if total == 2:
-            if pos == 0:
-                self.text = "Left-click or %s: %s" % (self.letter.upper(), _(modalityname))
-            if pos == 1:
-                self.text = "Right-click or %s: %s" % (self.letter.upper(), _(modalityname))
+        self.text = "%s %s: %s" % (_(self.mousetext), self.letter, _(modalityname)) # FIXME: will this break pyglettext?
+
         if total < 4:
             self.text += _(' match')
             font_size = 16
@@ -3240,37 +3244,21 @@ class TodayLabel:
     def __init__(self):
         self.labelTitle = pyglet.text.Label(
             '',
-            font_size=10, bold = True,
-            color=cfg.COLOR_TEXT,
-            x=window.width - 10, y=window.height-5,
-            anchor_x='right', anchor_y='top', batch=batch)
-        self.label = pyglet.text.Label(
-            '',
-            font_size=8, bold = False,
-            color=cfg.COLOR_TEXT,
-            x=window.width - 10, y=window.height-25,
-            anchor_x='right', anchor_y='top', batch=batch)
-        self.labelTime = pyglet.text.Label(
-            '',
-            font_size=8, bold = False,
-            color=cfg.COLOR_TEXT,
-            x=window.width - 10, y=window.height-40,
-            anchor_x='right', anchor_y='top', batch=batch)
+	    font_size = 9,
+	    color = cfg.COLOR_TEXT,
+            x=window.width, y=window.height-5,
+            anchor_x='right', anchor_y='top',width=280, multiline=True, batch=batch)
         self.update()
     def update(self):
         if mode.started:
             self.labelTitle.text = ''
-            self.label.text = ''
-            self.labelTime.text = ''
         else:
             total_trials = sum([mode.num_trials + mode.num_trials_factor * \
              his[2] ** mode.num_trials_exponent for his in stats.history])
             total_time = mode.ticks_per_trial * TICK_DURATION * total_trials
             
-            # should really make this in a fixed width font
-            self.labelTitle.text = _('Last 24 Hours    Today')
-            self.label.text = _('Sessions              %i                  %i        ') % (stats.sessions_thours, stats.sessions_today)
-            self.labelTime.text = _('Time              %i sec        %i sec') % (total_time, stats.time_today)
+            self.labelTitle.text = _("%i min %i sec done today in %i sessions\
+			    %i min %i sec done in last 24 hours in %i sessions" % (stats.time_today//60, stats.time_today%60, stats.sessions_today, stats.time_thours//60, stats.time_thours%60, stats.sessions_thours))
 
 class TrialsRemainingLabel:
     def __init__(self):
