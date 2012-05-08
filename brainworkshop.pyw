@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.8.2'
+VERSION = '4.8.3'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback, datetime
 import cPickle as pickle
@@ -530,6 +530,10 @@ KEY_VISVIS = 115
 KEY_VISAUDIO = 100
 # Sound & n-visual match. Default: 106 (J)
 KEY_AUDIOVIS = 106
+
+# Advance to the next trial in self-paced mode. Default: 65293 (return/enter).
+# You may also like space (32).
+KEY_ADVANCE = 65293
 
 ######################################################################
 # This is the end of the configuration file.
@@ -1132,8 +1136,8 @@ class Mode:
         # generate crab modes
         for m in self.short_mode_names.keys():
             nm = m | 128                          # newmode; Crab DNB = 2 | 128 = 130
-            self.flags[m]  = {'crab':0, 'multi':1}# forwards
-            self.flags[nm] = {'crab':1, 'multi':1}# every (self.back) stimuli are reversed for matching
+            self.flags[m]  = {'crab':0, 'multi':1, 'selfpaced':0}# forwards
+            self.flags[nm] = {'crab':1, 'multi':1, 'selfpaced':0}# every (self.back) stimuli are reversed for matching
             self.short_mode_names[nm] = 'C' + self.short_mode_names[m]
             self.long_mode_names[nm] = _('Crab ') + self.long_mode_names[m]
             self.modalities[nm] = self.modalities[m][:] # the [:] at the end is
@@ -1146,7 +1150,7 @@ class Mode:
                   or not 'position1' in self.modalities[m] \
                   or set(['visvis', 'arithmetic']).intersection(self.modalities[m]):  # Combination? AAAH! Scary! 
                     continue
-                nm = m | 256 * (n-1)                 # newmode; 3xDNB = 2 | 512 = 514
+                nm = m | 256 * (n-1)               # newmode; 3xDNB = 2 | 512 = 514
                 self.flags[nm] = dict(self.flags[m]) # take a copy
                 self.flags[nm]['multi'] = n          
                 self.short_mode_names[nm] = `n` + 'x' + self.short_mode_names[m]
@@ -1160,6 +1164,15 @@ class Mode:
                 for ic in 'image', 'color':
                     if ic in self.modalities[nm]:
                         self.modalities[nm].remove(ic)
+                        
+        for m in self.short_mode_names.keys():
+            nm = m | 1024
+            self.short_mode_names[nm] = 'SP-' + self.short_mode_names[m]
+            self.long_mode_names[nm] = 'Self-paced ' + self.long_mode_names[m]
+            self.modalities[nm] = self.modalities[m][:]
+            self.flags[nm] = dict(self.flags[m])
+            self.flags[nm]['selfpaced'] = 1
+
 
         self.variable_list = []
         
@@ -1969,6 +1982,8 @@ class GameSelect(Menu):
         options.append("Blank line")
         options.append('multi')
         options.append('multimode')
+        options.append('Blank line')
+        options.append('selfpaced')
         options.append("Blank line")
         options.append('interference')
         names['combination'] = _('Combination N-back mode')  
@@ -1976,6 +1991,7 @@ class GameSelect(Menu):
         names['crab'] = _('Crab-back mode (reverse order of sets of N stimuli)')
         names['multi'] = _('Simultaneous visual stimuli')
         names['multimode'] = _('Simultaneous stimuli differentiated by')
+        names['selfpaced'] = _('Self-paced mode')
         names['interference'] = _('Interference (tricky stimulus generation)')
         vals = dict([[op, None] for op in options])
         curmodes = mode.modalities[mode.mode]
@@ -1993,6 +2009,7 @@ class GameSelect(Menu):
         vals['crab'] = bool(mode.flags[mode.mode]['crab'])
         vals['multi'] = Cycler(values=[1,2,3,4], default=mode.flags[mode.mode]['multi']-1)
         vals['multimode'] = Cycler(values=['color', 'image'], default=cfg.MULTI_MODE)
+        vals['selfpaced'] = bool(mode.flags[mode.mode]['selfpaced'])
         for m in modalities:
             vals[m] = m in curmodes
         Menu.__init__(self, options, vals, names=names, title=_('Choose your game mode'))        
@@ -2027,7 +2044,10 @@ class GameSelect(Menu):
         if 'crab' in modes: 
             modes.remove('crab')
             base += 128
-        
+        if 'selfpaced' in modes:
+            modes.remove('selfpaced')
+            base += 1024
+            
         candidates = set([k for k,v in mode.modalities.items() if not 
                          [True for m in modes if not m in v] and not
                          [True for m in v if not m in modes]])
@@ -2290,6 +2310,8 @@ class Visual:
             index = cfg.IMAGE_SETS[index]
         if index == None:
             index = random.choice(cfg.IMAGE_SETS)
+        if hasattr(self, 'image_set_index') and index == self.image_set_index: 
+            return
         self.image_set_index = index
         self.image_set = [pyglet.sprite.Sprite(pyglet.image.load(path))
                             for path in resourcepaths['sprites'][index]]
@@ -3795,7 +3817,7 @@ def new_session():
     visuals[0].letters2 = random.sample(sounds[mode.sound2_mode].keys(), 8)    
     
 
-    for i in range(1, 4):
+    for i in range(1, mode.flags[mode.mode]['multi']):
         visuals[i].load_set(visuals[0].image_set_index)
         visuals[i].choose_indicated_images(visuals[0].image_indices)
         visuals[i].letters  = visuals[0].letters  # I don't think these are used for anything, but I'm not sure
@@ -4445,6 +4467,9 @@ def on_key_press(symbol, modifiers):
                         mode.inputs[k] = True
                         mode.input_rts[k] = time.time() - mode.trial_starttime
                         update_input_labels()
+        
+        if symbol == cfg.KEY_ADVANCE and mode.flags[mode.mode]['selfpaced']:
+            mode.tick = mode.ticks_per_trial-5
 
     return pyglet.event.EVENT_HANDLED
 # the loop where everything is drawn on the screen.
@@ -4480,7 +4505,10 @@ def on_draw():
 # tick = 1: etc.
 def update(dt):
     if mode.started and not mode.paused: # only run the timer during a game
-        mode.tick += 1
+        if not mode.flags[mode.mode]['selfpaced'] or \
+                mode.tick > mode.ticks_per_trial-6 or \
+                mode.tick < 5:
+            mode.tick += 1
         if mode.tick == 1:
             mode.show_missed = False
             if mode.trial_number > 0:
