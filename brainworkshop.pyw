@@ -5,7 +5,7 @@
 # Tutorial, installation instructions & links to the dual n-back community
 # are available at the Brain Workshop web site:
 #
-#       http://brainworkshop.sourceforge.net/
+#       http://brainworkshop.net/
 #
 # Also see Readme.txt.
 #
@@ -45,11 +45,11 @@ USER = 'default'
              #10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
 ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
-WEB_SITE = 'http://brainworkshop.sourceforge.net/'
-WEB_TUTORIAL = 'http://brainworkshop.sourceforge.net/#tutorial'
+WEB_SITE = 'http://brainworkshop.net/'
+WEB_TUTORIAL = 'http://brainworkshop.net/#tutorial'
 CLINICAL_TUTORIAL = WEB_TUTORIAL # FIXME: Add tutorial catered to clinical trials
-WEB_DONATE = 'http://brainworkshop.sourceforge.net/donate.html'
-WEB_VERSION_CHECK = 'http://brainworkshop.sourceforge.net/version.txt'
+WEB_DONATE = 'http://brainworkshop.net/donate.html'
+WEB_VERSION_CHECK = 'http://brainworkshop.net/version.txt'
 WEB_PYGLET_DOWNLOAD = 'http://pyglet.org/download.html'
 WEB_FORUM = 'http://groups.google.com/group/brain-training'
 WEB_MORSE = 'http://en.wikipedia.org/wiki/Morse_code'
@@ -128,7 +128,7 @@ CONFIGFILE_DEFAULT_CONTENTS = """
 # Every line beginning with # is ignored by the program.
 #
 # Please see the Brain Workshop web site for more information:
-#       http://brainworkshop.sourceforge.net
+#       http://brainworkshop.net
 #
 # The configuration options begin below.
 ######################################################################
@@ -862,7 +862,14 @@ def test_avbin():
         loaded_music = pyglet.media.load(music_file, streaming=False)
         del loaded_music
         
-    except WindowsError:
+    except ImportError:
+        cfg.USE_MUSIC = False
+        if pyglet.version >= '1.2':  
+            pyglet.media.have_avbin = False
+        print _('AVBin not detected. Music disabled.')
+        print _('Download AVBin from: http://code.google.com/p/avbin/')
+
+    except: # WindowsError
         cfg.USE_MUSIC = False
         pyglet.media.have_avbin = False 
         if hasattr(pyglet.media, '_source_class'): # pyglet v1.1
@@ -889,12 +896,6 @@ only" option, or add an exception for Brain Workshop.
    
 Press any key to continue without music support.
 """)
-    except ImportError:
-        cfg.USE_MUSIC = False
-        if pyglet.version >= '1.2':  
-            pyglet.media.have_avbin = False
-        print _('AVBin not detected. Music disabled.')
-        print _('Download AVBin from: http://code.google.com/p/avbin/')
 
 test_avbin()
 if pyglet.media.have_avbin: supportedtypes['sounds'] = supportedtypes['music']
