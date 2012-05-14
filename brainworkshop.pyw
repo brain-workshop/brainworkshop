@@ -845,22 +845,27 @@ def test_avbin():
         # since pyglet will use avbin over riff whenever it's detected.
         # Let's find an audio file and try to load it to see if avbin works.
         opj = os.path.join
+        opj = os.path.join
         def look_for_music(path):
             files = [p for p in os.listdir(path) if not p.startswith('.') and not os.path.isdir(opj(path, p))]
             for f in files:
                 ext = f.lower()[-3:]
-                if ext in supportedtypes['music'] and not ext in supportedtypes['sounds']:
-                    return opj(path, f)
-            dirs  = [p for p in os.listdir(path) if not p.startswith('.') and not os.path.isdir(opj(path, p))]
+                if ext in ['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a'] and not ext in ('wav'):
+                    return [opj(path, f)]
+            dirs  = [opj(path, p) for p in os.listdir(path) if not p.startswith('.') and os.path.isdir(opj(path, p))]
+            results = []
             for d in dirs:
-                result = look_for_music(d)
-                if result: return result
-            return None
+                results.extend(look_for_music(d))
+                if results: return results
+            return results
         music_file = look_for_music(res_path)
-        print music_file
-        # The first time we load a file should trigger the exception
-        loaded_music = pyglet.media.load(music_file, streaming=False)
-        del loaded_music
+        if music_file: 
+            # The first time we load a file should trigger the exception
+            music_file = music_file[0]
+            loaded_music = pyglet.media.load(music_file, streaming=False)
+            del loaded_music
+        else:
+            cfg.USE_MUSIC = False
         
     except ImportError:
         cfg.USE_MUSIC = False
