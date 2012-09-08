@@ -14,7 +14,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.8.4'
+VERSION = '4.8.6'
 
 import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback, datetime
 import cPickle as pickle
@@ -215,6 +215,8 @@ WINDOW_HEIGHT = 684
 SKIP_TITLE_SCREEN = False
 
 # Display feedback of correct/incorrect input?
+# If this is a number between 0 and 1, then it describes the probability that
+# feedback will be displayed for a particular session. 
 # Default: True
 SHOW_FEEDBACK = True
 
@@ -401,10 +403,11 @@ USE_SESSION_FEEDBACK = True
 
 # Music/SFX options.
 # Volumes are from 0.0 (silent) to 1.0 (full)
-# Defaults: True, True, 1.0, 1.0
+# Defaults: True, True, .25, 0.5, 1.0
 USE_MUSIC = True
 USE_APPLAUSE = True
-MUSIC_VOLUME = 1.0
+MUSIC_VOLUME = 0.25
+APPLAUSE_VOLUME = 0.50
 SFX_VOLUME = 1.0
 
 # Specify an alternate stats file.
@@ -486,6 +489,7 @@ COLOR_LABEL_INCORRECT = (255, 64, 64, 255)
 # Repetitions = number of times to switch the dot
 SACCADIC_DELAY = 0.5
 SACCADIC_REPETITIONS = 60
+SACCADIC_LOGGING = True
 
 ######################################################################
 # Keyboard definitions.
@@ -3319,12 +3323,16 @@ class Saccadic:
         else: self.position = 'left'
         
     def start(self):
+        self.start_time = time.time()
         self.position = 'left'
         mode.saccadic = True
         self.counter = 0
         pyglet.clock.schedule_interval(saccadic.tick, cfg.SACCADIC_DELAY)
 
     def stop(self):
+        elapsed_time = time.time() - self.start_time
+        stats.log_saccadic(self.start_time, elapsed_time, self.counter) 
+        
         pyglet.clock.unschedule(saccadic.tick)
         mode.saccadic = False
         
@@ -3628,6 +3636,19 @@ class Stats:
         self.session['arithmetic_input'].append(arithmeticAnswerLabel.parse_answer())
             
 
+    def log_saccadic(self, start_time, elapsed_time, counter):
+        if ATTEMPT_TO_SAVE_STATS and cfg.SACCADIC_LOGGING:
+            try:
+                statsfile_path = os.path.join(get_data_dir(), cfg.STATSFILE)
+                statsfile = open(statsfile_path, 'a')
+                statsfile.write("# Saccadic session at %s for %i seconds and %i saccades\n" % 
+                                (strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
+                                 int(elapsed_time), 
+                                 counter))
+                statsfile.close()
+            except:
+                pass
+    
     def submit_session(self, percent, category_percents):
         global musicplayer
         global applauseplayer
@@ -3722,7 +3743,7 @@ class Stats:
                 if cfg.USE_APPLAUSE:
                     #applauseplayer = pyglet.media.ManagedSoundPlayer()
                     applauseplayer.queue(random.choice(applausesounds))
-                    applauseplayer.volume = cfg.SFX_VOLUME
+                    applauseplayer.volume = cfg.APPLAUSE_VOLUME
                     applauseplayer.play()
                 advance = True
             elif mode.back > 1 and percent < get_threshold_fallback():
@@ -4529,7 +4550,7 @@ def update(dt):
         # Hide square at either the 0.5 second mark or sooner
         positions = len([mod for mod in mode.modalities[mode.mode] if mod.startswith('position')])
         positions = max(0, positions-1)
-        if mode.tick == (6+positions) or mode.tick == mode.ticks_per_trial - 1:
+        if mode.tick == (6+positions) or mode.tick >= mode.ticks_per_trial - 2:
             for visual in visuals: visual.hide()
         if mode.tick == mode.ticks_per_trial - 2:  # display feedback for 200 ms
             mode.tick = 0
