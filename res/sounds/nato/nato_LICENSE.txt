@@ -1,0 +1,14 @@
+Author: Michael Klier <chi@chimeric.de>
+Link:   http://www.chimeric.de/projects/npa
+Voice:  Christian Spellenberg
+
+These samples represent the NATO phonetical alphabet. They are protected
+by the Creative Commons Sampling Plus 1.0 License. You are free to use
+and redistribute these samples under the conditions defined by the
+license. For further information read the LICENSE file and visit
+http://www.creativecommons.org.
+
+This work is licensed under the Creative Commons Sampling Plus 1.0 License. To
+view a copy of this license, visit
+http://creativecommons.org/licenses/sampling+/1.0/ or send a letter to Creative
+Commons, 543 Howard Street, 5th Floor, San Francisco, California, 94105, USA.

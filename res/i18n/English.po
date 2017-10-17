@@ -1,0 +1,738 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-10-04 13:58-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: brainworkshop.py:83
+msgid "Full text of error:\n"
+msgstr ""
+
+#: brainworkshop.py:573
+#, python-format
+msgid "Unable to load config file: %s"
+msgstr ""
+
+#: brainworkshop.py:716
+msgid "No suitable audio driver could be loaded."
+msgstr ""
+
+#: brainworkshop.py:726
+msgid "AVBin not detected. Music disabled."
+msgstr ""
+
+#: brainworkshop.py:727
+msgid "Download AVBin from: http://code.google.com/p/avbin/"
+msgstr ""
+
+#: brainworkshop.py:736
+#, python-format
+msgid ""
+"Error: the resource folder\n"
+"%s"
+msgstr ""
+
+#: brainworkshop.py:737
+msgid " does not exist or is not readable.  Exiting"
+msgstr ""
+
+#: brainworkshop.py:740
+msgid "Error: pyglet 1.1 or greater is required.\n"
+msgstr ""
+
+#: brainworkshop.py:741
+msgid "You probably have an older version of pyglet installed.\n"
+msgstr ""
+
+#: brainworkshop.py:742
+#, python-format
+msgid "Please visit %s"
+msgstr ""
+
+#: brainworkshop.py:920
+msgid "Dual"
+msgstr ""
+
+#: brainworkshop.py:921
+msgid "Position, Color, Sound"
+msgstr ""
+
+#: brainworkshop.py:922
+msgid "Dual Combination"
+msgstr ""
+
+#: brainworkshop.py:923
+msgid "Tri Combination"
+msgstr ""
+
+#: brainworkshop.py:924
+msgid "Quad Combination"
+msgstr ""
+
+#: brainworkshop.py:925 brainworkshop.py:2913
+msgid "Arithmetic"
+msgstr ""
+
+#: brainworkshop.py:926
+msgid "Dual Arithmetic"
+msgstr ""
+
+#: brainworkshop.py:927
+msgid "Triple Arithmetic"
+msgstr ""
+
+#: brainworkshop.py:928
+msgid "Position"
+msgstr ""
+
+#: brainworkshop.py:929
+msgid "Sound"
+msgstr ""
+
+#: brainworkshop.py:930
+msgid "Tri Combination (Color)"
+msgstr ""
+
+#: brainworkshop.py:931
+msgid "Position, Color"
+msgstr ""
+
+#: brainworkshop.py:932
+msgid "Position, Image"
+msgstr ""
+
+#: brainworkshop.py:933
+msgid "Color, Sound"
+msgstr ""
+
+#: brainworkshop.py:934
+msgid "Image, Sound"
+msgstr ""
+
+#: brainworkshop.py:935
+msgid "Color, Image"
+msgstr ""
+
+#: brainworkshop.py:936
+msgid "Position, Color, Image"
+msgstr ""
+
+#: brainworkshop.py:937
+msgid "Position, Image, Sound"
+msgstr ""
+
+#: brainworkshop.py:938
+msgid "Color, Image, Sound"
+msgstr ""
+
+#: brainworkshop.py:939
+msgid "Quad"
+msgstr ""
+
+#: brainworkshop.py:940
+msgid "Sound, Sound2"
+msgstr ""
+
+#: brainworkshop.py:941
+msgid "Position, Sound, Sound2"
+msgstr ""
+
+#: brainworkshop.py:942
+msgid "Color, Sound, Sound2"
+msgstr ""
+
+#: brainworkshop.py:943
+msgid "Image, Sound, Sound2"
+msgstr ""
+
+#: brainworkshop.py:944
+msgid "Position, Color, Sound, Sound2"
+msgstr ""
+
+#: brainworkshop.py:945
+msgid "Position, Image, Sound, Sound2"
+msgstr ""
+
+#: brainworkshop.py:946
+msgid "Color, Image, Sound, Sound2"
+msgstr ""
+
+#: brainworkshop.py:947
+msgid "Pentuple"
+msgstr ""
+
+#: brainworkshop.py:988
+msgid "Crab "
+msgstr ""
+
+#: brainworkshop.py:994
+msgid "Double-stim"
+msgstr ""
+
+#: brainworkshop.py:994
+msgid "Triple-stim"
+msgstr ""
+
+#: brainworkshop.py:994
+msgid "Quadruple-stim"
+msgstr ""
+
+#: brainworkshop.py:1198
+#, python-format
+msgid ""
+"Error parsing stats file\n"
+" %s"
+msgstr ""
+
+#: brainworkshop.py:1200
+msgid "Please fix, delete or rename the stats file."
+msgstr ""
+
+#: brainworkshop.py:1295
+msgid " N-Back"
+msgstr ""
+
+#: brainworkshop.py:1304
+msgid ""
+"G: Return to Main Screen\n"
+"\n"
+"N: Next Game Type"
+msgstr ""
+
+#: brainworkshop.py:1318
+msgid "Date"
+msgstr ""
+
+#: brainworkshop.py:1324
+msgid "Maximum"
+msgstr ""
+
+#: brainworkshop.py:1330
+msgid "Average"
+msgstr ""
+
+#: brainworkshop.py:1336
+msgid "N-Back"
+msgstr ""
+
+#: brainworkshop.py:1345
+msgid "Insufficient data: two days needed"
+msgstr ""
+
+#: brainworkshop.py:1468
+msgid "Position: "
+msgstr ""
+
+#: brainworkshop.py:1468
+msgid "Position 2: "
+msgstr ""
+
+#: brainworkshop.py:1469
+msgid "Position 3: "
+msgstr ""
+
+#: brainworkshop.py:1469
+msgid "Position 4: "
+msgstr ""
+
+#: brainworkshop.py:1470
+msgid "Color/Image 1: "
+msgstr ""
+
+#: brainworkshop.py:1470
+msgid "Color/Image 2: "
+msgstr ""
+
+#: brainworkshop.py:1471
+msgid "Color/Image 3: "
+msgstr ""
+
+#: brainworkshop.py:1471
+msgid "Color/Image 4: "
+msgstr ""
+
+#: brainworkshop.py:1472
+msgid "Vis & nvis: "
+msgstr ""
+
+#: brainworkshop.py:1472
+msgid "Vis & n-sound: "
+msgstr ""
+
+#: brainworkshop.py:1473
+msgid "Sound & n-vis: "
+msgstr ""
+
+#: brainworkshop.py:1473
+msgid "Sound: "
+msgstr ""
+
+#: brainworkshop.py:1474
+msgid "Color: "
+msgstr ""
+
+#: brainworkshop.py:1474
+msgid "Image: "
+msgstr ""
+
+#: brainworkshop.py:1475
+msgid "Arithmetic: "
+msgstr ""
+
+#: brainworkshop.py:1475
+msgid "Sound2: "
+msgstr ""
+
+#: brainworkshop.py:1476
+msgid "Last 50 rounds:   "
+msgstr ""
+
+#: brainworkshop.py:1588
+msgid "Esc: cancel     Space: modify option     Enter: apply"
+msgstr ""
+
+#: brainworkshop.py:1636
+msgid "Yes"
+msgstr ""
+
+#: brainworkshop.py:1636
+msgid "No"
+msgstr ""
+
+#: brainworkshop.py:1740 brainworkshop.py:1753
+msgid "New user"
+msgstr ""
+
+#: brainworkshop.py:1743
+msgid "Please select your user profile"
+msgstr ""
+
+#: brainworkshop.py:1754
+msgid "Enter new user name:"
+msgstr ""
+
+#: brainworkshop.py:1766
+msgid "Configuration"
+msgstr ""
+
+#: brainworkshop.py:1773
+#, python-format
+msgid "Use %s"
+msgstr ""
+
+#: brainworkshop.py:1774
+msgid "Use position"
+msgstr ""
+
+#: brainworkshop.py:1785
+msgid "Combination N-back mode"
+msgstr ""
+
+#: brainworkshop.py:1786
+msgid "Use variable N-Back levels"
+msgstr ""
+
+#: brainworkshop.py:1787
+msgid "Crab-back mode (reverse order of sets of N stimuli)"
+msgstr ""
+
+#: brainworkshop.py:1788
+msgid "Simultaneous visual stimuli"
+msgstr ""
+
+#: brainworkshop.py:1789
+msgid "Simultaneous stimuli differentiated by"
+msgstr ""
+
+#: brainworkshop.py:1790
+msgid "Interference (tricky stimulus generation)"
+msgstr ""
+
+#: brainworkshop.py:1809
+msgid "Choose your game mode"
+msgstr ""
+
+#: brainworkshop.py:1824
+msgid "An invalid mode has been selected."
+msgstr ""
+
+#: brainworkshop.py:1934
+msgid "Choose images to use for the Image n-back tasks."
+msgstr ""
+
+#: brainworkshop.py:1976
+#, python-format
+msgid "Use sound set '%s' for channel %s"
+msgstr ""
+
+#: brainworkshop.py:1979
+msgid "Choose sound sets to Sound n-back tasks."
+msgstr ""
+
+#: brainworkshop.py:2302
+msgid "An update is available ("
+msgstr ""
+
+#: brainworkshop.py:2304
+msgid "). Press W to open web site"
+msgstr ""
+
+#: brainworkshop.py:2324
+msgid "Jaeggi mode: "
+msgstr ""
+
+#: brainworkshop.py:2326
+msgid "Manual mode: "
+msgstr ""
+
+#: brainworkshop.py:2329 brainworkshop.py:2779
+msgid "V. "
+msgstr ""
+
+#: brainworkshop.py:2331 brainworkshop.py:2781
+msgid "-Back"
+msgstr ""
+
+#: brainworkshop.py:2354
+msgid "Please disable Jaeggi Mode to access additional modes."
+msgstr ""
+
+#: brainworkshop.py:2375
+msgid "P: Pause / Unpause\n"
+msgstr ""
+
+#: brainworkshop.py:2377
+msgid "F8: Hide / Reveal Text\n"
+msgstr ""
+
+#: brainworkshop.py:2379
+msgid "ESC: Cancel Session\n"
+msgstr ""
+
+#: brainworkshop.py:2382
+msgid "ESC: Exit"
+msgstr ""
+
+#: brainworkshop.py:2389
+msgid "J: Morse Code Reference\n"
+msgstr ""
+
+#: brainworkshop.py:2391 brainworkshop.py:2451
+msgid "H: Help / Tutorial\n"
+msgstr ""
+
+#: brainworkshop.py:2394
+msgid "F1: Decrease N-Back\n"
+msgstr ""
+
+#: brainworkshop.py:2395
+msgid "F2: Increase N-Back\n"
+msgstr ""
+
+#: brainworkshop.py:2397
+msgid "F3: Decrease Trials\n"
+msgstr ""
+
+#: brainworkshop.py:2398
+msgid "F4: Increase Trials\n"
+msgstr ""
+
+#: brainworkshop.py:2401
+msgid "F5: Decrease Speed\n"
+msgstr ""
+
+#: brainworkshop.py:2402
+msgid "F6: Increase Speed\n"
+msgstr ""
+
+#: brainworkshop.py:2404
+msgid "C: Choose Game Type\n"
+msgstr ""
+
+#: brainworkshop.py:2405
+msgid "S: Select Sounds\n"
+msgstr ""
+
+#: brainworkshop.py:2406
+msgid "I: Select Images\n"
+msgstr ""
+
+#: brainworkshop.py:2408
+msgid "M: Standard Mode\n"
+msgstr ""
+
+#: brainworkshop.py:2410
+msgid "M: Manual Mode\n"
+msgstr ""
+
+#: brainworkshop.py:2411 brainworkshop.py:2453
+msgid "D: Donate\n"
+msgstr ""
+
+#: brainworkshop.py:2413 brainworkshop.py:2450
+msgid "G: Daily Progress Graph\n"
+msgstr ""
+
+#: brainworkshop.py:2415
+msgid "W: Brain Workshop Web Site\n"
+msgstr ""
+
+#: brainworkshop.py:2417
+msgid "E: Saccadic Eye Exercise\n"
+msgstr ""
+
+#: brainworkshop.py:2419
+msgid "ESC: Exit\n"
+msgstr ""
+
+#: brainworkshop.py:2426
+msgid "Brain Workshop"
+msgstr ""
+
+#: brainworkshop.py:2445
+msgid "C: Choose Game Mode\n"
+msgstr ""
+
+#: brainworkshop.py:2446
+msgid "S: Choose Sounds\n"
+msgstr ""
+
+#: brainworkshop.py:2447
+msgid "I: Choose Images\n"
+msgstr ""
+
+#: brainworkshop.py:2449
+msgid "U: Choose User\n"
+msgstr ""
+
+#: brainworkshop.py:2454
+msgid "F: Go to Forum / Mailing List"
+msgstr ""
+
+#: brainworkshop.py:2464
+msgid "Press SPACE to enter the Workshop"
+msgstr ""
+
+#: brainworkshop.py:2526
+msgid "Perfect score! "
+msgstr ""
+
+#: brainworkshop.py:2527
+msgid "Awesome score! "
+msgstr ""
+
+#: brainworkshop.py:2528
+msgid "Great score! "
+msgstr ""
+
+#: brainworkshop.py:2529
+msgid "Not bad! "
+msgstr ""
+
+#: brainworkshop.py:2530
+msgid "Keep trying. You're getting there! "
+msgstr ""
+
+#: brainworkshop.py:2532
+msgid "N-Back increased"
+msgstr ""
+
+#: brainworkshop.py:2534
+msgid "N-Back decreased"
+msgstr ""
+
+#: brainworkshop.py:2560
+msgid " match"
+msgstr ""
+
+#: brainworkshop.py:2665
+msgid "Answer: "
+msgstr ""
+
+#: brainworkshop.py:2671
+msgid "correct"
+msgstr ""
+
+#: brainworkshop.py:2674
+msgid "incorrect"
+msgstr ""
+
+#: brainworkshop.py:2725
+#, python-format
+msgid ""
+"Session:\n"
+"%1.2f sec/trial\n"
+"%i+%i trials\n"
+"%i seconds"
+msgstr ""
+
+#: brainworkshop.py:2754
+#, python-format
+msgid ""
+"Thresholds:\n"
+"Raise level: ≥ %i%%\n"
+"Lower level: < %i%%"
+msgstr ""
+
+#: brainworkshop.py:2773
+msgid "Press SPACE to begin session #"
+msgstr ""
+
+#: brainworkshop.py:2902
+msgid "Correct-Errors:   "
+msgstr ""
+
+#: brainworkshop.py:2929
+#, python-format
+msgid "Lowest score: %i%%"
+msgstr ""
+
+#: brainworkshop.py:2932
+#, python-format
+msgid "Score: %i%%"
+msgstr ""
+
+#: brainworkshop.py:2952
+msgid "Today's Last 20:"
+msgstr ""
+
+#: brainworkshop.py:3030
+#, python-format
+msgid "%sNB average: %1.2f"
+msgstr ""
+
+#: brainworkshop.py:3046
+#, python-format
+msgid "Sessions today: %i"
+msgstr ""
+
+#: brainworkshop.py:3061
+#, python-format
+msgid "%i remaining"
+msgstr ""
+
+#: brainworkshop.py:3108
+#, python-format
+msgid ""
+"\r\n"
+"You have completed %i sessions with Brain Workshop.  Your perseverance "
+"suggests \\\r\n"
+"that you are finding some benefit from using the program.  If you have been "
+"\\\r\n"
+"benefiting from Brain Workshop, don't you think Brain Workshop should \\\r\n"
+"benefit from you?\r\n"
+msgstr ""
+
+#: brainworkshop.py:3114
+#, python-format
+msgid ""
+"\r\n"
+"Brain Workshop is and always will be 100% free.  Up until now, Brain "
+"Workshop \\\r\n"
+"as a project has succeeded because a very small number of people have each \\"
+"\r\n"
+"donated a huge amount of time to it.  It would be much better if the project "
+"\\\r\n"
+"were supported by small donations from a large number of people.  Do your \\"
+"\r\n"
+"part.  Donate.\r\n"
+msgstr ""
+
+#: brainworkshop.py:3121
+msgid ""
+"\r\n"
+"As of March 2010, Brain Workshop has been downloaded over 75,000 times in 20 "
+"\\\r\n"
+"months.  If each downloader donated an average of $1, we could afford to pay "
+"\\\r\n"
+"decent full- or part-time salaries (as appropriate) to all of our "
+"developers, \\\r\n"
+"and we would be able to buy advertising to help people learn about Brain \\"
+"\r\n"
+"Workshop.  With $2 per downloader, or with more downloaders, we could afford "
+"\\\r\n"
+"to fund controlled experiments and clinical trials on Brain Workshop and \\"
+"\r\n"
+"cognitive training.  Help us make that vision a reality.  Donate.\r\n"
+msgstr ""
+
+#: brainworkshop.py:3130
+msgid ""
+"\r\n"
+"The authors think it important that access to cognitive training \\\r\n"
+"technologies be available to everyone as freely as possible.  Like other \\"
+"\r\n"
+"forms of education, cognitive training should not be a luxury of the rich, \\"
+"\r\n"
+"since that would tend to exacerbate class disparity and conflict.  Charging "
+"\\\r\n"
+"money for cognitive training does exactly that.  The commercial competitors "
+"\\\r\n"
+"of Brain Workshop have two orders of magnitude more users than does Brain \\"
+"\r\n"
+"Workshop because they have far more resources for research, development, and "
+"\\\r\n"
+"marketing.  Help us bridge that gap and improve social equality of \\\r\n"
+"opportunity.  Donate.\r\n"
+msgstr ""
+
+#: brainworkshop.py:3141
+msgid ""
+"\r\n"
+"Brain Workshop has many known bugs and missing features.  The developers \\"
+"\r\n"
+"would like to fix these issues, but they also have to work in order to be \\"
+"\r\n"
+"able to pay for rent and food.  If you think the developers' time is better "
+"\\\r\n"
+"spent programming than serving coffee, then do something about it.  Donate."
+"\r\n"
+msgstr ""
+
+#: brainworkshop.py:3147
+msgid ""
+"\r\n"
+"Press SPACE to continue, or press D to donate now.\r\n"
+msgstr ""
+
+#: brainworkshop.py:3266
+#, python-format
+msgid ""
+"Error parsing stats file\n"
+"%s"
+msgstr ""
+
+#: brainworkshop.py:3268
+msgid ""
+"\n"
+"Please fix, delete or rename the stats file."
+msgstr ""
+
+#: brainworkshop.py:3436
+#, python-format
+msgid ""
+"Error writing to stats file\n"
+"%s"
+msgstr ""
+
+#: brainworkshop.py:3438
+msgid ""
+"\n"
+"Please check file and directory permissions."
+msgstr ""
+
+#: brainworkshop.py:708
+msgid "Error: unable to load pyglet.  \\\r"
+msgstr ""
