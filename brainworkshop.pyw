@@ -57,7 +57,22 @@ TIMEOUT_SILENT = 3
 TICKS_MIN = 3
 TICKS_MAX = 50
 TICK_DURATION = 0.1
-                                           
+
+def from_top_edge(from_edge, window_height):
+    return window_height - (from_edge * window_height/684)
+
+def from_bottom_edge(from_edge, window_height):
+    return from_edge * (window_height/684)
+
+def from_right_edge(from_edge, window_width):
+    return window_width - (from_edge * window_width/912)
+
+def calc_fontsize(size):
+    return size * (cfg.WINDOW_WIDTH/912)
+
+def calc_width(from_edge):
+    window.width + (from_edge * window.width/912)
+
 # some functions to assist in path determination
 def main_is_frozen():
     return (hasattr(sys, "frozen") or # new py2exe
@@ -577,7 +592,7 @@ class Message:
                             batch=self.batch,
                             multiline=True,
                             width=(4*window.width)/5,
-                            font_size=(14*cfg.WINDOW_WIDTH/912),
+                            font_size=calc_fontsize(14),
                             x=window.width//2, y=window.height//2,
                             anchor_x='center', anchor_y='center')
         window.push_handlers(self.on_key_press, self.on_draw)
@@ -1475,38 +1490,38 @@ class Graph:
             _('G: Return to Main Screen\n\nN: Next Game Type'),
             batch=self.batch,
             multiline = True, width = 300,
-            font_size=(9*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(9),
             color=cfg.COLOR_TEXT,
             x=10, y=window.height - 10,
             anchor_x='left', anchor_y='top')
 
         pyglet.text.Label(graph_title,
             batch=self.batch,
-            font_size=(18*cfg.WINDOW_WIDTH/912), bold=True, color=cfg.COLOR_TEXT,
+            font_size=calc_fontsize(18), bold=True, color=cfg.COLOR_TEXT,
             x = center_x, y = top + 60,
             anchor_x = 'center', anchor_y = 'center')
         
         pyglet.text.Label(_('Date'),
             batch=self.batch,
-            font_size=(12*cfg.WINDOW_WIDTH/912), bold=True, color=cfg.COLOR_TEXT,
+            font_size=calc_fontsize(12), bold=True, color=cfg.COLOR_TEXT,
             x = center_x, y = bottom - 80,
             anchor_x = 'center', anchor_y = 'center')
 
         pyglet.text.Label(_('Maximum'), width=1,
             batch=self.batch,
-            font_size=(12*cfg.WINDOW_WIDTH/912), bold=True, color=linecolor2+(255,),
+            font_size=calc_fontsize(12), bold=True, color=linecolor2+(255,),
             x = left - 60, y = center_y + 50,
             anchor_x = 'right', anchor_y = 'center')
         
         pyglet.text.Label(_('Average'), width=1,
             batch=self.batch,
-            font_size=(12*cfg.WINDOW_WIDTH/912), bold=True, color=linecolor+(255,),
+            font_size=calc_fontsize(12), bold=True, color=linecolor+(255,),
             x = left - 60, y = center_y + 25,
             anchor_x = 'right', anchor_y = 'center')
 
         pyglet.text.Label(_('Score'), width=1,
         batch=self.batch,
-        font_size=(12*cfg.WINDOW_WIDTH/912), bold=True, color=cfg.COLOR_TEXT,
+        font_size=calc_fontsize(12), bold=True, color=cfg.COLOR_TEXT,
         x = left - 60, y = center_y,
         anchor_x = 'right', anchor_y = 'center')
                 
@@ -1515,7 +1530,7 @@ class Graph:
         if len(dates) < 2:
             pyglet.text.Label(_('Insufficient data: two days needed'),
                 batch=self.batch,
-                font_size=(12*cfg.WINDOW_WIDTH/912), bold = True, color = axiscolor + (255,),
+                font_size=calc_fontsize(12), bold = True, color = axiscolor + (255,),
                 x = center_x, y = center_y,
                 anchor_x = 'center', anchor_y = 'center')
             return
@@ -1566,7 +1581,7 @@ class Graph:
             if not index % (skip_x + 1):
                 pyglet.text.Label(datestring, multiline=True, width=12,
                     batch=self.batch,
-                    font_size=(8*cfg.WINDOW_WIDTH/912), bold=False, color=cfg.COLOR_TEXT,
+                    font_size=calc_fontsize(8), bold=False, color=cfg.COLOR_TEXT,
                     x=x, y=bottom - 15,
                     anchor_x='center', anchor_y='top')
                 self.batch.add(2, GL_LINES, 
@@ -1585,7 +1600,7 @@ class Graph:
             y = int((y_marking - ymin)/(ymax - ymin) * height + bottom)
             pyglet.text.Label(str(round(y_marking, 2)),
                 batch=self.batch,
-                font_size=(10*cfg.WINDOW_WIDTH/912), bold=False, color=cfg.COLOR_TEXT,
+                font_size=calc_fontsize(10), bold=False, color=cfg.COLOR_TEXT,
                 x = left - 30, y = y + 1,
                 anchor_x = 'center', anchor_y = 'center')
             self.batch.add(2, GL_LINES, 
@@ -1651,7 +1666,7 @@ class Graph:
           
         pyglet.text.Label(''.join(str_list),
             batch=self.batch,
-            font_size=(11*cfg.WINDOW_WIDTH/912), bold = False, color = cfg.COLOR_TEXT,
+            font_size=calc_fontsize(11), bold = False, color = cfg.COLOR_TEXT,
             x = window.width // 2, y = 20,
             anchor_x = 'center', anchor_y = 'center')
 
@@ -2517,7 +2532,7 @@ class UpdateLabel:
             self.label = pyglet.text.Label(
                 '',
                 multiline = True, width = field.size//3 - 4, align='middle',
-                font_size=(11*cfg.WINDOW_WIDTH/912), bold=True,
+                font_size=calc_fontsize(11), bold=True,
                 color=(0, 128, 0, 255),
                 x=window.width//2, y=field.center_x + field.size // 6,
                 anchor_x='center', anchor_y='center', batch=batch)
@@ -2525,7 +2540,7 @@ class UpdateLabel:
             self.label = pyglet.text.Label(
                 '',
                 multiline = True, width = field.size//3 - 4, halign='middle',
-                font_size=(11*cfg.WINDOW_WIDTH/912), bold=True,
+                font_size=calc_fontsize(11), bold=True,
                 color=(0, 128, 0, 255),
                 x=window.width//2, y=field.center_x + field.size // 6,
                 anchor_x='center', anchor_y='center', batch=batch)
@@ -2544,7 +2559,7 @@ class GameModeLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(16*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(16),
             color=cfg.COLOR_TEXT,
             x=window.width//2, y=window.height - 20,
             anchor_x='center', anchor_y='center', batch=batch)
@@ -2578,7 +2593,7 @@ class JaeggiWarningLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(12*cfg.WINDOW_WIDTH/912), bold = True,
+            font_size=calc_fontsize(12), bold = True,
             color=(255, 0, 255, 255),
             x=window.width//2, y=field.center_x + field.size // 3 + 8,
             anchor_x='center', anchor_y='center', batch=batch)
@@ -2596,7 +2611,7 @@ class KeysListLabel:
         self.label = pyglet.text.Label(
             '',
             multiline = True, width = 300, bold = False,
-            font_size=(9*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(9),
             color=cfg.COLOR_TEXT,
             x = 10,
             anchor_x='left', anchor_y='top', batch=batch)
@@ -2659,13 +2674,13 @@ class TitleMessageLabel:
         self.label = pyglet.text.Label(
             _('Brain Workshop'),
             #multiline = True, width = window.width // 2,
-            font_size=(32*cfg.WINDOW_WIDTH/912), bold = True, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = window.height - 35,
+            font_size=calc_fontsize(32), bold = True, color = cfg.COLOR_TEXT,
+            x = window.width // 2, y = from_top_edge(35, window.height),
             anchor_x = 'center', anchor_y = 'center')
         self.label2 = pyglet.text.Label(
             _('Version ') + str(VERSION),
-            font_size=(14*cfg.WINDOW_WIDTH/912), bold = False, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = window.height - 75,
+            font_size=calc_fontsize(14), bold = False, color = cfg.COLOR_TEXT,
+            x = window.width // 2, y = from_top_edge(75, window.height),
             anchor_x = 'center', anchor_y = 'center')
         
     def draw(self):
@@ -2691,14 +2706,14 @@ class TitleKeysLabel:
         self.keys = pyglet.text.Label(
             ''.join(str_list),
             multiline = True, width = 260,
-            font_size=(12*cfg.WINDOW_WIDTH/912), bold = True, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = 230,
+            font_size=calc_fontsize(12), bold = True, color = cfg.COLOR_TEXT,
+            x = window.width // 2, y = from_bottom_edge(300, window.height),
             anchor_x = 'center', anchor_y = 'top')
-        
+
         self.space = pyglet.text.Label(
             _('Press SPACE to enter the Workshop'),
-            font_size=(20*cfg.WINDOW_WIDTH/912), bold = True, color = (32, 32, 255, 255),
-            x = window.width // 2, y = 35,
+            font_size=calc_fontsize(20), bold = True, color = (32, 32, 255, 255),
+            x = window.width // 2, y = from_bottom_edge(35, window.height),
             anchor_x = 'center', anchor_y = 'center')
     def draw(self):
         self.space.draw()
@@ -2710,7 +2725,7 @@ class LogoUpperLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             'Brain', # I think we shouldn't translate the program name.  Yes?
-            font_size=(11*cfg.WINDOW_WIDTH/912), bold = True,
+            font_size=calc_fontsize(11), bold = True,
             color=cfg.COLOR_TEXT,
             x=field.center_x, y=field.center_y + 30,
             anchor_x='center', anchor_y='center')
@@ -2722,7 +2737,7 @@ class LogoLowerLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             'Workshop',
-            font_size=(11*cfg.WINDOW_WIDTH/912), bold = True,
+            font_size=calc_fontsize(11), bold = True,
             color=cfg.COLOR_TEXT,
             x=field.center_x, y=field.center_y - 27,
             anchor_x='center', anchor_y='center')
@@ -2734,7 +2749,7 @@ class PausedLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(14*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(14),
             color=(64, 64, 255, 255),
             x=field.center_x, y=field.center_y,
             anchor_x='center', anchor_y='center', batch=batch)
@@ -2750,7 +2765,7 @@ class CongratsLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(14*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(14),
             color=(255, 32, 32, 255),
             x=field.center_x, y=window.height - 47,
             anchor_x='center', anchor_y='center', batch=batch)
@@ -2802,10 +2817,10 @@ class FeedbackLabel:
 
         if total < 4:
             self.text += _(' match')
-            font_size=(16*cfg.WINDOW_WIDTH/912)
-        elif total < 5: font_size=(14*cfg.WINDOW_WIDTH/912)
-        elif total < 6: font_size=(13*cfg.WINDOW_WIDTH/912)
-        else:           font_size=(11*cfg.WINDOW_WIDTH/912) 
+            font_size=calc_fontsize(16)
+        elif total < 5: font_size=calc_fontsize(14)
+        elif total < 6: font_size=calc_fontsize(13)
+        else:           font_size=calc_fontsize(11) 
                 
         self.label = pyglet.text.Label(
             text=self.text,
@@ -2893,7 +2908,7 @@ class ArithmeticAnswerLabel:
         self.decimal = False
         self.label = pyglet.text.Label(
             '',
-            x=window.width/2 - 40, y=30,
+            x=window.width/2 - 40, y=from_bottom_edge(30, window.height),
             anchor_x='left', anchor_y='center', batch=batch)
         self.update()
     def update(self):
@@ -2904,7 +2919,7 @@ class ArithmeticAnswerLabel:
             self.label.text = ''
             return
         
-        self.label.font_size=(16*cfg.WINDOW_WIDTH/912)
+        self.label.font_size=calc_fontsize(16)
         str_list = []
         str_list.append(_('Answer: '))
         str_list.append(str(self.parse_answer()))
@@ -2958,7 +2973,7 @@ class SessionInfoLabel:
         self.label = pyglet.text.Label(
             '',
             multiline = True, width = 128,
-            font_size=(11*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(11),
             color=cfg.COLOR_TEXT,
             x=20, y=field.center_y - 145,
             anchor_x='left', anchor_y='top', batch=batch)
@@ -2987,7 +3002,7 @@ class ThresholdLabel:
         self.label = pyglet.text.Label(
             '',
             multiline = True, width = 155,
-            font_size=(11*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(11),
             color=cfg.COLOR_TEXT,
             x=window.width - 20, y=field.center_y - 145,
             anchor_x='right', anchor_y='top', batch=batch)
@@ -3004,7 +3019,7 @@ class SpaceLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(16*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(16),
             bold=True,
             color=(32, 32, 255, 255),
             x=window.width//2, y=62,
@@ -3087,9 +3102,9 @@ class AnalysisLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(14*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(14),
             color=cfg.COLOR_TEXT,
-            x=window.width//2, y=92,
+            x=window.width//2, y=from_bottom_edge(92, window.height),
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
         
@@ -3185,11 +3200,11 @@ class ChartTitleLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(10*cfg.WINDOW_WIDTH/912),
+            font_size=calc_fontsize(10),
             bold = True,
             color = cfg.COLOR_TEXT,
-            x = window.width - 10,
-            y = window.height - 85,
+            x = from_right_edge(10, window.width),
+            y = from_top_edge(90, window.height),
             anchor_x = 'right',
             anchor_y = 'top',
             batch = batch)
@@ -3208,7 +3223,7 @@ class ChartLabel:
         self.line_spacing = 15
         self.column_spacing_12 = 30
         self.column_spacing_23 = 70
-        self.font_size=(10*cfg.WINDOW_WIDTH/912)
+        self.font_size=calc_fontsize(10)
         self.color_normal = (128, 128, 128, 255)
         self.color_advance = (0, 160, 0, 255)
         self.color_fallback = (160, 0, 0, 255)
@@ -3262,9 +3277,9 @@ class AverageLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(10*cfg.WINDOW_WIDTH/912), bold=False,
+            font_size=calc_fontsize(10), bold=False,
             color=cfg.COLOR_TEXT,
-            x=window.width - 10, y=window.height-55,
+            x=from_right_edge(10, window.width), y=from_top_edge(75, window.height),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -3283,9 +3298,9 @@ class TodayLabel:
     def __init__(self):
         self.labelTitle = pyglet.text.Label(
             '',
-	    font_size=(9*cfg.WINDOW_WIDTH/912),
+	    font_size=calc_fontsize(9),
 	    color = cfg.COLOR_TEXT,
-            x=window.width, y=window.height-5,
+            x=window.width, y=from_top_edge(5, window.height),
             anchor_x='right', anchor_y='top',width=280, multiline=True, batch=batch)
         self.update()
     def update(self):
@@ -3303,9 +3318,9 @@ class TrialsRemainingLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            font_size=(12*cfg.WINDOW_WIDTH/912), bold = True,
+            font_size=calc_fontsize(12), bold = True,
             color=cfg.COLOR_TEXT,
-            x=window.width - 10, y=window.height-5,
+            x=from_right_edge(10, window.width), y=from_top_edge(5, window.height),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -3432,7 +3447,7 @@ Press SPACE to continue, or press D to donate now.
                             batch=self.batch,
                             multiline=True,
                             width=(4*window.width)/5,
-                            font_size=(14*cfg.WINDOW_WIDTH/912),
+                            font_size=calc_fontsize(14),
                             x=window.width//2, y=window.height//2,
                             anchor_x='center', anchor_y='center')
         window.push_handlers(self.on_key_press, self.on_draw)
