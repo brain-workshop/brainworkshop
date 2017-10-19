@@ -2767,7 +2767,7 @@ class CongratsLabel:
             '',
             font_size=calc_fontsize(14),
             color=(255, 32, 32, 255),
-            x=field.center_x, y=window.height - 47,
+            x=field.center_x, y=from_top_edge(47, window.height),
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
     def update(self, show=False, advance=False, fallback=False, awesome=False, great=False, good=False, perfect = False):
