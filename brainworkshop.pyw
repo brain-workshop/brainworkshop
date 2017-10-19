@@ -2511,13 +2511,24 @@ class Circles:
 # this is the update notification
 class UpdateLabel:
     def __init__(self):
-        self.label = pyglet.text.Label(
-            '',
-            multiline = True, width = field.size//3 - 4, halign='middle',
-            font_size=11, bold=True,
-            color=(0, 128, 0, 255),
-            x=window.width//2, y=field.center_x + field.size // 6,
-            anchor_x='center', anchor_y='center', batch=batch)
+        # Some versions don't accept the align argument and some don't accept halign.
+        # So try with one and if that fails use the other.
+        try:
+            self.label = pyglet.text.Label(
+                '',
+                multiline = True, width = field.size//3 - 4, align='middle',
+                font_size=11, bold=True,
+                color=(0, 128, 0, 255),
+                x=window.width//2, y=field.center_x + field.size // 6,
+                anchor_x='center', anchor_y='center', batch=batch)
+        except:
+            self.label = pyglet.text.Label(
+                '',
+                multiline = True, width = field.size//3 - 4, halign='middle',
+                font_size=11, bold=True,
+                color=(0, 128, 0, 255),
+                x=window.width//2, y=field.center_x + field.size // 6,
+                anchor_x='center', anchor_y='center', batch=batch)
         self.update()
     def update(self):
         if not mode.started and update_available:
