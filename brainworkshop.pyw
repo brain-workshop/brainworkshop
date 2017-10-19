@@ -3204,7 +3204,7 @@ class ChartTitleLabel:
             bold = True,
             color = cfg.COLOR_TEXT,
             x = from_right_edge(10, window.width),
-            y = from_top_edge(90, window.height),
+            y = from_top_edge(85, window.height),
             anchor_x = 'right',
             anchor_y = 'top',
             batch = batch)
@@ -3218,11 +3218,11 @@ class ChartTitleLabel:
 # this controls the session history chart.
 class ChartLabel:
     def __init__(self):
-        self.start_x = window.width - 140
-        self.start_y = window.height - 105
-        self.line_spacing = 15
-        self.column_spacing_12 = 30
-        self.column_spacing_23 = 70
+        self.start_x = from_right_edge(140, window.width)
+        self.start_y = from_top_edge(105, window.height)
+        self.line_spacing = calc_fontsize(15)
+        self.column_spacing_12 = calc_fontsize(30)
+        self.column_spacing_23 = calc_fontsize(70)
         self.font_size=calc_fontsize(10)
         self.color_normal = (128, 128, 128, 255)
         self.color_advance = (0, 160, 0, 255)
@@ -3279,7 +3279,7 @@ class AverageLabel:
             '',
             font_size=calc_fontsize(10), bold=False,
             color=cfg.COLOR_TEXT,
-            x=from_right_edge(10, window.width), y=from_top_edge(75, window.height),
+            x=from_right_edge(10, window.width), y=from_top_edge(70, window.height),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
