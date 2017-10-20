@@ -2710,13 +2710,13 @@ class TitleKeysLabel:
             ''.join(str_list),
             multiline = True, width = scale_to_width(260, window.width),
             font_size=calc_fontsize(12), bold = True, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = from_bottom_edge(300, window.height),
+            x = window.width // 2, y = from_bottom_edge(230, window.height),
             anchor_x = 'center', anchor_y = 'top')
 
         self.space = pyglet.text.Label(
             _('Press SPACE to enter the Workshop'),
             font_size=calc_fontsize(20), bold = True, color = (32, 32, 255, 255),
-            x = window.width // 2, y = from_bottom_edge(28, window.height),
+            x = window.width // 2, y = from_bottom_edge(35, window.height),
             anchor_x = 'center', anchor_y = 'center')
     def draw(self):
         self.space.draw()
