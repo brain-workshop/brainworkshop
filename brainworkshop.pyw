@@ -58,19 +58,19 @@ TICKS_MIN = 3
 TICKS_MAX = 50
 TICK_DURATION = 0.1
 
-def from_top_edge(from_edge, window_height):
-    return window_height - (from_edge * window.height/684)
+def from_top_edge(from_edge):
+    return window.height - (from_edge * window.height/684)
 
-def from_bottom_edge(from_edge, window_height):
+def from_bottom_edge(from_edge):
     return from_edge * (window.height/684)
 
-def from_right_edge(from_edge, window_width):
-    return window_width - (from_edge * window.width/912)
+def from_right_edge(from_edge):
+    return window.width - (from_edge * window.width/912)
 
-def from_left_edge(from_edge, window_width):
+def from_left_edge(from_edge):
     return from_edge * window.width/912
 
-def scale_to_width(fraction, window_width):
+def scale_to_width(fraction):
     return fraction * window.width/912
 
 def scale_to_height(fraction):
@@ -1498,7 +1498,7 @@ class Graph:
             multiline = True, width = 300,
             font_size=calc_fontsize(9),
             color=cfg.COLOR_TEXT,
-            x=from_left_edge(10, window.width), y=from_top_edge(10, window.height),
+            x=from_left_edge(10), y=from_top_edge(10),
             anchor_x='left', anchor_y='top')
 
         pyglet.text.Label(graph_title,
@@ -2616,16 +2616,16 @@ class KeysListLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            multiline = True, width = scale_to_width(300, window.width), bold = False,
+            multiline = True, width = scale_to_width(300), bold = False,
             font_size=calc_fontsize(9),
             color=cfg.COLOR_TEXT,
-            x = scale_to_width(10, window.width),
+            x = scale_to_width(10),
             anchor_x='left', anchor_y='top', batch=batch)
         self.update()
     def update(self):
         str_list = []
         if mode.started:
-            self.label.y = from_top_edge(10, window.height)
+            self.label.y = from_top_edge(10)
             if not mode.hide_text:
                 str_list.append(_('P: Pause / Unpause\n'))
                 str_list.append('\n')
@@ -2633,13 +2633,13 @@ class KeysListLabel:
                 str_list.append('\n')                
                 str_list.append(_('ESC: Cancel Session\n'))
         elif CLINICAL_MODE:
-            self.label.y = from_top_edge(10, window.height)
+            self.label.y = from_top_edge(10)
             str_list.append(_('ESC: Exit'))
         else:
             if mode.manual or cfg.JAEGGI_MODE:
-                self.label.y = from_top_edge(10, window.height)
+                self.label.y = from_top_edge(10)
             else:
-                self.label.y = from_top_edge(40, window.height)
+                self.label.y = from_top_edge(40)
             if 'morse' in cfg.AUDIO1_SETS or 'morse' in cfg.AUDIO2_SETS:
                 str_list.append(_('J: Morse Code Reference\n'))
                 str_list.append('\n')
@@ -2681,12 +2681,12 @@ class TitleMessageLabel:
             _('Brain Workshop'),
             #multiline = True, width = window.width // 2,
             font_size=calc_fontsize(32), bold = True, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = from_top_edge(35, window.height),
+            x = window.width // 2, y = from_top_edge(35),
             anchor_x = 'center', anchor_y = 'center')
         self.label2 = pyglet.text.Label(
             _('Version ') + str(VERSION),
             font_size=calc_fontsize(14), bold = False, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = from_top_edge(75, window.height),
+            x = window.width // 2, y = from_top_edge(75),
             anchor_x = 'center', anchor_y = 'center')
         
     def draw(self):
@@ -2711,15 +2711,15 @@ class TitleKeysLabel:
         
         self.keys = pyglet.text.Label(
             ''.join(str_list),
-            multiline = True, width = scale_to_width(260, window.width),
+            multiline = True, width = scale_to_width(260),
             font_size=calc_fontsize(12), bold = True, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = from_bottom_edge(230, window.height),
+            x = window.width // 2, y = from_bottom_edge(230),
             anchor_x = 'center', anchor_y = 'top')
 
         self.space = pyglet.text.Label(
             _('Press SPACE to enter the Workshop'),
             font_size=calc_fontsize(20), bold = True, color = (32, 32, 255, 255),
-            x = window.width // 2, y = from_bottom_edge(35, window.height),
+            x = window.width // 2, y = from_bottom_edge(35),
             anchor_x = 'center', anchor_y = 'center')
     def draw(self):
         self.space.draw()
@@ -2773,7 +2773,7 @@ class CongratsLabel:
             '',
             font_size=calc_fontsize(14),
             color=(255, 32, 32, 255),
-            x=field.center_x, y=from_top_edge(47, window.height),
+            x=field.center_x, y=from_top_edge(47),
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
     def update(self, show=False, advance=False, fallback=False, awesome=False, great=False, good=False, perfect = False):
@@ -2914,7 +2914,7 @@ class ArithmeticAnswerLabel:
         self.decimal = False
         self.label = pyglet.text.Label(
             '',
-            x=window.width/2 - 40, y=from_bottom_edge(30, window.height),
+            x=window.width/2 - 40, y=from_bottom_edge(30),
             anchor_x='left', anchor_y='center', batch=batch)
         self.update()
     def update(self):
@@ -3010,7 +3010,7 @@ class ThresholdLabel:
             multiline = True, width = 155,
             font_size=calc_fontsize(11),
             color=cfg.COLOR_TEXT,
-            x=from_right_edge(20, window.width), y=field.center_y - scale_to_height(145),
+            x=from_right_edge(20), y=field.center_y - scale_to_height(145),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -3028,7 +3028,7 @@ class SpaceLabel:
             font_size=calc_fontsize(16),
             bold=True,
             color=(32, 32, 255, 255),
-            x=window.width//2, y=from_bottom_edge(62, window.height),
+            x=window.width//2, y=from_bottom_edge(62),
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
     def update(self):
@@ -3110,7 +3110,7 @@ class AnalysisLabel:
             '',
             font_size=calc_fontsize(14),
             color=cfg.COLOR_TEXT,
-            x=window.width//2, y=from_bottom_edge(92, window.height),
+            x=window.width//2, y=from_bottom_edge(92),
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
         
@@ -3209,8 +3209,8 @@ class ChartTitleLabel:
             font_size=calc_fontsize(10),
             bold = True,
             color = cfg.COLOR_TEXT,
-            x = from_right_edge(10, window.width),
-            y = from_top_edge(85, window.height),
+            x = from_right_edge(10),
+            y = from_top_edge(85),
             anchor_x = 'right',
             anchor_y = 'top',
             batch = batch)
@@ -3224,8 +3224,8 @@ class ChartTitleLabel:
 # this controls the session history chart.
 class ChartLabel:
     def __init__(self):
-        self.start_x = from_right_edge(140, window.width)
-        self.start_y = from_top_edge(105, window.height)
+        self.start_x = from_right_edge(140)
+        self.start_y = from_top_edge(105)
         self.line_spacing = calc_fontsize(15)
         self.column_spacing_12 = calc_fontsize(30)
         self.column_spacing_23 = calc_fontsize(70)
@@ -3285,7 +3285,7 @@ class AverageLabel:
             '',
             font_size=calc_fontsize(10), bold=False,
             color=cfg.COLOR_TEXT,
-            x=from_right_edge(10, window.width), y=from_top_edge(70, window.height),
+            x=from_right_edge(10), y=from_top_edge(70),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -3306,7 +3306,7 @@ class TodayLabel:
             '',
 	    font_size=calc_fontsize(9),
 	    color = cfg.COLOR_TEXT,
-            x=window.width, y=from_top_edge(5, window.height),
+            x=window.width, y=from_top_edge(5),
             anchor_x='right', anchor_y='top',width=280, multiline=True, batch=batch)
         self.update()
     def update(self):
@@ -3326,7 +3326,7 @@ class TrialsRemainingLabel:
             '',
             font_size=calc_fontsize(12), bold = True,
             color=cfg.COLOR_TEXT,
-            x=from_right_edge(10, window.width), y=from_top_edge(5, window.height),
+            x=from_right_edge(10), y=from_top_edge(5),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -4668,7 +4668,7 @@ def scale_brain(dt):
         brain_graphic.set_position(field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
 
-scale_brain(scale_to_width(1, cfg.WINDOW_WIDTH))
+scale_brain(scale_to_width(1))
 # If we had messages queued during loading (like from moving our data files), display them now
 messagequeue.reverse()
 for msg in messagequeue:
