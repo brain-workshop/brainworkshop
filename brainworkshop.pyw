@@ -122,7 +122,7 @@ def edit_config_ini():
         cmd = 'open'
     else:
         cmd = 'xdg-open'
-    print (cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"')
+    print(cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"')
     window.on_close()
     import subprocess
     subprocess.call((cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"'), shell=True)
@@ -588,7 +588,7 @@ messagequeue = [] # add messages generated during loading here
 class Message:
     def __init__(self, msg):
         if not 'window' in globals():
-            print msg                # dump it to console just in case
+            print(msg)               # dump it to console just in case
             messagequeue.append(msg) # but we'll display this later
             return
         self.batch = pyglet.graphics.Batch()
@@ -892,8 +892,8 @@ def test_avbin():
         cfg.USE_MUSIC = False
         if pyglet.version >= '1.2':  
             pyglet.media.have_avbin = False
-        print _('AVBin not detected. Music disabled.')
-        print _('Download AVBin from: http://code.google.com/p/avbin/')
+        print( _('AVBin not detected. Music disabled.'))
+        print( _('Download AVBin from: http://code.google.com/p/avbin/'))
 
     except: # WindowsError
         cfg.USE_MUSIC = False
@@ -1012,7 +1012,7 @@ def default_ticks(mode):
         bonus = ((mode & 128)/128) * cfg.BONUS_TICKS_CRAB
         if mode & 768:
             bonus += cfg['BONUS_TICKS_MULTI_%i' % ((mode & 768)/256+1)]
-        if DEBUG: print "Adding a bonus of %i ticks for mode %i" % (bonus, mode)
+        if DEBUG: print("Adding a bonus of %i ticks for mode %i" % (bonus, mode))
         return bonus + default_ticks(mode % 128)
     else:
         return cfg.TICKS_DEFAULT
@@ -1312,7 +1312,7 @@ class Graph:
     
     def next_style(self):
         self.style = (self.style + 1) % len(self.styles)
-        print "style = %s" % self.styles[self.style] # fixme:  change the labels
+        print("style = %s" % self.styles[self.style]) # fixme:  change the labels
         self.parse_stats()
 
     def reset_dictionaries(self):
@@ -1483,7 +1483,7 @@ class Graph:
         bottom = center_y - height // 2
         try:
             dictionary = self.dictionaries[self.graph]
-        except: print self.graph
+        except: print(self.graph)
         graph_title = mode.long_mode_names[self.graph] + _(' N-Back')
         
         self.batch.add(3, GL_LINE_STRIP, 
@@ -1904,7 +1904,7 @@ class Menu:
         self.update_labels()
         
     def choose(self, k, i): # override this method in subclasses
-        print "Thank you for beta-testing our software."
+        print("Thank you for beta-testing our software.")
         
     def close(self):
         return window.remove_handlers(self.on_key_press, self.on_text, 
@@ -2085,7 +2085,7 @@ class GameSelect(Menu):
                 self.newmode = candidate
             else: self.newmode = False
         else:
-            if DEBUG: print candidates, base
+            if DEBUG: print(candidates, base)
             self.newmode = False 
 
     def close(self):
@@ -4083,7 +4083,7 @@ def generate_stimulus():
                         back = real_back + i
                 if back == real_back: back = None # if none of the above worked
                 elif DEBUG:
-                    print 'Forcing interference for %s' % current
+                    print('Forcing interference for %s' % current)
             
             if back:            
                 nback_trial = mode.trial_number - back - 1
@@ -4095,12 +4095,12 @@ def generate_stimulus():
                     if matching_stim in conflict_positions: # swap 'em
                         i = positions.index(matching_stim)
                         if DEBUG:
-                            print "moving position%i from %i to %i for %s" % (i+1, positions[i], mode.current_stim[current], current)
+                            print("moving position%i from %i to %i for %s" % (i+1, positions[i], mode.current_stim[current], current))
                         mode.current_stim['position' + `i+1`] = mode.current_stim[current]
                         positions[i] = mode.current_stim[current]
                     positions[int(current[-1])-1] = matching_stim
                 if DEBUG:
-                    print "setting %s to %i" % (current, matching_stim)
+                    print("setting %s to %i" % (current, matching_stim))
                 mode.current_stim[current] = matching_stim
 
         if multi > 1:
@@ -4178,10 +4178,10 @@ def generate_stimulus():
     else:
         variable = 0
     if DEBUG and multi < 2:
-        print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+        print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
                 (mode.trial_number, mode.current_stim['position1'], mode.current_stim['audio'], 
                  mode.current_stim['color'], mode.current_stim['vis'], \
-                 mode.current_stim['number'], mode.current_operation, variable)
+                 mode.current_stim['number'], mode.current_operation, variable))
     if multi == 1:
         visuals[0].spawn(mode.current_stim['position1'], mode.current_stim['color'], 
                          mode.current_stim['vis'], mode.current_stim['number'], 
@@ -4190,19 +4190,19 @@ def generate_stimulus():
         for i in range(1, multi+1):
             if cfg.MULTI_MODE == 'color':
                 if DEBUG:
-                    print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+                    print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
                         (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
                         cfg.VISUAL_COLORS[i-1], mode.current_stim['vis'+`i`], \
-                        mode.current_stim['number'], mode.current_operation, variable)
+                        mode.current_stim['number'], mode.current_operation, variable))
                 visuals[i-1].spawn(mode.current_stim['position'+`i`], cfg.VISUAL_COLORS[i-1], 
                                    mode.current_stim['vis'+`i`], mode.current_stim['number'], 
                                    mode.current_operation, variable)
             else:
                 if DEBUG:
-                    print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+                    print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
                         (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
                         mode.current_stim['vis'+`i`], i, \
-                        mode.current_stim['number'], mode.current_operation, variable)
+                        mode.current_stim['number'], mode.current_operation, variable))
                 visuals[i-1].spawn(mode.current_stim['position'+`i`], mode.current_stim['vis'+`i`], 
                                    i,                            mode.current_stim['number'], 
                                    mode.current_operation, variable)
