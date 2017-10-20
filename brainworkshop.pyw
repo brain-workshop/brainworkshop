@@ -16,14 +16,24 @@
 
 VERSION = '4.8.4'
 
-import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback, datetime
-import cPickle as pickle
+import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime
+if sys.version_info >= (3,0):
+    import urllib, configparser as ConfigParser
+    from io import StringIO
+    import pickle
+else:
+    import urllib2 as urllib, ConfigParser, StringIO
+    import cPickle as pickle
+
 from decimal import Decimal
 from time import strftime
 from datetime import date
-
 import gettext
-gettext.install('messages', localedir='res/i18n', unicode=True)
+if sys.version_info >= (3,0):
+    # TODO check if this is right
+    gettext.install('messages', localedir='res/i18n')
+else:
+    gettext.install('messages', localedir='res/i18n', unicode=True)
 
 # Clinical mode?  Clinical mode sets cfg.JAEGGI_MODE = True, enforces a minimal user
 # interface, and saves results into a binary file (default 'logfile.dat') which
@@ -804,9 +814,9 @@ def update_check():
     global update_available
     global update_version
     socket.setdefaulttimeout(TIMEOUT_SILENT)
-    req = urllib2.Request(WEB_VERSION_CHECK)
+    req = urllib.Request(WEB_VERSION_CHECK)
     try:
-        response = urllib2.urlopen(req)
+        response = urllib.urlopen(req)
         version = response.readline().strip()
     except:
         return
