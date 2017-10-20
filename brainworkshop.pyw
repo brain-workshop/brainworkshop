@@ -1180,14 +1180,14 @@ class Mode:
                 nm = m | 256 * (n-1)               # newmode; 3xDNB = 2 | 512 = 514
                 self.flags[nm] = dict(self.flags[m]) # take a copy
                 self.flags[nm]['multi'] = n          
-                self.short_mode_names[nm] = `n` + 'x' + self.short_mode_names[m]
+                self.short_mode_names[nm] = repr(n) + 'x' + self.short_mode_names[m]
                 self.long_mode_names[nm] = s + ' ' + self.long_mode_names[m]
                 self.modalities[nm] = self.modalities[m][:] # take a copy ([:])
                 for i in range(2, n+1):
-                    self.modalities[nm].insert(i-1, 'position'+`i`)
+                    self.modalities[nm].insert(i-1, 'position'+repr(i))
                 if 'color' in self.modalities[m] or 'image' in self.modalities[m]:
                     for i in range(1, n+1):
-                        self.modalities[nm].insert(n+i-1, 'vis'+`i`)
+                        self.modalities[nm].insert(n+i-1, 'vis'+repr(i))
                 for ic in 'image', 'color':
                     if ic in self.modalities[nm]:
                         self.modalities[nm].remove(ic)
@@ -3991,8 +3991,8 @@ def generate_stimulus():
     # first, randomly generate all stimuli
     positions = random.sample(range(1,9), 4)   # sample without replacement
     for s, p in zip(range(1, 5), positions):
-        mode.current_stim['position' + `s`] = p
-        mode.current_stim['vis' + `s`] = random.randint(1, 8)
+        mode.current_stim['position' + repr(s)] = p
+        mode.current_stim['vis' + repr(s)] = random.randint(1, 8)
 
     #mode.current_stim['position1'] = random.randint(1, 8)
     mode.current_stim['color'] = random.randint(1, 8)
@@ -4096,7 +4096,7 @@ def generate_stimulus():
                         i = positions.index(matching_stim)
                         if DEBUG:
                             print("moving position%i from %i to %i for %s" % (i+1, positions[i], mode.current_stim[current], current))
-                        mode.current_stim['position' + `i+1`] = mode.current_stim[current]
+                        mode.current_stim['position' + repr(i+1)] = mode.current_stim[current]
                         positions[i] = mode.current_stim[current]
                     positions[int(current[-1])-1] = matching_stim
                 if DEBUG:
@@ -4110,9 +4110,9 @@ def generate_stimulus():
                     mod = 'vis'
                 offset = random.choice(range(1, multi))
                 for i in range(multi):
-                    mode.current_stim[mod + `i+1`] = stats.session[mod + `((i+offset)%multi) + 1`][mode.trial_number - real_back - 1]
+                    mode.current_stim[mod + repr(i+1)] = stats.session[mod + repr(((i+offset)%multi) + 1)][mode.trial_number - real_back - 1]
                     if mod == 'position':
-                        positions[i] = mode.current_stim[mod + `i+1`]
+                        positions[i] = mode.current_stim[mod + repr(i+1)]
 
         
     # set static stimuli according to mode.
@@ -4127,9 +4127,9 @@ def generate_stimulus():
     if multi > 1 and not 'vis1' in mode.modalities[mode.mode]:
         for i in range(1, 5):
             if cfg.MULTI_MODE == 'color':
-                mode.current_stim['vis'+`i`] = 0 # use squares
+                mode.current_stim['vis'+repr(i)] = 0 # use squares
             elif cfg.MULTI_MODE == 'image':
-                mode.current_stim['vis'+`i`] = cfg.VISUAL_COLORS[0]
+                mode.current_stim['vis'+repr(i)] = cfg.VISUAL_COLORS[0]
         
     # in jaeggi mode, set using the predetermined sequence.
     if cfg.JAEGGI_MODE:
@@ -4191,19 +4191,19 @@ def generate_stimulus():
             if cfg.MULTI_MODE == 'color':
                 if DEBUG:
                     print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
-                        (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
-                        cfg.VISUAL_COLORS[i-1], mode.current_stim['vis'+`i`], \
+                        (mode.trial_number, mode.current_stim['position' + repr(i)], mode.current_stim['audio'], 
+                        cfg.VISUAL_COLORS[i-1], mode.current_stim['vis'+repr(i)], \
                         mode.current_stim['number'], mode.current_operation, variable))
-                visuals[i-1].spawn(mode.current_stim['position'+`i`], cfg.VISUAL_COLORS[i-1], 
-                                   mode.current_stim['vis'+`i`], mode.current_stim['number'], 
+                visuals[i-1].spawn(mode.current_stim['position'+repr(i)], cfg.VISUAL_COLORS[i-1], 
+                                   mode.current_stim['vis'+repr(i)], mode.current_stim['number'], 
                                    mode.current_operation, variable)
             else:
                 if DEBUG:
                     print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
-                        (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'], 
-                        mode.current_stim['vis'+`i`], i, \
+                        (mode.trial_number, mode.current_stim['position' + repr(i)], mode.current_stim['audio'], 
+                        mode.current_stim['vis'+repr(i)], i, \
                         mode.current_stim['number'], mode.current_operation, variable))
-                visuals[i-1].spawn(mode.current_stim['position'+`i`], mode.current_stim['vis'+`i`], 
+                visuals[i-1].spawn(mode.current_stim['position'+repr(i)], mode.current_stim['vis'+repr(i)], 
                                    i,                            mode.current_stim['number'], 
                                    mode.current_operation, variable)
                 
