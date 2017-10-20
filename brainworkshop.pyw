@@ -59,22 +59,25 @@ TICKS_MAX = 50
 TICK_DURATION = 0.1
 
 def from_top_edge(from_edge, window_height):
-    return window_height - (from_edge * window_height/684)
+    return window_height - (from_edge * window.height/684)
 
 def from_bottom_edge(from_edge, window_height):
-    return from_edge * (window_height/684)
+    return from_edge * (window.height/684)
 
 def from_right_edge(from_edge, window_width):
-    return window_width - (from_edge * window_width/912)
+    return window_width - (from_edge * window.width/912)
 
 def from_left_edge(from_edge, window_width):
-    return from_edge * window_width/912
+    return from_edge * window.width/912
 
 def scale_to_width(fraction, window_width):
-    return fraction * window_width/912
+    return fraction * window.width/912
+
+def scale_to_height(fraction):
+    return fraction * window.height/684
 
 def calc_fontsize(size):
-    return size * (cfg.WINDOW_WIDTH/912)
+    return size * (window.width/912)
 
 # some functions to assist in path determination
 def main_is_frozen():
@@ -3007,7 +3010,7 @@ class ThresholdLabel:
             multiline = True, width = 155,
             font_size=calc_fontsize(11),
             color=cfg.COLOR_TEXT,
-            x=window.width - 20, y=field.center_y - 145,
+            x=from_right_edge(20, window.width), y=field.center_y - scale_to_height(145),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -3025,7 +3028,7 @@ class SpaceLabel:
             font_size=calc_fontsize(16),
             bold=True,
             color=(32, 32, 255, 255),
-            x=window.width//2, y=62,
+            x=window.width//2, y=from_bottom_edge(62, window.height),
             anchor_x='center', anchor_y='center', batch=batch)
         self.update()
     def update(self):
