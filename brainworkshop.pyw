@@ -67,11 +67,14 @@ def from_bottom_edge(from_edge, window_height):
 def from_right_edge(from_edge, window_width):
     return window_width - (from_edge * window_width/912)
 
+def from_left_edge(from_edge, window_width):
+    return from_edge * window_width/912
+
+def scale_to_width(fraction, window_width):
+    return fraction * window_width/912
+
 def calc_fontsize(size):
     return size * (cfg.WINDOW_WIDTH/912)
-
-def calc_width(from_edge):
-    window.width + (from_edge * window.width/912)
 
 # some functions to assist in path determination
 def main_is_frozen():
@@ -1492,7 +1495,7 @@ class Graph:
             multiline = True, width = 300,
             font_size=calc_fontsize(9),
             color=cfg.COLOR_TEXT,
-            x=10, y=window.height - 10,
+            x=from_left_edge(10, window.width), y=from_top_edge(10, window.height),
             anchor_x='left', anchor_y='top')
 
         pyglet.text.Label(graph_title,
@@ -1671,8 +1674,8 @@ class Graph:
             anchor_x = 'center', anchor_y = 'center')
 
 class TextInputScreen:
-    titlesize = 18
-    textsize = 16
+    titlesize = calc_fontsize(18)
+    textsize  = calc_fontsize(16)
     
     def __init__(self, title='', text='', callback=None, catch=''):
         self.titletext = title
@@ -1766,9 +1769,9 @@ class Menu:
     being a python callable which returns the new value for that option.
     
     """
-    titlesize = 18
-    choicesize = 12
-    footnotesize = 10
+    titlesize    = calc_fontsize(18)
+    choicesize   = calc_fontsize(12)
+    footnotesize = calc_fontsize(10)
     fontlist = ['Courier New', # try fixed width fonts first
                 'Monospace', 'Terminal', 'fixed', 'Fixed', 'Times New Roman', 
                 'Helvetica', 'Arial']
@@ -2610,16 +2613,16 @@ class KeysListLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            multiline = True, width = 300, bold = False,
+            multiline = True, width = scale_to_width(300, window.width), bold = False,
             font_size=calc_fontsize(9),
             color=cfg.COLOR_TEXT,
-            x = 10,
+            x = scale_to_width(10, window.width),
             anchor_x='left', anchor_y='top', batch=batch)
         self.update()
     def update(self):
         str_list = []
         if mode.started:
-            self.label.y = window.height - 10
+            self.label.y = from_top_edge(10, window.height)
             if not mode.hide_text:
                 str_list.append(_('P: Pause / Unpause\n'))
                 str_list.append('\n')
@@ -2627,13 +2630,13 @@ class KeysListLabel:
                 str_list.append('\n')                
                 str_list.append(_('ESC: Cancel Session\n'))
         elif CLINICAL_MODE:
-            self.label.y = window.height - 10
+            self.label.y = from_top_edge(10, window.height)
             str_list.append(_('ESC: Exit'))
         else:
             if mode.manual or cfg.JAEGGI_MODE:
-                self.label.y = window.height - 10
+                self.label.y = from_top_edge(10, window.height)
             else:
-                self.label.y = window.height - 40
+                self.label.y = from_top_edge(40, window.height)
             if 'morse' in cfg.AUDIO1_SETS or 'morse' in cfg.AUDIO2_SETS:
                 str_list.append(_('J: Morse Code Reference\n'))
                 str_list.append('\n')
@@ -2705,7 +2708,7 @@ class TitleKeysLabel:
         
         self.keys = pyglet.text.Label(
             ''.join(str_list),
-            multiline = True, width = 260,
+            multiline = True, width = scale_to_width(260, window.width),
             font_size=calc_fontsize(12), bold = True, color = cfg.COLOR_TEXT,
             x = window.width // 2, y = from_bottom_edge(300, window.height),
             anchor_x = 'center', anchor_y = 'top')
@@ -2713,7 +2716,7 @@ class TitleKeysLabel:
         self.space = pyglet.text.Label(
             _('Press SPACE to enter the Workshop'),
             font_size=calc_fontsize(20), bold = True, color = (32, 32, 255, 255),
-            x = window.width // 2, y = from_bottom_edge(35, window.height),
+            x = window.width // 2, y = from_bottom_edge(28, window.height),
             anchor_x = 'center', anchor_y = 'center')
     def draw(self):
         self.space.draw()
@@ -4649,9 +4652,8 @@ else:
     brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash'])))
 brain_graphic.set_position(field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
-
-def shrink_brain(dt):
-    brain_graphic.scale -= dt * 2
+def scale_brain(dt):
+    brain_graphic.scale = dt
     brain_graphic.x = field.center_x - brain_graphic.image.width//2  + 2 + (brain_graphic.image.width - brain_graphic.width) // 2
     brain_graphic.y = field.center_y - brain_graphic.image.height//2 - 1 + (brain_graphic.image.height - brain_graphic.height) // 2
     window.clear()
@@ -4662,8 +4664,8 @@ def shrink_brain(dt):
         brain_graphic.scale = 1
         brain_graphic.set_position(field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
-        
 
+scale_brain(scale_to_width(1, cfg.WINDOW_WIDTH))
 # If we had messages queued during loading (like from moving our data files), display them now
 messagequeue.reverse()
 for msg in messagequeue:
