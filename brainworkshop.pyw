@@ -2811,13 +2811,13 @@ class FeedbackLabel:
         if mode.flags[mode.mode]['multi'] == 1 and modalityname == 'position1':
             modalityname = 'position'
             
-	if total == 2 and not cfg.JAEGGI_MODE and cfg.ENABLE_MOUSE:
-	    if pos == 0:
-		self.mousetext = "Left-click or"
-	    if pos == 1:
-		self.mousetext = "Right-click or"
-	else:
-	    self.mousetext = ""
+        if total == 2 and not cfg.JAEGGI_MODE and cfg.ENABLE_MOUSE:
+            if pos == 0:
+                self.mousetext = "Left-click or"
+            if pos == 1:
+                self.mousetext = "Right-click or"
+        else:
+            self.mousetext = ""
 
         self.text = "%s %s: %s" % (_(self.mousetext), self.letter, _(modalityname)) # FIXME: will this break pyglettext?
 
@@ -3304,8 +3304,8 @@ class TodayLabel:
     def __init__(self):
         self.labelTitle = pyglet.text.Label(
             '',
-	    font_size=calc_fontsize(9),
-	    color = cfg.COLOR_TEXT,
+            font_size=calc_fontsize(9),
+            color = cfg.COLOR_TEXT,
             x=window.width, y=from_top_edge(5),
             anchor_x='right', anchor_y='top',width=280, multiline=True, batch=batch)
         self.update()
@@ -3318,7 +3318,7 @@ class TodayLabel:
             total_time = mode.ticks_per_trial * TICK_DURATION * total_trials
             
             self.labelTitle.text = _("%i min %i sec done today in %i sessions\
-			    %i min %i sec done in last 24 hours in %i sessions" % (stats.time_today//60, stats.time_today%60, stats.sessions_today, stats.time_thours//60, stats.time_thours%60, stats.sessions_thours))
+                %i min %i sec done in last 24 hours in %i sessions" % (stats.time_today//60, stats.time_today%60, stats.sessions_today, stats.time_thours//60, stats.time_thours%60, stats.sessions_thours))
 
 class TrialsRemainingLabel:
     def __init__(self):
