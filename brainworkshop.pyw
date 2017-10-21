@@ -950,7 +950,7 @@ else:                       del supportedtypes['music']
 supportedtypes['misc'] = supportedtypes['sounds'] + supportedtypes['sprites']
 
 resourcepaths = {}
-for restype in supportedtypes.keys():
+for restype in list(supportedtypes):
     res_sets = {}
     for folder in os.listdir(os.path.join(res_path, restype)):
         contents = []
@@ -963,7 +963,7 @@ for restype in supportedtypes.keys():
     if res_sets: resourcepaths[restype] = res_sets
 
 sounds = {}
-for k in resourcepaths['sounds'].keys():
+for k in list(resourcepaths['sounds']):
     sounds[k] = {}
     for f in resourcepaths['sounds'][k]:
         sounds[k][os.path.basename(f).split('.')[0]] = pyglet.media.load(f, streaming=False)
@@ -1351,7 +1351,7 @@ class Graph:
             self.next_mode()
             mode2 = mode1
     def next_mode(self):
-        modes = mode.modalities.keys()
+        modes = list(mode.modalities)
         modes.sort()
         i = modes.index(self.graph)
         i = (i + 1) % len(modes)
@@ -1420,7 +1420,7 @@ class Graph:
                 return map(lambda y: .01*y, x)
             
             for dictionary in self.dictionaries.values():
-                for datestamp in dictionary.keys(): # this would be so much easier with numpy
+                for datestamp in list(dictionary): # this would be so much easier with numpy
                     entries = dictionary[datestamp]
                     if self.styles[self.style] == 'N':
                         scores = [entry[0] for entry in entries]
@@ -1452,7 +1452,7 @@ class Graph:
             #dictionary = self.dictionaries[x]
             #output = ['Date\t%s N-Back Average\n' % mode.long_mode_names[x]]
             
-            #keyslist = dictionary.keys()
+            #keyslist = list(dictionary)
             #keyslist.sort()
             #if len(keyslist) == 0: continue
             #for datestamp in keyslist:
@@ -1553,7 +1553,7 @@ class Graph:
         x = left - 60, y = center_y,
         anchor_x = 'right', anchor_y = 'center')
                 
-        dates = dictionary.keys()
+        dates = list(dictionary)
         dates.sort()
         if len(dates) < 2:
             pyglet.text.Label(_('Insufficient data: two days needed'),
@@ -1811,7 +1811,7 @@ class Menu:
         self.pagesize = min(len(options), (window.height*6/10) / (self.choicesize*3/2))
         if type(options) == dict:
             vals = options
-            self.options = options.keys()
+            self.options = list(options)
         else:
             vals = dict([[op, None] for op in options])
             self.options = options
@@ -1876,9 +1876,9 @@ class Menu:
         if ending:
             self.labels[i].text = '...'
         w, h, cs = window.width, window.height, self.choicesize
-        self.marker.vertices = [w/10, (h*8)/10 - markerpos*(cs*3/2) + cs/2,
-                                w/9,  (h*8)/10 - markerpos*(cs*3/2),
-                                w/10, (h*8)/10 - markerpos*(cs*3/2) - cs/2]
+        self.marker.vertices = [w//10, int((h*8)/10 - markerpos*(cs*3/2) + cs/2),
+                                w//9,  int((h*8)/10 - markerpos*(cs*3/2)),
+                                w//10, int((h*8)/10 - markerpos*(cs*3/2) - cs/2)]
         
     def move_selection(self, steps, relative=True):
         # FIXME:  pageup/pagedown can occasionally cause "Hello bug!" to be displayed
@@ -2186,7 +2186,7 @@ class ImageSelect(Menu):
         self.new_sets = {}
         for image in imagesets:
             self.new_sets[image] = image in cfg.IMAGE_SETS
-        options = self.new_sets.keys()
+        options = list(self.new_sets)
         options.sort()
         vals = self.new_sets
         Menu.__init__(self, options, vals, title=_('Choose images to use for the Image n-back tasks.'))
@@ -2219,9 +2219,9 @@ class SoundSelect(Menu):
         for audio in audiosets:
             if not audio == 'operations':
                 self.new_sets['2'+audio] = audio in cfg.AUDIO2_SETS
-        options = self.new_sets.keys()
+        options = list(self.new_sets)
         options.sort()
-        options.insert(len(self.new_sets)/2, "Blank line") # Menu.update_labels and .select will ignore this
+        options.insert(len(self.new_sets)//2, "Blank line") # Menu.update_labels and .select will ignore this
         options.append("Blank line")
         options.extend(['cfg.CHANNEL_AUDIO1', 'cfg.CHANNEL_AUDIO2'])
         lcr = ['left', 'right', 'center']
@@ -2251,7 +2251,7 @@ class SoundSelect(Menu):
         Menu.select(self)
         for c in ('1', '2'):
             if not [v for k,v in self.values.items() if (k.startswith(c) and v and not isinstance(v, Cycler))]:
-                options = resourcepaths['sounds'].keys()
+                options = list(resourcepaths['sounds'])
                 options.remove('operations')
                 i = 0
                 if self.selpos == 0:
