@@ -664,7 +664,8 @@ Press space to continue.""" % (get_data_dir(),  get_old_data_dir(),  get_data_di
 
 def load_last_user(lastuserpath):
     if os.path.isfile(os.path.join(get_data_dir(), lastuserpath)):
-        f = file(os.path.join(get_data_dir(), lastuserpath), 'r')
+        if DEBUG: print("Trying to load", os.path.join(get_data_dir(), lastuserpath))
+        f = open(os.path.join(get_data_dir(), lastuserpath), 'rb')
         p = pickle.Unpickler(f)
         options = p.load()
         del p
@@ -679,11 +680,12 @@ def load_last_user(lastuserpath):
 
 def save_last_user(lastuserpath):
     try:
-        f = file(os.path.join(get_data_dir(), lastuserpath), 'w')
+        f = open(os.path.join(get_data_dir(), lastuserpath), 'wb')
         p = pickle.Pickler(f)
         p.dump({'USER': USER})
         # also do date of last session?
     except:
+        print("ERROR: Could not save last user")
         pass
 
 def parse_config(configpath):
@@ -754,7 +756,7 @@ def rewrite_configfile(configfile, overwrite=False):
     except OSError:
         overwrite = True
     if overwrite:
-        f = file(os.path.join(get_data_dir(), configfile), 'w')
+        f = open(os.path.join(get_data_dir(), configfile), 'w')
         newconfigfile_contents = CONFIGFILE_DEFAULT_CONTENTS.replace('stats.txt', statsfile)
         f.write(newconfigfile_contents)
         f.close()
@@ -762,12 +764,12 @@ def rewrite_configfile(configfile, overwrite=False):
     try:
         os.stat(os.path.join(get_data_dir(), statsfile))
     except OSError:
-        f = file(os.path.join(get_data_dir(), statsfile), 'w')
+        f = open(os.path.join(get_data_dir(), statsfile), 'w')
         f.close()
     try:
         os.stat(os.path.join(get_data_dir(), STATS_BINARY))
     except OSError:
-        f = file(os.path.join(get_data_dir(), STATS_BINARY), 'w')
+        f = open(os.path.join(get_data_dir(), STATS_BINARY), 'w')
         f.close()
 
 check_and_move_user_data()
@@ -1734,7 +1736,6 @@ class TextInputScreen:
             anchor_x='center', anchor_y='center')
         self.document = pyglet.text.document.UnformattedDocument()
         self.document.set_style(0, len(self.document.text), {'color': self.textcolor})
-        print("watatattata")
         self.layout = pyglet.text.layout.IncrementalTextLayout(self.document,
             (from_width_center(-20) - len(title) * calc_fontsize(6)), (window.height*10)/11, batch=self.batch, dpi=calc_dpi())
         self.layout.x = from_width_center(15) + len(title) * calc_fontsize(6)
@@ -2398,7 +2399,6 @@ class Visual:
         self.images = [self.image_set[i] for i in indices]
 
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
-        print("Visual spawn")
         self.position = position
         self.color = get_color(color)
         self.vis = vis
