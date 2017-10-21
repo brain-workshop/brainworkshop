@@ -1081,6 +1081,7 @@ class MyWindow(pyglet.window.Window):
         pass
 
 window = MyWindow(cfg.WINDOW_WIDTH, cfg.WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
+pyglet.gl.glLineWidth(calc_fontsize(2))
 #if DEBUG:
 #    window.push_handlers(pyglet.window.event.WindowEventLogger())
 if sys.platform == 'darwin' and cfg.WINDOW_FULLSCREEN:
