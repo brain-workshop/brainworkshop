@@ -2375,13 +2375,13 @@ class Visual:
         self.images = [self.image_set[i] for i in indices]
         
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
-
+        print("Visual spawn")
         self.position = position
         self.color = get_color(color)
         self.vis = vis
         
-        self.center_x = field.center_x + (field.size / 3)*((position+1)%3 - 1) + (field.size / 3 - self.size)/2
-        self.center_y = field.center_y + (field.size / 3)*((position/3+1)%3 - 1) + (field.size / 3 - self.size)/2
+        self.center_x = field.center_x + (field.size // 3)*((position+1)%3 - 1) + (field.size // 3 - self.size)//2
+        self.center_y = field.center_y + (field.size // 3)*((position//3+1)%3 - 1) + (field.size // 3 - self.size)//2
         
         if self.vis == 0:
             if cfg.OLD_STYLE_SQUARES:
