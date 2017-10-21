@@ -1183,7 +1183,7 @@ class Mode:
         self.flags = {}
         
         # generate crab modes
-        for m in self.short_mode_names.keys():
+        for m in list(self.short_mode_names):
             nm = m | 128                          # newmode; Crab DNB = 2 | 128 = 130
             self.flags[m]  = {'crab':0, 'multi':1, 'selfpaced':0}# forwards
             self.flags[nm] = {'crab':1, 'multi':1, 'selfpaced':0}# every (self.back) stimuli are reversed for matching
@@ -1193,7 +1193,7 @@ class Mode:
             # so we take a copy of the list, in case we want to change it later
 
         # generate multi-stim modes
-        for m in self.short_mode_names.keys():
+        for m in list(self.short_mode_names):
             for n, s in [(2, _('Double-stim')), (3, _('Triple-stim')), (4, _('Quadruple-stim'))]:
                 if set(['color', 'image']).issubset(self.modalities[m]) \
                   or not 'position1' in self.modalities[m] \
@@ -1214,7 +1214,7 @@ class Mode:
                     if ic in self.modalities[nm]:
                         self.modalities[nm].remove(ic)
                         
-        for m in self.short_mode_names.keys():
+        for m in list(self.short_mode_names):
             nm = m | 1024
             self.short_mode_names[nm] = 'SP-' + self.short_mode_names[m]
             self.long_mode_names[nm] = 'Self-paced ' + self.long_mode_names[m]
@@ -2280,14 +2280,14 @@ class Field:
         if cfg.FIELD_EXPAND:
             self.center_y = window.height // 2
         else: self.center_y = window.height // 2 + 20
-        self.x1 = self.center_x - self.size/2
-        self.x2 = self.center_x + self.size/2
-        self.x3 = self.center_x - self.size/6
-        self.x4 = self.center_x + self.size/6
-        self.y1 = self.center_y - self.size/2
-        self.y2 = self.center_y + self.size/2
-        self.y3 = self.center_y - self.size/6
-        self.y4 = self.center_y + self.size/6
+        self.x1 = int(self.center_x - self.size/2)
+        self.x2 = int(self.center_x + self.size/2)
+        self.x3 = int(self.center_x - self.size/6)
+        self.x4 = int(self.center_x + self.size/6)
+        self.y1 = int(self.center_y - self.size/2)
+        self.y2 = int(self.center_y + self.size/2)
+        self.y3 = int(self.center_y - self.size/6)
+        self.y4 = int(self.center_y + self.size/6)
         
         # add the inside lines
         if cfg.GRIDLINES:
