@@ -89,6 +89,13 @@ def scale_to_height(fraction):
 def calc_fontsize(size):
     return size * (window.width/912)
 
+def get_pyglet_media_Player():
+    try:
+        my_player = pyglet.media.Player()
+    except:
+        my_player = pyglet.media.ManagedSoundPlayer()
+    return my_player
+
 # some functions to assist in path determination
 def main_is_frozen():
     return (hasattr(sys, "frozen") or # new py2exe
@@ -3803,7 +3810,7 @@ class Stats:
             return
 
         if cfg.USE_MUSIC:
-            musicplayer = pyglet.media.ManagedSoundPlayer()
+            musicplayer = get_pyglet_media_Player()
             if percent >= get_threshold_advance() and resourcepaths['music']['advance']:
                 musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['advance']), streaming = True))
             elif percent >= (get_threshold_advance() + get_threshold_fallback()) // 2 and resourcepaths['music']['great']:
@@ -4160,25 +4167,16 @@ def generate_stimulus():
     # initiate the chosen stimuli.
     # mode.current_stim['audio'] is a number from 1 to 8.
     if 'arithmetic' in mode.modalities[mode.mode] and mode.trial_number > mode.back:
-        try:
-            player = pyglet.media.Player()
-        except:
-            player = pyglet.media.ManagedSoundPlayer()
+        player = get_pyglet_media_Player()
         player.queue(sounds['operations'][mode.current_operation])  # maybe we should try... catch... here
         player.play()                                               # and maybe we should recycle sound players...
     elif 'audio' in mode.modalities[mode.mode] and not 'audio2' in mode.modalities[mode.mode]:
-        try:
-            player = pyglet.media.Player()
-        except:
-            player = pyglet.media.ManagedSoundPlayer()
+        player = get_pyglet_media_Player()
         player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.play()
     elif 'audio2' in mode.modalities[mode.mode]:
         # dual audio modes - two sound players
-        try:
-            player = pyglet.media.Player()
-        except:
-            player = pyglet.media.ManagedSoundPlayer()
+        player = get_pyglet_media_Player()
         player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.min_distance = 100.0
         if cfg.CHANNEL_AUDIO1 == 'left':
@@ -4189,10 +4187,7 @@ def generate_stimulus():
             #player.position = (0.0, 0.0, 0.0)
             pass
         player.play()
-        try:
-            player2 = pyglet.media.Player()
-        except:
-            player2 = pyglet.media.ManagedSoundPlayer()
+        player2 = get_pyglet_media_Player()
         player2.queue(mode.soundlist2[mode.current_stim['audio2']-1])
         player2.min_distance = 100.0
         if cfg.CHANNEL_AUDIO2 == 'left':
