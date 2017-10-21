@@ -99,6 +99,8 @@ def scale_to_height(fraction):
 
 def calc_fontsize(size):
     return size * (window.width/DEFAULT_WINDOW_WIDTH)
+def calc_dpi(size = 100):
+    return int(size * ((window.width + window.height)/(DEFAULT_WINDOW_WIDTH + DEFAULT_WINDOW_HEIGHT)))
 
 def get_pyglet_media_Player():
     try:
@@ -621,7 +623,7 @@ class Message:
             return
         self.batch = pyglet.graphics.Batch()
         self.label = pyglet.text.Label(msg,
-                            font_name='Times New Roman',
+                            font_name=self.fontlist_serif,
                             color=cfg.COLOR_TEXT,
                             batch=self.batch,
                             multiline=True,
@@ -1513,11 +1515,11 @@ class Graph:
 
         height = int(window.height * 0.625)
         width = int(window.width * 0.625)
-        center_x = window.width // 2
-        center_y = window.height // 2 + scale_to_height(20)
-        left = center_x - width // 2
-        right = center_x + width // 2
-        top = center_y + height // 2
+        center_x = width_center()
+        center_y = from_height_center(20)
+        left   = center_x - width  // 2
+        right  = center_x + width  // 2
+        top    = center_y + height // 2
         bottom = center_y - height // 2
         try:
             dictionary = self.dictionaries[self.graph]
@@ -1712,7 +1714,7 @@ class Graph:
         pyglet.text.Label(''.join(str_list),
             batch=self.batch,
             font_size=calc_fontsize(11), bold = False, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = scale_to_width(20),
+            x = width_center(), y = scale_to_width(20),
             anchor_x = 'center', anchor_y = 'center')
 
 class TextInputScreen:
@@ -1728,13 +1730,14 @@ class TextInputScreen:
         self.batch = pyglet.graphics.Batch()
         self.title = pyglet.text.Label(title, font_size=self.titlesize,
             bold=True, color=self.textcolor, batch=self.batch,
-            x=window.width/2, y=(window.height*9)/10,
+            x=width_center(), y=(window.height*9)/10,
             anchor_x='center', anchor_y='center')
         self.document = pyglet.text.document.UnformattedDocument()
         self.document.set_style(0, len(self.document.text), {'color': self.textcolor})
+        print("watatattata")
         self.layout = pyglet.text.layout.IncrementalTextLayout(self.document,
-            (window.width/2 - 20 - len(title)*6), (window.height*10)/11, batch=self.batch)
-        self.layout.x = (window.width)/2 + 15 + len(title)*6
+            (from_width_center(-20) - len(title) * calc_fontsize(6)), (window.height*10)/11, batch=self.batch, dpi=calc_dpi())
+        self.layout.x = from_width_center(15) + len(title) * calc_fontsize(6)
         if not callback: callback = lambda x: x
         self.callback = callback
         self.caret = pyglet.text.caret.Caret(self.layout)
@@ -3251,7 +3254,7 @@ class ChartTitleLabel:
             font_size=calc_fontsize(10),
             bold = True,
             color = cfg.COLOR_TEXT,
-            x = from_right_edge(10),
+            x = from_right_edge(30),
             y = from_top_edge(85),
             anchor_x = 'right',
             anchor_y = 'top',
@@ -3356,11 +3359,14 @@ class TodayLabel:
             self.labelTitle.text = ''
         else:
             total_trials = sum([mode.num_trials + mode.num_trials_factor * \
-             his[2] ** mode.num_trials_exponent for his in stats.history])
+                his[2] ** mode.num_trials_exponent for his in stats.history])
             total_time = mode.ticks_per_trial * TICK_DURATION * total_trials
 
-            self.labelTitle.text = _("%i min %i sec done today in %i sessions\
-                %i min %i sec done in last 24 hours in %i sessions" % (stats.time_today//60, stats.time_today%60, stats.sessions_today, stats.time_thours//60, stats.time_thours%60, stats.sessions_thours))
+            self.labelTitle.text = _(
+                ("%i min %i sec done today in %i sessions\n" \
+               + "%i min %i sec done in last 24 hours in %i sessions") \
+                % (stats.time_today//60, stats.time_today%60, stats.sessions_today, \
+                    stats.time_thours//60, stats.time_thours%60, stats.sessions_thours))
 
 class TrialsRemainingLabel:
     def __init__(self):
