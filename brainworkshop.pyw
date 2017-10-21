@@ -18,7 +18,7 @@ VERSION = '4.8.4'
 
 import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime
 if sys.version_info >= (3,0):
-    import urllib, configparser as ConfigParser
+    import urllib.request, configparser as ConfigParser
     from io import StringIO
     import pickle
 else:
@@ -698,8 +698,11 @@ def parse_config(configpath):
                 quit_with_error(_('Unable to load config file: %s') %
                                  os.path.join(get_data_dir(), configpath))
 
-    defaultconfig = ConfigParser.ConfigParser() 
-    defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
+    defaultconfig = ConfigParser.ConfigParser()
+    if sys.version_info >= (3,0):
+        defaultconfig.readfp(StringIO(CONFIGFILE_DEFAULT_CONTENTS))
+    else:
+        defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
 
     def try_eval(text):  # this is a one-use function for config parsing
         try:  return eval(text)
@@ -814,7 +817,10 @@ def update_check():
     global update_available
     global update_version
     socket.setdefaulttimeout(TIMEOUT_SILENT)
-    req = urllib.Request(WEB_VERSION_CHECK)
+    if sys.version_info >= (3,0):
+        req = urllib.request.Request(WEB_VERSION_CHECK)
+    else:
+        req = urllib.Request(WEB_VERSION_CHECK)
     try:
         response = urllib.urlopen(req)
         version = response.readline().strip()
@@ -865,7 +871,10 @@ supportedtypes = {'sounds' :['wav'],
 def test_avbin():
     try:
         import pyglet
-        from pyglet.media import avbin
+        try:
+            from pyglet.media import avbin
+        except:
+            pyglet.lib.load_library('avbin')
         if pyglet.version >= '1.2':  # temporary workaround for defect in pyglet svn 2445
             pyglet.media.have_avbin = True
             
@@ -964,9 +973,12 @@ sound = sounds['letters'] # is this obsolete yet?
 if cfg.USE_APPLAUSE:
     applausesounds = [pyglet.media.load(soundfile, streaming=False)
                      for soundfile in resourcepaths['misc']['applause']]
-
-applauseplayer = pyglet.media.ManagedSoundPlayer()
-musicplayer = pyglet.media.ManagedSoundPlayer()
+try:
+    applauseplayer = pyglet.media.Player()
+    musicplayer = pyglet.media.Player()
+except:
+    applauseplayer = pyglet.media.ManagedSoundPlayer()
+    musicplayer = pyglet.media.ManagedSoundPlayer()
 
 def sound_stop():
     global applauseplayer
@@ -4149,16 +4161,25 @@ def generate_stimulus():
     # initiate the chosen stimuli.
     # mode.current_stim['audio'] is a number from 1 to 8.
     if 'arithmetic' in mode.modalities[mode.mode] and mode.trial_number > mode.back:
-        player = pyglet.media.ManagedSoundPlayer()
+        try:
+            player = pyglet.media.Player()
+        except:
+            player = pyglet.media.ManagedSoundPlayer()
         player.queue(sounds['operations'][mode.current_operation])  # maybe we should try... catch... here
         player.play()                                               # and maybe we should recycle sound players...
     elif 'audio' in mode.modalities[mode.mode] and not 'audio2' in mode.modalities[mode.mode]:
-        player = pyglet.media.ManagedSoundPlayer()
+        try:
+            player = pyglet.media.Player()
+        except:
+            player = pyglet.media.ManagedSoundPlayer()
         player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.play()
     elif 'audio2' in mode.modalities[mode.mode]:
         # dual audio modes - two sound players
-        player = pyglet.media.ManagedSoundPlayer()
+        try:
+            player = pyglet.media.Player()
+        except:
+            player = pyglet.media.ManagedSoundPlayer()
         player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.min_distance = 100.0
         if cfg.CHANNEL_AUDIO1 == 'left':
@@ -4169,8 +4190,10 @@ def generate_stimulus():
             #player.position = (0.0, 0.0, 0.0)
             pass
         player.play()
-        
-        player2 = pyglet.media.ManagedSoundPlayer()
+        try:
+            player2 = pyglet.media.Player()
+        except:
+            player2 = pyglet.media.ManagedSoundPlayer()
         player2.queue(mode.soundlist2[mode.current_stim['audio2']-1])
         player2.min_distance = 100.0
         if cfg.CHANNEL_AUDIO2 == 'left':
