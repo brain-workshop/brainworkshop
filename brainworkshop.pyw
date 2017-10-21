@@ -69,22 +69,22 @@ TICKS_MAX = 50
 TICK_DURATION = 0.1
 
 def from_top_edge(from_edge):
-    return window.height - (from_edge * window.height/684)
+    return int(window.height - (from_edge * window.height/684))
 
 def from_bottom_edge(from_edge):
-    return from_edge * (window.height/684)
+    return int(from_edge * (window.height/684))
 
 def from_right_edge(from_edge):
-    return window.width - (from_edge * window.width/912)
+    return int(window.width - (from_edge * window.width/912))
 
 def from_left_edge(from_edge):
-    return from_edge * window.width/912
+    return int(from_edge * window.width/912)
 
 def scale_to_width(fraction):
-    return fraction * window.width/912
+    return int(fraction * window.width/912)
 
 def scale_to_height(fraction):
-    return fraction * window.height/684
+    return int(fraction * window.height/684)
 
 def calc_fontsize(size):
     return size * (window.width/912)
@@ -1489,21 +1489,22 @@ class Graph:
         else:
             axiscolor = (160, 160, 160)
             minorcolor = (224, 224, 224)
-        
+        # TODO does this need to be scaled too?
         x_label_width = 20
         y_marking_interval = 0.25
 
         height = int(window.height * 0.625)
         width = int(window.width * 0.625)
         center_x = window.width // 2
-        center_y = window.height // 2 + 20
+        center_y = window.height // 2 + scale_to_height(20)
         left = center_x - width // 2
         right = center_x + width // 2
         top = center_y + height // 2
         bottom = center_y - height // 2
         try:
             dictionary = self.dictionaries[self.graph]
-        except: print(self.graph)
+        except:
+            print(self.graph)
         graph_title = mode.long_mode_names[self.graph] + _(' N-Back')
 
         self.batch.add(3, GL_LINE_STRIP,
@@ -1515,7 +1516,7 @@ class Graph:
         pyglet.text.Label(
             _('G: Return to Main Screen\n\nN: Next Game Type'),
             batch=self.batch,
-            multiline = True, width = 300,
+            multiline = True, width = scale_to_width(300),
             font_size=calc_fontsize(9),
             color=cfg.COLOR_TEXT,
             x=from_left_edge(10), y=from_top_edge(10),
@@ -1524,33 +1525,33 @@ class Graph:
         pyglet.text.Label(graph_title,
             batch=self.batch,
             font_size=calc_fontsize(18), bold=True, color=cfg.COLOR_TEXT,
-            x = center_x, y = top + 60,
+            x = center_x, y = top + scale_to_height(60),
             anchor_x = 'center', anchor_y = 'center')
 
         pyglet.text.Label(_('Date'),
             batch=self.batch,
             font_size=calc_fontsize(12), bold=True, color=cfg.COLOR_TEXT,
-            x = center_x, y = bottom - 80,
+            x = center_x, y = bottom - scale_to_height(80),
             anchor_x = 'center', anchor_y = 'center')
 
-        pyglet.text.Label(_('Maximum'), width=1,
+        pyglet.text.Label(_('Maximum'), width=scale_to_width(1),
             batch=self.batch,
             font_size=calc_fontsize(12), bold=True, color=linecolor2+(255,),
-            x = left - 60, y = center_y + 50,
-            anchor_x = 'right', anchor_y = 'center')
-        
-        pyglet.text.Label(_('Average'), width=1,
-            batch=self.batch,
-            font_size=calc_fontsize(12), bold=True, color=linecolor+(255,),
-            x = left - 60, y = center_y + 25,
+            x = left - scale_to_width(60), y = center_y + scale_to_height(50),
             anchor_x = 'right', anchor_y = 'center')
 
-        pyglet.text.Label(_('Score'), width=1,
-        batch=self.batch,
-        font_size=calc_fontsize(12), bold=True, color=cfg.COLOR_TEXT,
-        x = left - 60, y = center_y,
-        anchor_x = 'right', anchor_y = 'center')
-                
+        pyglet.text.Label(_('Average'), width=scale_to_width(1),
+            batch=self.batch,
+            font_size=calc_fontsize(12), bold=True, color=linecolor+(255,),
+            x = left - scale_to_width(60), y = center_y + scale_to_height(25),
+            anchor_x = 'right', anchor_y = 'center')
+
+        pyglet.text.Label(_('Score'), width=scale_to_width(1),
+            batch=self.batch,
+            font_size=calc_fontsize(12), bold=True, color=cfg.COLOR_TEXT,
+            x = left - scale_to_width(60), y = center_y,
+            anchor_x = 'right', anchor_y = 'center')
+
         dates = list(dictionary)
         dates.sort()
         if len(dates) < 2:
@@ -1608,7 +1609,7 @@ class Graph:
                 pyglet.text.Label(datestring, multiline=True, width=12,
                     batch=self.batch,
                     font_size=calc_fontsize(8), bold=False, color=cfg.COLOR_TEXT,
-                    x=x, y=bottom - 15,
+                    x=x, y=bottom - scale_to_height(15),
                     anchor_x='center', anchor_y='top')
                 self.batch.add(2, GL_LINES,
                     pyglet.graphics.OrderedGroup(order=0), ('v2i', (
@@ -1616,7 +1617,7 @@ class Graph:
                     x, top)), ('c3B', minorcolor * 2))
                 self.batch.add(2, GL_LINES,
                     pyglet.graphics.OrderedGroup(order=1), ('v2i', (
-                    x, bottom - 10,
+                    x, bottom - scale_to_height(10),
                     x, bottom)), ('c3B', axiscolor * 2))
 
         pyglet.clock.tick(poll=True) # Prevent music skipping 2
@@ -1627,7 +1628,7 @@ class Graph:
             pyglet.text.Label(str(round(y_marking, 2)),
                 batch=self.batch,
                 font_size=calc_fontsize(10), bold=False, color=cfg.COLOR_TEXT,
-                x = left - 30, y = y + 1,
+                x = left - scale_to_width(30), y = y + scale_to_width(1),
                 anchor_x = 'center', anchor_y = 'center')
             self.batch.add(2, GL_LINES,
                 pyglet.graphics.OrderedGroup(order=0), ('v2i', (
@@ -1635,7 +1636,7 @@ class Graph:
                 right, y)), ('c3B', minorcolor * 2))
             self.batch.add(2, GL_LINES,
                 pyglet.graphics.OrderedGroup(order=1), ('v2i', (
-                left - 10, y,
+                left - scale_to_width(10), y,
                 left, y)), ('c3B', axiscolor * 2))
             y_marking += y_marking_interval
 
@@ -1693,7 +1694,7 @@ class Graph:
         pyglet.text.Label(''.join(str_list),
             batch=self.batch,
             font_size=calc_fontsize(11), bold = False, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = 20,
+            x = window.width // 2, y = scale_to_width(20),
             anchor_x = 'center', anchor_y = 'center')
 
 class TextInputScreen:
