@@ -934,7 +934,7 @@ def test_avbin():
         if pyglet.version >= '1.2':
             pyglet.media.have_avbin = False
         print( _('AVBin not detected. Music disabled.'))
-        print( _('Download AVBin from: http://code.google.com/p/avbin/'))
+        print( _('Download AVBin from: https://avbin.github.io'))
 
     except: # WindowsError
         cfg.USE_MUSIC = False
