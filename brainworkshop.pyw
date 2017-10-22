@@ -1685,7 +1685,7 @@ class Graph:
 
         pyglet.clock.tick(poll=True) # Prevent music skipping 3
 
-        radius = 1
+        radius = scale_to_height(3)
         o = 4
         for index in range(0, len(avgpoints) // 2):
             x = avgpoints[index * 2]
@@ -2019,6 +2019,7 @@ class UserScreen(Menu):
     def choose(self, k, i):
         newuser = self.users[i]
         if newuser == _("New user"):
+            # TODO Don't allow the user to create a username that's an empty string
             textInput = TextInputScreen(_("Enter new user name:"), USER, callback=set_user, catch=' ')
         else:
             set_user(newuser)
@@ -2738,12 +2739,12 @@ class TitleMessageLabel:
             _('Brain Workshop'),
             #multiline = True, width = window.width // 2,
             font_size=calc_fontsize(32), bold = True, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = from_top_edge(35),
+            x = width_center(), y = from_top_edge(25),
             anchor_x = 'center', anchor_y = 'center')
         self.label2 = pyglet.text.Label(
             _('Version ') + str(VERSION),
             font_size=calc_fontsize(14), bold = False, color = cfg.COLOR_TEXT,
-            x = window.width // 2, y = from_top_edge(75),
+            x = width_center(), y = from_top_edge(55),
             anchor_x = 'center', anchor_y = 'center')
 
     def draw(self):
@@ -2770,7 +2771,7 @@ class TitleKeysLabel:
             ''.join(str_list),
             multiline = True, width = scale_to_width(260),
             font_size=calc_fontsize(12), bold = True, color = cfg.COLOR_TEXT,
-            x = width_center(), y = from_bottom_edge(230),
+            x = from_width_center(65), y = from_bottom_edge(230),
             anchor_x = 'center', anchor_y = 'top')
 
         self.space = pyglet.text.Label(
@@ -2887,7 +2888,7 @@ class FeedbackLabel:
 
         self.label = pyglet.text.Label(
             text=self.text,
-            x=-200, y=30, # we'll fix this position later, after we see how big the label is
+            x=-200, y=from_bottom_edge(30), # we'll fix the x position later, after we see how big the label is
             anchor_x='left', anchor_y='center', batch=batch, font_size=font_size)
         #w = self.label.width  # this doesn't work; how are you supposed to find the width of a label texture?
         w = (len(self.text) * font_size*4)/5
@@ -2900,7 +2901,7 @@ class FeedbackLabel:
             if cfg.MULTI_MODE == 'color':
                 self.icon = pyglet.sprite.Sprite(visuals[self.id-1].spr_square[cfg.VISUAL_COLORS[self.id-1]-1].image)
                 self.icon.scale = .125 * visuals[self.id-1].size / visuals[self.id-1].image_set_size
-                self.icon.y = 22
+                self.icon.y = from_bottom_edge(22)
                 self.icon.x = x - 15
                 x += 15
 
@@ -2908,7 +2909,7 @@ class FeedbackLabel:
                 self.icon = pyglet.sprite.Sprite(visuals[self.id-1].images[self.id-1].image)
                 self.icon.color = get_color(1)[:3]
                 self.icon.scale = .25 * visuals[self.id-1].size / visuals[self.id-1].image_set_size
-                self.icon.y = 15
+                self.icon.y = from_bottom_edge(15)
                 self.icon.x = x - 25
                 x += 25
 
@@ -3038,7 +3039,7 @@ class SessionInfoLabel:
             multiline = True, width = scale_to_width(128),
             font_size=calc_fontsize(11),
             color=cfg.COLOR_TEXT,
-            x=scale_to_width(20), y=field.center_y - scale_to_height(145),
+            x=from_left_edge(20), y=from_bottom_edge(145),
             anchor_x='left', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -3064,10 +3065,10 @@ class ThresholdLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            multiline = True, width = scale_to_width(155),
+            multiline = True, width = scale_to_width(128),
             font_size=calc_fontsize(11),
             color=cfg.COLOR_TEXT,
-            x=from_right_edge(20), y=field.center_y - scale_to_height(145),
+            x=from_right_edge(20), y=from_bottom_edge(145),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
@@ -4719,8 +4720,8 @@ brain_graphic.set_position(field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
 def scale_brain(dt):
     brain_graphic.scale = dt
-    brain_graphic.x = field.center_x - brain_graphic.image.width//2  + 2 + (brain_graphic.image.width - brain_graphic.width) // 2
-    brain_graphic.y = field.center_y - brain_graphic.image.height//2 - 1 + (brain_graphic.image.height - brain_graphic.height) // 2
+    brain_graphic.x = field.center_x - brain_graphic.image.width//2  + scale_to_width(2) + (brain_graphic.image.width - brain_graphic.width) // 2
+    brain_graphic.y = field.center_y - brain_graphic.image.height//2 + scale_to_height(60) + (brain_graphic.image.height - brain_graphic.height) // 2
     window.clear()
     brain_graphic.draw()
     if brain_graphic.width < 56:
