@@ -664,13 +664,23 @@ make sure you look in "%s".
 Press space to continue.""" % (get_data_dir(),  get_old_data_dir(),  get_data_dir()))
 
 def load_last_user(lastuserpath):
-    if os.path.isfile(os.path.join(get_data_dir(), lastuserpath)):
-        if DEBUG: print("Trying to load", os.path.join(get_data_dir(), lastuserpath))
-        f = open(os.path.join(get_data_dir(), lastuserpath), 'rb')
-        p = pickle.Unpickler(f)
-        options = p.load()
-        del p
-        f.close()
+    path = os.path.join(get_data_dir(), lastuserpath)
+    if os.path.isfile(path):
+        if DEBUG: print("Trying to load '%s'" % (path))
+        try:
+            f = open(path, 'rb')
+            p = pickle.Unpickler(f)
+            options = p.load()
+            del p
+            f.close()
+        except Exception as e:
+            print("%s\nDue to error, continuing as user 'default'" % e)
+            # Delete the pickle file, since it wasn't able to be loaded.
+            os.remove(path)
+            return
+        if options['USER'] == '':
+            print("Last loaded user is an empty string! Setting it to default instead")
+            options['USER'] = "default"
         if not options['USER'].lower() == 'default':
             global USER
             global STATS_BINARY
