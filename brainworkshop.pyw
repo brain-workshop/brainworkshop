@@ -3831,13 +3831,16 @@ class Stats:
             return
 
         if cfg.USE_MUSIC:
-            musicplayer = get_pyglet_media_Player()
-            if percent >= get_threshold_advance() and resourcepaths['music']['advance']:
-                musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['advance']), streaming = True))
-            elif percent >= (get_threshold_advance() + get_threshold_fallback()) // 2 and resourcepaths['music']['great']:
-                musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['great']), streaming = True))
-            elif percent >= get_threshold_fallback() and resourcepaths['music']['good']:
-                musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['good']), streaming = True))
+            if 'music' in resourcepaths:
+                musicplayer = get_pyglet_media_Player()
+                if percent >= get_threshold_advance() and 'advance' in resourcepaths['music']:
+                    musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['advance']), streaming = True))
+                elif percent >= (get_threshold_advance() + get_threshold_fallback()) // 2 and 'great' in resourcepaths['music']:
+                    musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['great']), streaming = True))
+                elif percent >= get_threshold_fallback() and 'good' in resourcepaths['music']:
+                    musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['good']), streaming = True))
+                else:
+                    return
             else:
                 return
             musicplayer.volume = cfg.MUSIC_VOLUME
