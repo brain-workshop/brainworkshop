@@ -14,7 +14,8 @@
 #
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
-
+# Use python3 style division for consistency
+from __future__ import division
 VERSION = '5.0-beta'
 
 import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime
