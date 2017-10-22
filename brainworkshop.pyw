@@ -15,7 +15,7 @@
 # The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 
-VERSION = '4.8.4'
+VERSION = '5.0-beta'
 
 import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime
 if sys.version_info >= (3,0):
