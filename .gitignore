@@ -1,0 +1,5 @@
+*.pyc
+pyglet/
+future/
+past/
+libfuturize/
