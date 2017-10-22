@@ -1,0 +1,9 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+# crlf line endings, since that was how it was in the original CVS repository
+[*]
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
