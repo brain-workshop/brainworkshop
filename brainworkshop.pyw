@@ -99,7 +99,7 @@ def scale_to_height(fraction):
     return int(fraction * window.height/DEFAULT_WINDOW_HEIGHT)
 
 def calc_fontsize(size):
-    return size * (window.width/DEFAULT_WINDOW_WIDTH)
+    return size * (window.height/DEFAULT_WINDOW_HEIGHT)
 def calc_dpi(size = 100):
     return int(size * ((window.width + window.height)/(DEFAULT_WINDOW_WIDTH + DEFAULT_WINDOW_HEIGHT)))
 
