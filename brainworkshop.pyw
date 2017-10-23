@@ -1090,8 +1090,10 @@ class MyWindow(pyglet.window.Window):
         pass
     def on_key_release(self, symbol, modifiers):
         pass
-
-window = MyWindow(cfg.WINDOW_WIDTH, cfg.WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
+if cfg.WINDOW_FULLSCREEN and cfg.WINDOW_WIDTH_FULLSCREEN and cfg.WINDOW_HEIGHT_FULLSCREEN:
+    window = MyWindow(cfg.WINDOW_WIDTH_FULLSCREEN, cfg.WINDOW_HEIGHT_FULLSCREEN, caption=''.join(caption), style=style, vsync=VSYNC)
+else:
+    window = MyWindow(cfg.WINDOW_WIDTH, cfg.WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
 pyglet.gl.glLineWidth(calc_fontsize(2))
 #if DEBUG:
 #    window.push_handlers(pyglet.window.event.WindowEventLogger())
@@ -3344,7 +3346,7 @@ class AverageLabel:
             '',
             font_size=calc_fontsize(10), bold=False,
             color=cfg.COLOR_TEXT,
-            x=from_right_edge(10), y=from_top_edge(70),
+            x=from_right_edge(30), y=from_top_edge(70),
             anchor_x='right', anchor_y='top', batch=batch)
         self.update()
     def update(self):
