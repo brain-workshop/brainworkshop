@@ -1107,6 +1107,7 @@ else:
     glClearColor(1, 1, 1, 1)
 if cfg.WINDOW_FULLSCREEN:
     window.maximize()
+    window.set_fullscreen(cfg.WINDOW_FULLSCREEN)
     window.set_mouse_visible(False)
 
 
