@@ -3517,7 +3517,6 @@ Press SPACE to continue, or press D to donate now.
 
         self.batch = pyglet.graphics.Batch()
         self.label = pyglet.text.Label(self.text,
-                            font_name=self.fontlist_serif,
                             color=cfg.COLOR_TEXT,
                             batch=self.batch,
                             multiline=True,
