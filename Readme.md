@@ -39,6 +39,8 @@ If you are having issues launching BrainWorkshop even if you have `pyglet`, `fut
   the crashed that were preventing me from using it before, so in most cases
   I would consider it more stable than the official version 4
 
+### Python 2
+* You need pyglet, urllib3
 
 # Start of Old Readme
 
@@ -70,9 +72,9 @@ Enjoy!
 ----------------------------------------------------------------------
 *** NOTE TO LINUX AND SOURCE-CODE USERS: ***
 
-Python 2.5 or later is required to run Brain Workshop on Linux. Python 2.4 
+Python 2.5 or later is required to run Brain Workshop on Linux. Python 2.4
 may also work as long as the python-ctypes package is installed.
-[Note: Windows versions and Mac OS X .app bundled versions of Brain 
+[Note: Windows versions and Mac OS X .app bundled versions of Brain
 Workshop have python included.]
 
 The latest version of python can be downloaded here:
@@ -100,27 +102,27 @@ Change Log:
 
 4.8:
 * Changed config.ini file format.  Existing config.ini files will be
-   renamed and replaced.  Users will have to migrate their 
+   renamed and replaced.  Users will have to migrate their
    customizations manually.
 * Added Multi-stim modes, whereby objects appear in two to four places
-   in the 3x3 grid at the same time.  Objects can be differentiated 
+   in the 3x3 grid at the same time.  Objects can be differentiated
    either by image or by color.
 * Added Crab modes.  In crab modes, you have to reverse every N stimuli
    when matching, so that in 3-back, if the stimuli you saw were the
-   first line below, then you would be matching them against the 
+   first line below, then you would be matching them against the
    second line, like thus:
         ABCDEFGHIJKLMNO
         ---CBAFEDIHGLKJ
-* Full support for multiple users and/or profiles.  This lets you 
+* Full support for multiple users and/or profiles.  This lets you
    easily keep separate statistics for different settings (for example,
    with different timings or with JAEGGI_SCORING in the config file) or
    for different users.
 * Added an "interference" setting, whereby a certain percentage of the
    time Brain Workshop will generate trials designed to be particularly
    tricky, such as by making the current stimulus match the stimulus
-   (n-1), (n+1), or (2n) trials ago, or (in multi-stim mode) by 
+   (n-1), (n+1), or (2n) trials ago, or (in multi-stim mode) by
    swapping the positions of the stimuli (n) trials ago.
-* New mode-, sound-, and user-selection screens.   
+* New mode-, sound-, and user-selection screens.
 * Changed how often matches are generated for modes other than Dual
    N-back.
 * Made Brain Workshop ask for donations, by default every 100 sessions.
@@ -128,10 +130,10 @@ Change Log:
    changed in the config.ini file.)
 * Trial-by-trial session data are now recorded to disk in Python's
    pickle format in the USERNAME-sessions.dat files.
-* Changed how scores are calculated in graphing; the percentage of 
+* Changed how scores are calculated in graphing; the percentage of
    items correct now affects the exact score in addition to the
    N-back level.
-* All of the music files and some of the other media files have been 
+* All of the music files and some of the other media files have been
    removed for copyright reasons and replaced with free alternatives.
 
 4.7:
@@ -141,7 +143,7 @@ Change Log:
 * Number of trials per session now increases automatically with higher
    n-back levels. The calculation can be adjusted from the config file.
 * Timing resolution has been increased to 0.1 seconds, with a maximum
-   speed of 0.3 seconds per trial. 
+   speed of 0.3 seconds per trial.
 * Toggling Manual Mode no longer reverts to default settings.
 * Title screen graphic is now colored inversely when a black background is
    selected.
@@ -248,7 +250,7 @@ Change Log:
 * The number of sessions below 50% required to trigger a
    level decrease has been changed from 1 to 3.
 * New piano sounds are available in the config file to test your
-   tonal memory. 
+   tonal memory.
 * Pressing the ESC key during a session will return you to the
    main screen instead of quitting the program.
 
@@ -346,7 +348,7 @@ Change Log:
    with a score of 50 percent will now be 3.5 instead of 2.
 
 - Fixed a bug in the input feedback that would show correct responses
-   as incorrect (this did not affect stats). 
+   as incorrect (this did not affect stats).
 - Added more music clips and adjusted the length and volumes of the
    existing ones.
 
@@ -409,4 +411,3 @@ Added music clips which play when certain scores are achieved.
    - Added a more descriptive error message in case an old version
       of pyglet is installed
    - Fixed cosmetic issue with the session history label on Linux
-
