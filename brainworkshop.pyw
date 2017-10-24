@@ -3156,12 +3156,16 @@ def check_match(input_type, check_missed = False):
             correct_answer = Decimal(back_data) / Decimal(current)
         if correct_answer == arithmeticAnswerLabel.parse_answer():
             return 'correct'
-
-    elif current == stats.session[back_data][nback_trial]:
-        if check_missed:
-            return 'missed'
-        else:
-            return 'correct'
+    else:
+        # Catch accesses past list end
+        if len(stats.session[back_data]) - 1 < nback_trial:
+            print("Error tried to access past list end")
+            return 'incorrect'
+        if current == stats.session[back_data][nback_trial]:
+            if check_missed:
+                return 'missed'
+            else:
+                return 'correct'
     return 'incorrect'
 
 
