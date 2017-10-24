@@ -2353,11 +2353,12 @@ class Field:
         if (not mode.paused) and 'position1' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK:
             if self.crosshair_visible: return
             else:
+                length_of_crosshair = scale_to_height(8)
                 self.v_crosshair = batch.add(4, GL_LINES, None, ('v2i', (
-                    self.center_x - 8, self.center_y,
-                    self.center_x + 8, self.center_y,
-                    self.center_x, self.center_y - 8,
-                    self.center_x, self.center_y + 8)), ('c3B', self.color4))
+                    self.center_x - length_of_crosshair, self.center_y,
+                    self.center_x + length_of_crosshair, self.center_y,
+                    self.center_x, self.center_y - length_of_crosshair,
+                    self.center_x, self.center_y + length_of_crosshair)), ('c3B', self.color4))
                 self.crosshair_visible = True
         else:
             if self.crosshair_visible:
