@@ -3408,7 +3408,7 @@ class Saccadic:
     def __init__(self):
         self.position = 'left'
         self.counter = 0
-        self.radius = 10
+        self.radius = scale_to_height(10)
         self.color = (0, 0, 255, 255)
 
     def tick(self, dt):
