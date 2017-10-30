@@ -3158,14 +3158,15 @@ def check_match(input_type, check_missed = False):
             return 'correct'
     else:
         # Catch accesses past list end
-        if len(stats.session[back_data]) - 1 < nback_trial:
-            print("Error tried to access past list end")
+        try:
+            if current == stats.session[back_data][nback_trial]:
+                if check_missed:
+                    return 'missed'
+                else:
+                    return 'correct'
+        except Exception as e:
+            print(e)
             return 'incorrect'
-        if current == stats.session[back_data][nback_trial]:
-            if check_missed:
-                return 'missed'
-            else:
-                return 'correct'
     return 'incorrect'
 
 
