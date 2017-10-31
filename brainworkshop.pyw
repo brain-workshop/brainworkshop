@@ -3662,55 +3662,18 @@ class Stats:
 
     def initialize_session(self):
         self.session = {}
-        self.session['position1'] = []
-        self.session['position2'] = []
-        self.session['position3'] = []
-        self.session['position4'] = []
-        self.session['vis1'] = []
-        self.session['vis2'] = []
-        self.session['vis3'] = []
-        self.session['vis4'] = []
-        self.session['color'] = []
-        self.session['image'] = []
-        self.session['audio'] = []
-        self.session['audio2'] = []
-        self.session['vis'] = []
-        self.session['numbers'] = []
-        self.session['operation'] = []
-
-        self.session['position1_input'] = []
-        self.session['position2_input'] = []
-        self.session['position3_input'] = []
-        self.session['position4_input'] = []
-        self.session['vis1_input'] = []
-        self.session['vis2_input'] = []
-        self.session['vis3_input'] = []
-        self.session['vis4_input'] = []
-        self.session['visvis_input'] = []
-        self.session['visaudio_input'] = []
-        self.session['color_input'] = []
-        self.session['audiovis_input'] = []
-        self.session['image_input'] = []
-        self.session['audio_input'] = []
-        self.session['audio2_input'] = []
-        self.session['arithmetic_input'] = []
-
-        self.session['position1_rt'] = [] # reaction times
-        self.session['position2_rt'] = []
-        self.session['position3_rt'] = []
-        self.session['position4_rt'] = []
-        self.session['vis1_rt'] = []
-        self.session['vis2_rt'] = []
-        self.session['vis3_rt'] = []
-        self.session['vis4_rt'] = []
-        self.session['visvis_rt'] = []
-        self.session['visaudio_rt'] = []
-        self.session['color_rt'] = []
-        self.session['audiovis_rt'] = []
-        self.session['image_rt'] = []
-        self.session['audio_rt'] = []
-        self.session['audio2_rt'] = []
-        #self.session['arithmetic_rt'] = []
+        for name in ('position1', 'position2', 'position3', 'position4',
+             'vis1', 'vis2', 'vis3', 'vis4',
+            'color', 'image', 'audio', 'audio2'
+            ):
+            self.session[name] = []
+            self.session["%s_input" % name] = []
+            self.session["%s_rt"    % name] = [] # reaction times
+        for name in ('vis', 'numbers', 'operation', 'visvis_input',
+            'visaudio_input', 'audiovis_input', 'arithmetic_input', 'visvis_rt',
+            'visaudio_rt', 'audiovis_rt' # , 'arithmetic_rt'
+            ):
+            self.session[name] = []
 
     def save_input(self):
         for k, v in mode.current_stim.items():
