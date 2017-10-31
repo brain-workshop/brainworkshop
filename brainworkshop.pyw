@@ -1526,9 +1526,8 @@ class Graph:
         else:
             axiscolor = (160, 160, 160)
             minorcolor = (224, 224, 224)
-        # TODO does this need to be scaled too?
-        x_label_width = 20
-        y_marking_interval = 0.25
+        y_marking_interval = 0.25 # This doesn't need scaling
+        x_label_width      = 20   # TODO does this need to be scaled too?
 
         height = int(window.height * 0.625)
         width = int(window.width * 0.625)
