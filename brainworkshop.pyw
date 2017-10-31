@@ -1640,11 +1640,14 @@ class Graph:
                 avgpoints.extend([x, int((dictionary[dates[index]][0] - ymin)/(ymax - ymin) * height + bottom)])
                 maxpoints.extend([x, int((dictionary[dates[index]][1] - ymin)/(ymax - ymin) * height + bottom)])
             datestring = str(dates[index])[2:]
-            datestring = datestring.replace('-', '\n')
+            # If more than 10 dates, don't separate by '-' but by newlines so
+            # they appear vertically rather than 01-01-01
+            if 10 < len(dates):
+                datestring = datestring.replace('-', '\n')
             if not index % (skip_x + 1):
                 pyglet.text.Label(datestring, multiline=True, width=scale_to_width(12),
                     batch=self.batch,
-                    font_size=calc_fontsize(8), bold=False, color=cfg.COLOR_TEXT,
+                    font_size=calc_fontsize(8), bold=True, color=cfg.COLOR_TEXT,
                     x=x, y=bottom - scale_to_height(15),
                     anchor_x='center', anchor_y='top')
                 self.batch.add(2, GL_LINES,
