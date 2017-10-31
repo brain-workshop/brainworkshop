@@ -71,6 +71,8 @@ TICKS_MAX      = 50
 TICK_DURATION  =  0.1
 DEFAULT_WINDOW_WIDTH  = 912
 DEFAULT_WINDOW_HEIGHT = 684
+preventMusicSkipping  = True
+
 def from_width_center(offset):
     return int( (window.width/2) + offset * (window.width / DEFAULT_WINDOW_WIDTH) )
 def from_height_center(offset):
@@ -1010,7 +1012,29 @@ if cfg.USE_APPLAUSE:
 
 applauseplayer = get_pyglet_media_Player()
 musicplayer    = get_pyglet_media_Player()
-
+def play_applause():
+    #applauseplayer = get_pyglet_media_Player()
+    applauseplayer.queue(random.choice(applausesounds))
+    applauseplayer.volume = cfg.SFX_VOLUME
+    if DEBUG: print("Playing applause")
+    applauseplayer.play()
+def play_music(percent):
+    if 'music' in resourcepaths:
+        musicplayer = get_pyglet_media_Player()
+        if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 1
+        if percent >= get_threshold_advance() and 'advance' in resourcepaths['music']:
+            musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['advance']), streaming = True))
+        elif percent >= (get_threshold_advance() + get_threshold_fallback()) // 2 and 'great' in resourcepaths['music']:
+            musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['great']), streaming = True))
+        elif percent >= get_threshold_fallback() and 'good' in resourcepaths['music']:
+            musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['good']), streaming = True))
+        else:
+            return
+    else:
+        return
+    musicplayer.volume = cfg.MUSIC_VOLUME
+    if DEBUG: print("Playing music")
+    musicplayer.play()
 def sound_stop():
     global applauseplayer
     global musicplayer
@@ -1610,7 +1634,7 @@ class Graph:
         if ymin == ymax:
             ymin = 0
 
-        pyglet.clock.tick(poll=True) # Prevent music skipping 1
+        if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 1
 
         ymin = int(math.floor(ymin * 4))/4.
         ymax = int(math.ceil(ymax * 4))/4.
@@ -1659,7 +1683,7 @@ class Graph:
                     x, bottom - scale_to_height(10),
                     x, bottom)), ('c3B', axiscolor * 2))
 
-        pyglet.clock.tick(poll=True) # Prevent music skipping 2
+        if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 2
 
         y_marking = ymin
         while y_marking <= ymax:
@@ -1688,7 +1712,7 @@ class Graph:
             maxpoints),
             ('c3B', linecolor2 * (len(maxpoints) // 2)))
 
-        pyglet.clock.tick(poll=True) # Prevent music skipping 3
+        if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 3
 
         radius = scale_to_height(3)
         o = 4
@@ -1715,7 +1739,7 @@ class Graph:
                 ('c3B', linecolor2 * 4))
             o += 1
 
-        pyglet.clock.tick(poll=True) # Prevent music skipping 4
+        if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 4
 
         labelstrings = {'position1':_('Position: ')  , 'position2':_('Position 2: '),
                         'position3':_('Position 3: '), 'position4':_('Position 4: '),
@@ -3786,10 +3810,7 @@ class Stats:
                 mode.progress = 0
                 circles.update()
                 if cfg.USE_APPLAUSE:
-                    #applauseplayer = pyglet.media.ManagedSoundPlayer()
-                    applauseplayer.queue(random.choice(applausesounds))
-                    applauseplayer.volume = cfg.SFX_VOLUME
-                    applauseplayer.play()
+                    play_applause()
                 advance = True
             elif mode.back > 1 and percent < get_threshold_fallback():
                 if cfg.JAEGGI_MODE:
@@ -3816,20 +3837,7 @@ class Stats:
             return
 
         if cfg.USE_MUSIC:
-            if 'music' in resourcepaths:
-                musicplayer = get_pyglet_media_Player()
-                if percent >= get_threshold_advance() and 'advance' in resourcepaths['music']:
-                    musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['advance']), streaming = True))
-                elif percent >= (get_threshold_advance() + get_threshold_fallback()) // 2 and 'great' in resourcepaths['music']:
-                    musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['great']), streaming = True))
-                elif percent >= get_threshold_fallback() and 'good' in resourcepaths['music']:
-                    musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['good']), streaming = True))
-                else:
-                    return
-            else:
-                return
-            musicplayer.volume = cfg.MUSIC_VOLUME
-            musicplayer.play()
+            play_music(percent)
 
     def clear(self):
         self.history = []
@@ -3846,7 +3854,7 @@ def update_all_labels(do_analysis=False):
     else:
         analysisLabel.update(skip=True)
 
-    pyglet.clock.tick(poll=True) # Prevent music/applause skipping 1
+    if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music/applause skipping 1
 
     gameModeLabel.update()
     keysListLabel.update()
@@ -3857,7 +3865,7 @@ def update_all_labels(do_analysis=False):
     chartTitleLabel.update()
     chartLabel.update()
 
-    pyglet.clock.tick(poll=True) # Prevent music/applause skipping 2
+    if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music/applause skipping 2
 
     averageLabel.update()
     todayLabel.update()
@@ -3908,7 +3916,7 @@ def new_session():
     if cfg.JAEGGI_MODE:
         compute_bt_sequence()
 
-    pyglet.clock.tick(poll=True) # Prevent music/applause skipping
+    if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music/applause skipping
 
     if cfg.VARIABLE_NBACK:
         # compute variable n-back sequence using beta distribution
