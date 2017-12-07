@@ -162,12 +162,15 @@ def edit_config_ini():
     sys.exit(0)
 
 def quit_with_error(message='', postmessage='', quit=True, trace=True):
-    if message:     print >> sys.stderr, message + '\n'
+    if message:
+        sys.stderr.write(message + '\n')
     if trace:
-        print >> sys.stderr, _("Full text of error:\n")
+        sys.stderr.write(_("Full text of error:\n"))
         traceback.print_exc()
-    if postmessage: print >> sys.stderr, '\n\n' + postmessage
-    if quit:        sys.exit(1)
+    if postmessage:
+        sys.stderr.write('\n\n' + postmessage)
+    if quit:
+        sys.exit(1)
 
 CONFIGFILE_DEFAULT_CONTENTS = """
 ######################################################################
