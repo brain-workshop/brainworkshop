@@ -2098,18 +2098,9 @@ class GameSelect(Menu):
         options = modalities[:]
         names = dict([(m, _("Use %s") % m) for m in modalities])
         names['position1'] = _("Use position")
-        options.append("Blank line")
-        options.append('combination')
-        options.append("Blank line")
-        options.append('variable')
-        options.append('crab')
-        options.append("Blank line")
-        options.append('multi')
-        options.append('multimode')
-        options.append('Blank line')
-        options.append('selfpaced')
-        options.append("Blank line")
-        options.append('interference')
+        options.extend(["Blank line", 'combination', "Blank line", 'variable',
+            'crab', "Blank line", 'multi', 'multimode', 'Blank line',
+            'selfpaced', "Blank line", 'interference'])
         names['combination'] = _('Combination N-back mode')
         names['variable'] = _('Use variable N-Back levels')
         names['crab'] = _('Crab-back mode (reverse order of sets of N stimuli)')
@@ -2387,8 +2378,7 @@ class Field:
         if not cfg.CROSSHAIRS:
             return
         if (not mode.paused) and 'position1' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK:
-            if self.crosshair_visible: return
-            else:
+            if not self.crosshair_visible:
                 length_of_crosshair = scale_to_height(8)
                 self.v_crosshair = batch.add(4, GL_LINES, None, ('v2i', (
                     self.center_x - length_of_crosshair, self.center_y,
@@ -2400,7 +2390,6 @@ class Field:
             if self.crosshair_visible:
                 self.v_crosshair.delete()
                 self.crosshair_visible = False
-            else: return
 
 
 # this class controls the visual cues (colored squares).
@@ -2744,32 +2733,29 @@ class KeysListLabel:
             str_list.append(_('H: Help / Tutorial\n'))
             str_list.append('\n')
             if mode.manual:
-                str_list.append(_('F1: Decrease N-Back\n'))
-                str_list.append(_('F2: Increase N-Back\n'))
-                str_list.append('\n')
-                str_list.append(_('F3: Decrease Trials\n'))
-                str_list.append(_('F4: Increase Trials\n'))
-                str_list.append('\n')
+                str_list.extend([
+                    _('F1: Decrease N-Back\n'),
+                    _('F2: Increase N-Back\n'), '\n',
+                    _('F3: Decrease Trials\n'),
+                    _('F4: Increase Trials\n'), '\n'])
             if mode.manual:
-                str_list.append(_('F5: Decrease Speed\n'))
-                str_list.append(_('F6: Increase Speed\n'))
-                str_list.append('\n')
-            str_list.append(_('C: Choose Game Type\n'))
-            str_list.append(_('S: Select Sounds\n'))
+                str_list.extend([
+                    _('F5: Decrease Speed\n'),
+                    _('F6: Increase Speed\n'), '\n',
+                    _('C: Choose Game Type\n'),
+                    _('S: Select Sounds\n')])
             str_list.append(_('I: Select Images\n'))
             if mode.manual:
                 str_list.append(_('M: Standard Mode\n'))
             else:
-                str_list.append(_('M: Manual Mode\n'))
-            str_list.append(_('D: Donate\n'))
-            str_list.append('\n')
-            str_list.append(_('G: Daily Progress Graph\n'))
-            str_list.append('\n')
-            str_list.append(_('W: Brain Workshop Web Site\n'))
+                str_list.extend([
+                    _('M: Manual Mode\n'),
+                    _('D: Donate\n'), '\n',
+                    _('G: Daily Progress Graph\n'), '\n',
+                    _('W: Brain Workshop Web Site\n')])
             if cfg.WINDOW_FULLSCREEN:
                 str_list.append(_('E: Saccadic Eye Exercise\n'))
-            str_list.append('\n')
-            str_list.append(_('ESC: Exit\n'))
+            str_list.extend(['\n', _('ESC: Exit\n')])
 
         self.label.text = ''.join(str_list)
 
@@ -3793,11 +3779,11 @@ class Stats:
                     session['summary'] = outlist # that's what goes into stats.txt
                     session['cfg'] = cfg.__dict__
                     session['timestamp'] = strftime("%Y-%m-%d %H:%M:%S")
-                    session['mode'] = mode.mode
-                    session['n'] = mode.back
+                    session['mode']   = mode.mode
+                    session['n']      = mode.back
                     session['manual'] = mode.manual
                     session['trial_duration'] = mode.ticks_per_trial * TICK_DURATION
-                    session['trials'] = mode.num_trials_total
+                    session['trials']  = mode.num_trials_total
                     session['session'] = self.session
                     pickle.dump(session, picklefile)
                     picklefile.close()
@@ -3806,17 +3792,13 @@ class Stats:
                                 os.path.join(get_data_dir(), cfg.STATSFILE),
                                 _('\nPlease check file and directory permissions.'))
 
-        perfect = False
-        awesome = False
-        great = False
-        good = False
-        advance = False
-        fallback = False
+        perfect = awesome = great = good = advance = fallback = False
 
         if not mode.manual:
             if percent >= get_threshold_advance():
                 mode.back += 1
-                mode.num_trials_total = mode.num_trials + mode.num_trials_factor * mode.back ** mode.num_trials_exponent
+                mode.num_trials_total = (mode.num_trials +
+                    mode.num_trials_factor * mode.back ** mode.num_trials_exponent)
                 mode.progress = 0
                 circles.update()
                 if cfg.USE_APPLAUSE:
@@ -4000,9 +3982,7 @@ def reset_input():
 ##    mode.bt_sequence = seq.values()
 
 def compute_bt_sequence():
-    bt_sequence = []
-    bt_sequence.append([])
-    bt_sequence.append([])
+    bt_sequence = [[], []]
     for x in range(0, mode.num_trials_total):
         bt_sequence[0].append(0)
         bt_sequence[1].append(0)
@@ -4050,9 +4030,9 @@ def generate_stimulus():
         mode.current_stim['vis' + repr(s)] = random.randint(1, 8)
 
     #mode.current_stim['position1'] = random.randint(1, 8)
-    mode.current_stim['color'] = random.randint(1, 8)
-    mode.current_stim['vis'] = random.randint(1, 8)
-    mode.current_stim['audio'] = random.randint(1, 8)
+    mode.current_stim['color']  = random.randint(1, 8)
+    mode.current_stim['vis']    = random.randint(1, 8)
+    mode.current_stim['audio']  = random.randint(1, 8)
     mode.current_stim['audio2'] = random.randint(1, 8)
 
 
