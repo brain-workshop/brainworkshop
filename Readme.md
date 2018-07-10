@@ -2,43 +2,46 @@
 ## What is this?
 This is a fork of the popular brain training software BrainWorkshop
 
-Since there has not been a release in 2 years, I decided to get it working on
-python2+3 as well as fix some bugs!
+Since there has not been a release in 3 years, I decided to get it working on
+Python 2+3 in additon to making many changes and improvements.
+
+Version 5 is technically in Beta, although it is expected to be more
+stable compared to the original project and work with modern Python and Pyglet
 
 ## New in this release:
 
 * Elements on the screen scale depending on the window size, making it much more
-  usable if you have a hidpi monitor or use the game fullscreened
-* Fullscreen scales automatically to your screen size
+  usable if you have a hidpi monitor.
+* Using a widescreen resolution causes items on the screen to be placed/scale properly
+* Fullscreen mode sets the resolution of the screen automatically
 * Font size scales based on window size
   * Positioning of items also scales with window size
   * Window position and font size are determined with one function to do scaling,
     thereby making it easier in the future to make adjustments
 * Set fonts differently for serif and for monospace fonts, eventually to allow
   them to be configurable.
-* Now compatible with python 3
-  * Fixed issues with at least 3 modules not loading due to renaming or changed
-    semantics. (Done in a way to maintain python2 compatibility)
-  * Fix alignment of the polygons/icons in the grid due to changes in division
-    in python3
-* Compatible with *both* python 2 and python 3!
+* Now compatible with Python 3
+  * Fixed issues with at least three modules not loading. This was due to
+    being renamed or their semantics changing. Fixed in a way to maintain Python 2
+    compatibility.
+  * Fix alignment of the polygons/icons in the grid due to changes to division
+    in Python 3
+* Compatible with *both* Python 2 and Python 3!
 * Fixed crash with text.Label not recognizing `halign`; use `align` instead since
   `halign` is deprecated. Though to avoid breaking anything, we try `align` first
   and if that fails we fall back to using `halign`
+* Fix many more crashes and issues of Brain Workshop failing to launch
 
 
 ## Notes:
-* You need pyglet installed to work.
+* You need pyglet installed for this to work.
+
 ### Python 3
 If you are having issues launching BrainWorkshop even if you have `pyglet`, `future`, `past` and
   `libfuturize` modules installed, follow these steps first:
 1. Copy the following folders into the brainworkshop folder: past, future and
    libfuturize. You can get those here: https://github.com/PythonCharmers/python-future
 2. Copy the pyglet module into a `pyglet` folder. You can get pyglet here: http://www.pyglet.org/
-
-* This version 5 is still in beta stage, but at least for me I have fixed all
-  the crashed that were preventing me from using it before, so in most cases
-  I would consider it more stable than the official version 4
 
 ### Python 2
 * You need pyglet, urllib3
