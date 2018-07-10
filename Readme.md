@@ -9,6 +9,7 @@ python2+3 as well as fix some bugs!
 
 * Elements on the screen scale depending on the window size, making it much more
   usable if you have a hidpi monitor or use the game fullscreened
+* Fullscreen scales automatically to your screen size
 * Font size scales based on window size
   * Positioning of items also scales with window size
   * Window position and font size are determined with one function to do scaling,
