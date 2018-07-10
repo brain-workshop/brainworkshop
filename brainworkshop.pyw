@@ -605,9 +605,13 @@ class dotdict(dict):
 
 def dump_pyglet_info():
     from pyglet import info
-    sys.stdout = open(os.path.join(get_data_dir(), 'dump.txt'), 'w')
+    oldStdout = sys.stdout
+    pygletDumpPath = os.path.join(get_data_dir(), 'dump.txt')
+    sys.stdout = open(pygletDumpPath, 'w')
     info.dump()
     sys.stdout.close()
+    sys.stdout = oldStdout
+    print("pyglet info dumped to %s" % pygletDumpPath)
     sys.exit()
 
 # parse config file & command line options
@@ -1117,8 +1121,11 @@ class MyWindow(pyglet.window.Window):
         pass
     def on_key_release(self, symbol, modifiers):
         pass
-if cfg.WINDOW_FULLSCREEN and cfg.WINDOW_WIDTH_FULLSCREEN and cfg.WINDOW_HEIGHT_FULLSCREEN:
-    window = MyWindow(cfg.WINDOW_WIDTH_FULLSCREEN, cfg.WINDOW_HEIGHT_FULLSCREEN, caption=''.join(caption), style=style, vsync=VSYNC)
+if cfg.WINDOW_FULLSCREEN:
+    screen = pyglet.window.get_platform().get_default_display().get_default_screen()
+    cfg.WINDOW_WIDTH_FULLSCREEN  = screen.width
+    cfg.WINDOW_HEIGHT_FULLSCREEN = screen.height
+    window = MyWindow(cfg.WINDOW_WIDTH_FULLSCREEN, cfg.WINDOW_HEIGHT_FULLSCREEN, caption=''.join(caption), style=style, vsync=VSYNC, fullscreen=True)
 else:
     window = MyWindow(cfg.WINDOW_WIDTH, cfg.WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
 pyglet.gl.glLineWidth(calc_fontsize(2))
