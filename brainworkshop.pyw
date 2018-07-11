@@ -139,14 +139,14 @@ def get_settings_path(name):
 def get_old_data_dir():
     return os.path.join(get_main_dir(), FOLDER_DATA)
 def get_data_dir():
-    try:
+    if '--datadir' in sys.argv:
         return sys.argv[sys.argv.index('--datadir') + 1]
-    except:
+    else:
         return os.path.join(get_settings_path('Brain Workshop'), FOLDER_DATA)
 def get_res_dir():
-    try:
+    if '--resdir' in sys.argv:
         return sys.argv[sys.argv.index('--resdir') + 1]
-    except:
+    else:
         return os.path.join(get_main_dir(), FOLDER_RES)
 def edit_config_ini():
     if sys.platform == 'win32':
