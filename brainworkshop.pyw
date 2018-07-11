@@ -17,7 +17,18 @@
 # Use python3 style division for consistency
 from __future__ import division
 VERSION = '5.0-beta'
-
+def debug_msg(msg):
+    if DEBUG:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print('debug: %s Line %i' % (str(msg), exc_tb.tb_lineno))
+def error_msg(msg, e = None):
+    if DEBUG and e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print("ERROR: %s\n\t%s Line %i" % (msg, e, exc_tb.tb_lineno))
+    else:
+        print("ERROR: %s" % msg)
 import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime
 if sys.version_info >= (3,0):
     import urllib.request, configparser as ConfigParser
