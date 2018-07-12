@@ -761,7 +761,8 @@ def parse_config(configpath):
         try:
             config = ConfigParser.ConfigParser()
             config.read(os.path.join(get_data_dir(), configpath))
-        except:
+        except Exception as e:
+            debug_msg(e)
             if configpath != 'config.ini':
                 quit_with_error(_('Unable to load config file: %s') %
                                  os.path.join(get_data_dir(), configpath))
@@ -3666,7 +3667,8 @@ class Stats:
                     newsession_number = int(newline[8])
                     try:
                         sesstime = int(round(float(newline[25])))
-                    except:
+                    except Exception as e:
+                        debug_msg(e)
                         # this session wasn't performed with this version of BW, and is therefore
                         # old, and therefore the session time doesn't matter
                         sesstime = 0
@@ -3685,7 +3687,8 @@ class Stats:
                 statsfile.close()
                 self.retrieve_progress()
 
-            except:
+            except Exception as e:
+                debug_msg(e)
                 quit_with_error(_('Error parsing stats file\n%s') %
                                 os.path.join(get_data_dir(), cfg.STATSFILE),
                                 _('\nPlease fix, delete or rename the stats file.'),
@@ -3823,7 +3826,8 @@ class Stats:
                     session['session'] = self.session
                     pickle.dump(session, picklefile)
                     picklefile.close()
-            except:
+            except Exception as e:
+                debug_msg(e)
                 quit_with_error(_('Error writing to stats file\n%s') %
                                 os.path.join(get_data_dir(), cfg.STATSFILE),
                                 _('\nPlease check file and directory permissions.'))
@@ -4670,7 +4674,8 @@ try:
         200, 100)),
               ('c3B', (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     test_polygon.delete()
-except:
+except Exception as e:
+    debug_msg(e)
     quit_with_error('Error creating test polygon. Full text of error:\n')
 
 # Instantiate the classes
