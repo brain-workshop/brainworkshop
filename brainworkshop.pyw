@@ -4617,9 +4617,9 @@ def on_draw():
 # tick = 1: etc.
 def update(dt):
     if mode.started and not mode.paused: # only run the timer during a game
-        if not mode.flags[mode.mode]['selfpaced'] or \
-                mode.tick > mode.ticks_per_trial-6 or \
-                mode.tick < 5:
+        if (not mode.flags[mode.mode]['selfpaced'] or
+                mode.tick > mode.ticks_per_trial-6 or
+                mode.tick < 5):
             mode.tick += 1
         if mode.tick == 1:
             mode.show_missed = False
