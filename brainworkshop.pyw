@@ -4563,7 +4563,7 @@ def on_key_press(symbol, modifiers):
                         update_input_labels()
 
         if symbol == cfg.KEY_ADVANCE and mode.flags[mode.mode]['selfpaced']:
-            mode.tick = mode.ticks_per_trial-5
+            mode.tick = mode.ticks_per_trial-2
 
     return pyglet.event.EVENT_HANDLED
 # the loop where everything is drawn on the screen.
