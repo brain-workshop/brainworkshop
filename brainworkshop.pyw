@@ -720,8 +720,8 @@ def load_last_user(lastuserpath):
             global USER
             global STATS_BINARY
             global CONFIGFILE
-            USER = options['USER']
-            CONFIGFILE = USER + '-config.ini'
+            USER         = options['USER']
+            CONFIGFILE   = USER + '-config.ini'
             STATS_BINARY = USER + '-logfile.dat'
 
 def save_last_user(lastuserpath):
@@ -2233,25 +2233,25 @@ class GameSelect(Menu):
         choice = self.options[self.selpos]
         if choice == 'combination':
             self.values['arithmetic'] = False
-            self.values['image'] = False
-            self.values['audio2'] = False
-            self.values['audio'] = True
-            self.values['multi'].i = 0 # no multi mode
+            self.values['image']      = False
+            self.values['audio2']     = False
+            self.values['audio']      = True
+            self.values['multi'].i    = 0 # no multi mode
         elif choice == 'arithmetic':
-            self.values['image'] = False
-            self.values['audio'] = False
-            self.values['audio2'] = False
+            self.values['image']       = False
+            self.values['audio']       = False
+            self.values['audio2']      = False
             self.values['combination'] = False
-            self.values['multi'].i = 0
+            self.values['multi'].i     = 0
         elif choice == 'audio':
             self.values['arithmetic'] = False
             if self.values['audio']:
                 self.values['combination'] = False
-                self.values['audio2'] = False
+                self.values['audio2']      = False
         elif choice == 'audio2':
-            self.values['audio'] = True
+            self.values['audio']       = True
             self.values['combination'] = False
-            self.values['arithmetic'] = False
+            self.values['arithmetic']  = False
         elif choice == 'image':
             self.values['combination'] = False
             self.values['arithmetic'] = False
