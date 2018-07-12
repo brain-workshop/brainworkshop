@@ -19,9 +19,12 @@ from __future__ import division
 VERSION = '5.0-beta'
 def debug_msg(msg):
     if DEBUG:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print('debug: %s Line %i' % (str(msg), exc_tb.tb_lineno))
+        if isinstance(msg, Exception):
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print('debug: %s Line %i' % (str(msg), exc_tb.tb_lineno))
+        else:
+            print('debug: %s' % str(msg))
 def error_msg(msg, e = None):
     if DEBUG and e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
