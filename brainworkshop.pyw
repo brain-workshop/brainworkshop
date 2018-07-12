@@ -119,7 +119,8 @@ def calc_dpi(size = 100):
 def get_pyglet_media_Player():
     try:
         my_player = pyglet.media.Player()
-    except:
+    except Exception as e:
+        debug_msg(e)
         my_player = pyglet.media.ManagedSoundPlayer()
     return my_player
 
@@ -686,7 +687,7 @@ Press space to continue.""" % (get_data_dir(),  get_old_data_dir(),  get_data_di
 def load_last_user(lastuserpath):
     path = os.path.join(get_data_dir(), lastuserpath)
     if os.path.isfile(path):
-        if DEBUG: print("Trying to load '%s'" % (path))
+        debug_msg("Trying to load '%s'" % (path))
         try:
             f = open(path, 'rb')
             p = pickle.Unpickler(f)
@@ -715,8 +716,8 @@ def save_last_user(lastuserpath):
         p = pickle.Pickler(f)
         p.dump({'USER': USER})
         # also do date of last session?
-    except:
-        print("ERROR: Could not save last user")
+    except Exception as e:
+        error_msg("Could not save last user", e)
         pass
 
 def parse_config(configpath):
@@ -784,17 +785,21 @@ def rewrite_configfile(configfile, overwrite=False):
         statsfile = USER + '-stats.txt'
     try:
         os.stat(os.path.join(get_data_dir(), configfile))
-    except OSError:
+    except OSError as e:
+        debug_msg(e)
         overwrite = True
     if overwrite:
         f = open(os.path.join(get_data_dir(), configfile), 'w')
-        newconfigfile_contents = CONFIGFILE_DEFAULT_CONTENTS.replace('stats.txt', statsfile)
+        newconfigfile_contents = CONFIGFILE_DEFAULT_CONTENTS.replace(
+            'stats.txt', statsfile)
         f.write(newconfigfile_contents)
         f.close()
-    STATS_BINARY = statsfile.replace('-stats.txt', '-logfile.dat') # let's hope nobody uses '-stats.txt' in their username
+    # let's hope nobody uses '-stats.txt' in their username
+    STATS_BINARY = statsfile.replace('-stats.txt', '-logfile.dat')
     try:
         os.stat(os.path.join(get_data_dir(), statsfile))
-    except OSError:
+    except OSError as e:
+        debug_msg(e)
         f = open(os.path.join(get_data_dir(), statsfile), 'w')
         f.close()
     try:
@@ -877,7 +882,8 @@ def update_check():
     try:
         response = urllib.urlopen(req)
         version = response.readline().strip()
-    except:
+    except Exception as e:
+        debug_msg(e)
         return
     if version > VERSION: # simply comparing strings works just fine
         update_available = True
@@ -893,13 +899,15 @@ try:
     from pyglet.gl import *
     if NOVBO: pyglet.options['graphics_vbo'] = False
     from pyglet.window import key
-except:
+except Exception as e:
+    debug_msg(e)
     quit_with_error(_('Error: unable to load pyglet.  If you already installed pyglet, please ensure ctypes is installed.  Please visit %s') % WEB_PYGLET_DOWNLOAD)
 try:
     pyglet.options['audio'] = ('directsound', 'openal', 'alsa', )
     # use in pyglet 1.2: pyglet.options['audio'] = ('directsound', 'pulse', 'openal', )
     import pyglet.media
-except:
+except Exception as e:
+    debug_msg(e)
     quit_with_error(_('No suitable audio driver could be loaded.'))
 
 # Initialize resources (sounds and images)
@@ -926,7 +934,8 @@ def test_avbin():
         import pyglet
         try:
             from pyglet.media import avbin
-        except:
+        except Exception as e:
+            debug_msg(e)
             pyglet.lib.load_library('avbin')
         if pyglet.version >= '1.2':  # temporary workaround for defect in pyglet svn 2445
             pyglet.media.have_avbin = True
@@ -960,14 +969,16 @@ def test_avbin():
         else:
             cfg.USE_MUSIC = False
 
-    except ImportError:
+    except ImportError as e:
+        debug_msg(e)
         cfg.USE_MUSIC = False
         if pyglet.version >= '1.2':
             pyglet.media.have_avbin = False
         print( _('AVBin not detected. Music disabled.'))
         print( _('Download AVBin from: https://avbin.github.io'))
 
-    except: # WindowsError
+    except Exception as e: # WindowsError
+        debug_msg(e)
         cfg.USE_MUSIC = False
         pyglet.media.have_avbin = False
         if hasattr(pyglet.media, '_source_class'): # pyglet v1.1
