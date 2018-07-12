@@ -32,6 +32,15 @@ def error_msg(msg, e = None):
         print("ERROR: %s\n\t%s Line %i" % (msg, e, exc_tb.tb_lineno))
     else:
         print("ERROR: %s" % msg)
+def get_argv(arg):
+    if arg in sys.argv:
+        index = sys.argv.index(arg)
+        if index + 1 < len(sys.argv):
+            return sys.argv[index + 1]
+        else:
+            error_msg("Expected an argument following %s" % arg)
+            exit(1)
+
 import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime
 if sys.version_info >= (3,0):
     import urllib.request, configparser as ConfigParser
@@ -154,13 +163,15 @@ def get_settings_path(name):
 def get_old_data_dir():
     return os.path.join(get_main_dir(), FOLDER_DATA)
 def get_data_dir():
-    if '--datadir' in sys.argv:
-        return sys.argv[sys.argv.index('--datadir') + 1]
+    rtrn = get_argv('--datadir')
+    if rtrn:
+        return rtrn
     else:
         return os.path.join(get_settings_path('Brain Workshop'), FOLDER_DATA)
 def get_res_dir():
-    if '--resdir' in sys.argv:
-        return sys.argv[sys.argv.index('--resdir') + 1]
+    rtrn = get_argv('--resdir')
+    if rtrn:
+        return rtrn
     else:
         return os.path.join(get_main_dir(), FOLDER_RES)
 def edit_config_ini():
@@ -636,8 +647,8 @@ if '--vsync' in sys.argv or sys.platform == 'darwin':
     VSYNC = True
 if '--dump' in sys.argv:
     dump_pyglet_info()
-try: CONFIGFILE = sys.argv[sys.argv.index('--configfile') + 1]
-except: pass
+if get_argv('--configfile'):
+    CONFIGFILE = get_argv('--configfile')
 
 messagequeue = [] # add messages generated during loading here
 class Message:
@@ -774,9 +785,9 @@ def parse_config(configpath):
 
     if not 'CHANCE_OF_INTERFERENCE' in cfg:
         cfg.CHANCE_OF_INTERFERENCE = cfg.DEFAULT_CHANCE_OF_INTERFERENCE
-    try: cfg.STATSFILE = sys.argv[sys.argv.index('--statsfile') + 1]
-    except:
-        pass
+    rtrn = get_argv('--statsfile')
+    if rtrn:
+        cfg.STATSFILE = rtrn
     return cfg
 
 def rewrite_configfile(configfile, overwrite=False):
