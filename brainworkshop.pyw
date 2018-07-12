@@ -815,46 +815,46 @@ cfg = parse_config(CONFIGFILE)
 
 if CLINICAL_MODE:
     cfg.JAEGGI_INTERFACE_DEFAULT_SCORING = False
-    cfg.JAEGGI_MODE = True
-    cfg.JAEGGI_FORCE_OPTIONS = True
-    cfg.JAEGGI_FORCE_OPTIONS_ADDITIONAL = True
-    cfg.SKIP_TITLE_SCREEN = True
-    cfg.USE_MUSIC = False
+    cfg.JAEGGI_MODE                      = True
+    cfg.JAEGGI_FORCE_OPTIONS             = True
+    cfg.JAEGGI_FORCE_OPTIONS_ADDITIONAL  = True
+    cfg.SKIP_TITLE_SCREEN                = True
+    cfg.USE_MUSIC                        = False
 elif cfg.JAEGGI_INTERFACE_DEFAULT_SCORING:
-    cfg.ANIMATE_SQUARES = False
-    cfg.OLD_STYLE_SQUARES = True
+    cfg.ANIMATE_SQUARES         = False
+    cfg.OLD_STYLE_SQUARES       = True
     cfg.OLD_STYLE_SHARP_CORNERS = True
-    cfg.GRIDLINES = False
-    cfg.CROSSHAIRS = True
-    cfg.SHOW_FEEDBACK = False
-    cfg.BLACK_BACKGROUND = True
-    cfg.WINDOW_FULLSCREEN = True
-    cfg.HIDE_TEXT = True
-    cfg.FIELD_EXPAND = True
+    cfg.GRIDLINES               = False
+    cfg.CROSSHAIRS              = True
+    cfg.SHOW_FEEDBACK           = False
+    cfg.BLACK_BACKGROUND        = True
+    cfg.WINDOW_FULLSCREEN       = True
+    cfg.HIDE_TEXT               = True
+    cfg.FIELD_EXPAND            = True
 
 if cfg.JAEGGI_MODE and not cfg.JAEGGI_INTERFACE_DEFAULT_SCORING:
-    cfg.GAME_MODE = 2
+    cfg.GAME_MODE      = 2
     cfg.VARIABLE_NBACK = 0
     cfg.JAEGGI_SCORING = True
     if cfg.JAEGGI_FORCE_OPTIONS:
         cfg.AUDIO1_SETS = ['letters']
-        cfg.ANIMATE_SQUARES = False
+        cfg.ANIMATE_SQUARES   = False
         cfg.OLD_STYLE_SQUARES = True
         cfg.OLD_STYLE_SHARP_CORNERS = True
-        cfg.GRIDLINES = False
-        cfg.CROSSHAIRS = True
+        cfg.GRIDLINES     = False
+        cfg.CROSSHAIRS    = True
         cfg.SHOW_FEEDBACK = False
         cfg.THRESHOLD_FALLBACK_SESSIONS = 1
-        cfg.NUM_TRIALS_FACTOR = 1
+        cfg.NUM_TRIALS_FACTOR   = 1
         cfg.NUM_TRIALS_EXPONENT = 1
     if cfg.JAEGGI_FORCE_OPTIONS_ADDITIONAL:
-        cfg.BLACK_BACKGROUND = True
+        cfg.BLACK_BACKGROUND  = True
         cfg.WINDOW_FULLSCREEN = True
-        cfg.HIDE_TEXT = True
+        cfg.HIDE_TEXT    = True
         cfg.FIELD_EXPAND = True
 
 if not cfg.USE_SESSION_FEEDBACK:
-    cfg.USE_MUSIC = False
+    cfg.USE_MUSIC    = False
     cfg.USE_APPLAUSE = False
 
 if cfg.BLACK_BACKGROUND:
@@ -887,13 +887,13 @@ def update_check():
         return
     if version > VERSION: # simply comparing strings works just fine
         update_available = True
-        update_version = version
+        update_version   = version
 
 if cfg.VERSION_CHECK_ON_STARTUP and not CLINICAL_MODE:
     update_check()
 try:
     # workaround for pyglet.gl.ContextException error on certain video cards.
-    os.environ["PYGLET_SHADOW_WINDOW"]="0"
+    os.environ["PYGLET_SHADOW_WINDOW"] = "0"
     # import pyglet
     import pyglet
     from pyglet.gl import *
