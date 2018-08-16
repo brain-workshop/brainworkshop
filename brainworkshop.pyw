@@ -41,7 +41,7 @@ def get_argv(arg):
             error_msg("Expected an argument following %s" % arg)
             exit(1)
 
-import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime
+import random, os, sys, imp, socket, webbrowser, time, math, traceback, datetime, errno
 if sys.version_info >= (3,0):
     import urllib.request, configparser as ConfigParser
     from io import StringIO
@@ -824,6 +824,16 @@ def rewrite_configfile(configfile, overwrite=False):
         f.close()
 
 check_and_move_user_data()
+
+try:
+    path = get_data_dir()
+    os.makedirs(path)
+except OSError as e:
+    if e.errno == errno.EEXIST and os.path.isdir(path):
+        pass
+    else:
+        raise
+
 load_last_user('defaults.ini')
 
 cfg = parse_config(CONFIGFILE)
