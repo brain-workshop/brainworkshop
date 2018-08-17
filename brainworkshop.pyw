@@ -1172,7 +1172,24 @@ if sys.platform == 'darwin' and cfg.WINDOW_FULLSCREEN:
     window.set_exclusive_keyboard()
 if sys.platform == 'linux2':
     window.set_icon(pyglet.image.load(resourcepaths['misc']['brain'][0]))
-
+is_fullscreen = cfg.WINDOW_FULLSCREEN
+def toggle_fullscreen():
+    global is_fullscreen
+    if is_fullscreen:
+        debug_msg("trying to unset fullscreen")
+        window.set_fullscreen(False)
+        window.set_mouse_visible(True)
+        window.set_size(cfg.WINDOW_WIDTH, cfg.WINDOW_HEIGHT)
+        is_fullscreen = False
+    else:
+        screen = pyglet.window.get_platform().get_default_display().get_default_screen()
+        cfg.WINDOW_WIDTH_FULLSCREEN  = screen.width
+        cfg.WINDOW_HEIGHT_FULLSCREEN = screen.height
+        window.set_size(cfg.WINDOW_WIDTH_FULLSCREEN, cfg.WINDOW_HEIGHT_FULLSCREEN)
+        window.maximize()
+        window.set_fullscreen(True)
+        window.set_mouse_visible(False)
+        is_fullscreen = True
 # set the background color of the window
 if cfg.BLACK_BACKGROUND:
     glClearColor(0, 0, 0, 1)
@@ -4351,6 +4368,9 @@ def on_mouse_press(x, y, button, modifiers):
 
 @window.event
 def on_key_press(symbol, modifiers):
+    if symbol == key.F:
+        debug_msg("want fullscreen?")
+        toggle_fullscreen()
     if symbol == key.D and (modifiers & key.MOD_CTRL):
         dump_pyglet_info()
 
@@ -4581,6 +4601,7 @@ def on_key_press(symbol, modifiers):
                         update_input_labels()
 
         if symbol == cfg.KEY_ADVANCE and mode.flags[mode.mode]['selfpaced']:
+            debug_msg("advance")
             mode.tick = mode.ticks_per_trial-2
 
     return pyglet.event.EVENT_HANDLED
