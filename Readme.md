@@ -37,6 +37,10 @@ stable compared to the original project and work with modern Python and Pyglet
 * You need pyglet installed for this to work.
 
 ### Python 3
+
+    pipenv install
+    pipenv run ./brainworkshop.py
+
 If you are having issues launching BrainWorkshop even if you have `pyglet`, `future`, `past` and
   `libfuturize` modules installed, follow these steps first:
 1. Copy the following folders into the brainworkshop folder: past, future and
