@@ -4732,13 +4732,13 @@ update_all_labels()
 
 # Initialize brain sprite
 brain_icon = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
-brain_icon.set_position(field.center_x - brain_icon.width//2,
+brain_icon.position = (field.center_x - brain_icon.width//2,
                            field.center_y - brain_icon.height//2)
 if cfg.BLACK_BACKGROUND:
     brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash-black'])))
 else:
     brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash'])))
-brain_graphic.set_position(field.center_x - brain_graphic.width//2,
+brain_graphic.position = (field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
 def scale_brain(dt):
     brain_graphic.scale = dt
@@ -4750,7 +4750,7 @@ def scale_brain(dt):
         mode.shrink_brain = False
         pyglet.clock.unschedule(shrink_brain)
         brain_graphic.scale = 1
-        brain_graphic.set_position(field.center_x - brain_graphic.width//2,
+        brain_graphic.position = (field.center_x - brain_graphic.width//2,
                            field.center_y - brain_graphic.height//2 + 40)
 
 scale_brain(scale_to_width(1))
