@@ -954,45 +954,51 @@ supportedtypes = {'sounds' :['wav'],
                   'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a'], # what else?
                   'sprites':['png', 'jpg', 'bmp']}
 
-def test_avbin():
+def test_music():
     try:
         import pyglet
-        try:
-            from pyglet.media import avbin
-        except Exception as e:
-            debug_msg(e)
-            pyglet.lib.load_library('avbin')
-        if pyglet.version >= '1.2':  # temporary workaround for defect in pyglet svn 2445
-            pyglet.media.have_avbin = True
-
-        # On Windows with Data Execution Protection enabled (on by default on Vista),
-        # an exception will be raised when use of avbin is attempted:
-        #   WindowsError: exception: access violation writing [ADDRESS]
-        # The file doesn't need to be in a avbin-specific format,
-        # since pyglet will use avbin over riff whenever it's detected.
-        # Let's find an audio file and try to load it to see if avbin works.
-        opj = os.path.join
-        opj = os.path.join
-        def look_for_music(path):
-            files = [p for p in os.listdir(path) if not p.startswith('.') and not os.path.isdir(opj(path, p))]
-            for f in files:
-                ext = f.lower()[-3:]
-                if ext in ['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a'] and not ext in ('wav'):
-                    return [opj(path, f)]
-            dirs  = [opj(path, p) for p in os.listdir(path) if not p.startswith('.') and os.path.isdir(opj(path, p))]
-            results = []
-            for d in dirs:
-                results.extend(look_for_music(d))
-                if results: return results
-            return results
-        music_file = look_for_music(res_path)
-        if music_file:
-            # The first time we load a file should trigger the exception
-            music_file = music_file[0]
-            loaded_music = pyglet.media.load(music_file, streaming=False)
-            del loaded_music
+        if pyglet.version >= '1.4':
+            from pyglet.media import have_ffmpeg
+            pyglet.media.have_avbin = have_ffmpeg()
+            if not pyglet.media.have_avbin:
+                cfg.USE_MUSIC = False
         else:
-            cfg.USE_MUSIC = False
+            try:
+                from pyglet.media import avbin
+            except Exception as e:
+                debug_msg(e)
+                pyglet.lib.load_library('avbin')
+            if pyglet.version >= '1.2':  # temporary workaround for defect in pyglet svn 2445
+                pyglet.media.have_avbin = True
+
+            # On Windows with Data Execution Protection enabled (on by default on Vista),
+            # an exception will be raised when use of avbin is attempted:
+            #   WindowsError: exception: access violation writing [ADDRESS]
+            # The file doesn't need to be in a avbin-specific format,
+            # since pyglet will use avbin over riff whenever it's detected.
+            # Let's find an audio file and try to load it to see if avbin works.
+            opj = os.path.join
+            opj = os.path.join
+            def look_for_music(path):
+                files = [p for p in os.listdir(path) if not p.startswith('.') and not os.path.isdir(opj(path, p))]
+                for f in files:
+                    ext = f.lower()[-3:]
+                    if ext in ['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a'] and not ext in ('wav'):
+                        return [opj(path, f)]
+                dirs  = [opj(path, p) for p in os.listdir(path) if not p.startswith('.') and os.path.isdir(opj(path, p))]
+                results = []
+                for d in dirs:
+                    results.extend(look_for_music(d))
+                    if results: return results
+                return results
+            music_file = look_for_music(res_path)
+            if music_file:
+                # The first time we load a file should trigger the exception
+                music_file = music_file[0]
+                loaded_music = pyglet.media.load(music_file, streaming=False)
+                del loaded_music
+            else:
+                cfg.USE_MUSIC = False
 
     except ImportError as e:
         debug_msg(e)
@@ -1031,7 +1037,7 @@ only" option, or add an exception for Brain Workshop.
 Press any key to continue without music support.
 """)
 
-test_avbin()
+test_music()
 if pyglet.media.have_avbin: supportedtypes['sounds'] = supportedtypes['music']
 elif cfg.USE_MUSIC:         supportedtypes['music'] = supportedtypes['sounds']
 else:                       del supportedtypes['music']
@@ -1067,14 +1073,12 @@ if cfg.USE_APPLAUSE:
 applauseplayer = get_pyglet_media_Player()
 musicplayer    = get_pyglet_media_Player()
 def play_applause():
-    #applauseplayer = get_pyglet_media_Player()
     applauseplayer.queue(random.choice(applausesounds))
     applauseplayer.volume = cfg.SFX_VOLUME
     if DEBUG: print("Playing applause")
     applauseplayer.play()
 def play_music(percent):
     if 'music' in resourcepaths:
-        musicplayer = get_pyglet_media_Player()
         if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 1
         if percent >= get_threshold_advance() and 'advance' in resourcepaths['music']:
             musicplayer.queue(pyglet.media.load(random.choice(resourcepaths['music']['advance']), streaming = True))
@@ -4071,6 +4075,8 @@ def compute_bt_sequence():
 
     mode.bt_sequence = bt_sequence
 
+player = get_pyglet_media_Player()
+player2 = get_pyglet_media_Player()
 # responsible for the random generation of each new stimulus (audio, color, position)
 def generate_stimulus():
     # first, randomly generate all stimuli
@@ -4224,16 +4230,13 @@ def generate_stimulus():
     # initiate the chosen stimuli.
     # mode.current_stim['audio'] is a number from 1 to 8.
     if 'arithmetic' in mode.modalities[mode.mode] and mode.trial_number > mode.back:
-        player = get_pyglet_media_Player()
         player.queue(sounds['operations'][mode.current_operation])  # maybe we should try... catch... here
         player.play()                                               # and maybe we should recycle sound players...
     elif 'audio' in mode.modalities[mode.mode] and not 'audio2' in mode.modalities[mode.mode]:
-        player = get_pyglet_media_Player()
         player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.play()
     elif 'audio2' in mode.modalities[mode.mode]:
         # dual audio modes - two sound players
-        player = get_pyglet_media_Player()
         player.queue(mode.soundlist[mode.current_stim['audio']-1])
         player.min_distance = 100.0
         if cfg.CHANNEL_AUDIO1 == 'left':
@@ -4244,7 +4247,6 @@ def generate_stimulus():
             #player.position = (0.0, 0.0, 0.0)
             pass
         player.play()
-        player2 = get_pyglet_media_Player()
         player2.queue(mode.soundlist2[mode.current_stim['audio2']-1])
         player2.min_distance = 100.0
         if cfg.CHANNEL_AUDIO2 == 'left':
