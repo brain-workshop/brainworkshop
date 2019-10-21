@@ -1824,6 +1824,7 @@ class Graph:
 class TextInputScreen:
     titlesize = calc_fontsize(18)
     textsize  = calc_fontsize(16)
+    instance = None
 
     def __init__(self, title='', text='', callback=None, catch=''):
         self.titletext = title
@@ -1852,6 +1853,7 @@ class TextInputScreen:
         # to result in the keypress being interpreted as a text input, so we
         # catch that later
         self.catch = catch
+        self.instance = self
 
 
     def on_draw(self):
@@ -1924,6 +1926,7 @@ class Menu:
                 'Monospace', 'Terminal', 'fixed', 'Fixed', 'Times New Roman',
                 'Helvetica', 'Arial']
     fontlist_serif = ['Times New Roman', 'Serif', 'Helvetica', 'Arial']
+    instance = None
 
 
     def __init__(self, options, values=None, actions={}, names={}, title='',
@@ -1972,6 +1975,10 @@ class Menu:
 
         window.push_handlers(self.on_key_press, self.on_text,
                              self.on_text_motion, self.on_draw)
+
+        # keep a reference to the current instance as pyglet>=1.4 Window.push_handlers
+        # only keep weak references to handlers so Menu subclasses will be deleted
+        self.instance = self
 
     def textify(self, x):
         if type(x) == bool:
