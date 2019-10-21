@@ -768,8 +768,8 @@ def parse_config(configpath):
                                  os.path.join(get_data_dir(), configpath))
 
     defaultconfig = ConfigParser.ConfigParser()
-    if sys.version_info >= (3,0):
-        defaultconfig.readfp(StringIO(CONFIGFILE_DEFAULT_CONTENTS))
+    if sys.version_info >= (3,):
+        defaultconfig.read_file(StringIO(CONFIGFILE_DEFAULT_CONTENTS))
     else:
         defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
 
