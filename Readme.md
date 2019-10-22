@@ -1,4 +1,7 @@
 # BrainWorkshop 5
+PS: If you appreciated this work, please star the repository. It helps others
+find this repository
+
 ## What is this?
 This is a fork of the popular brain training software BrainWorkshop
 
