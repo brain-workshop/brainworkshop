@@ -2093,7 +2093,7 @@ class MainMenu(Menu):
                ('user', _('Choose User'), UserScreen),
                ('graph', _('Daily Progress Graph'), NotImplemented),
                ('help', _('Help / Tutorial'), NotImplemented),
-               ('donate', _('Donate'), Notimplemented)
+               ('donate', _('Donate'), Notimplemented),
                ('forum', _('Go to Forum / Mailing List'), NotImplemented)]
         options =       [  op[0]         for op in ops]
         names   = dict( [ (op[0], op[1]) for op in ops])
@@ -3217,7 +3217,7 @@ def check_match(input_type, check_missed = False):
         back_data = 'vis'
     elif input_type in ('visaudio', ):
         back_data = 'audio'
-    elif input_type is 'arithmetic':
+    elif input_type == 'arithmetic':
         current = mode.current_stim['number']
         back_data = stats.session['numbers'][nback_trial]
         operation = mode.current_operation
