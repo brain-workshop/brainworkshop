@@ -6,13 +6,13 @@
 # Tutorial, installation instructions & links to the dual n-back community
 # are available at the Brain Workshop web site:
 #
-#       http://brainworkshop.net/
+#       http://brainworkshop.sourceforge.net/
 #
 # Also see Readme.txt.
 #
 # Copyright (C) 2009-2011: Paul Hoskinson (plhosk@gmail.com)
 #
-# The code is GPL licensed (http://www.gnu.org/copyleft/gpl.html)
+# The code is GPL licensed (https://www.gnu.org/copyleft/gpl.html)
 #------------------------------------------------------------------------------
 # Use python3 style division for consistency
 from __future__ import division
@@ -80,14 +80,14 @@ USER = 'default'
              #10:'chart-10-ponb.txt', 11:'chart-11-aunb.txt'}
 ATTEMPT_TO_SAVE_STATS = True
 STATS_SEPARATOR = ','
-WEB_SITE     = 'http://brainworkshop.net/'
-WEB_TUTORIAL = 'http://brainworkshop.net/#tutorial'
+WEB_SITE     = 'http://brainworkshop.sourceforge.net/'
+WEB_TUTORIAL = 'http://brainworkshop.sourceforge.net/tutorial.html'
 CLINICAL_TUTORIAL = WEB_TUTORIAL # FIXME: Add tutorial catered to clinical trials
-WEB_DONATE          = 'http://brainworkshop.net/donate.html'
-WEB_VERSION_CHECK   = 'http://brainworkshop.net/version.txt'
-WEB_PYGLET_DOWNLOAD = 'http://pyglet.org/download.html'
-WEB_FORUM           = 'http://groups.google.com/group/brain-training'
-WEB_MORSE           = 'http://en.wikipedia.org/wiki/Morse_code'
+WEB_DONATE          = 'http://brainworkshop.sourceforge.net/donate.html'
+WEB_VERSION_CHECK   = 'http://brainworkshop.sourceforge.net/version.txt'
+WEB_PYGLET_DOWNLOAD = 'https://github.com/pyglet/pyglet'
+WEB_FORUM           = 'https://groups.google.com/group/brain-training'
+WEB_MORSE           = 'https://en.wikipedia.org/wiki/Morse_code'
 TIMEOUT_SILENT =  3
 TICKS_MIN      =  3
 TICKS_MAX      = 50
@@ -211,7 +211,7 @@ CONFIGFILE_DEFAULT_CONTENTS = """
 # Every line beginning with # is ignored by the program.
 #
 # Please see the Brain Workshop web site for more information:
-#       http://brainworkshop.net
+#       http://brainworkshop.sourceforge.net
 #
 # The configuration options begin below.
 ######################################################################
