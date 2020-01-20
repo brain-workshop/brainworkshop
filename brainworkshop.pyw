@@ -1173,7 +1173,7 @@ class MyWindow(pyglet.window.Window):
     def on_key_release(self, symbol, modifiers):
         pass
 if cfg.WINDOW_FULLSCREEN:
-    screen = pyglet.window.get_platform().get_default_display().get_default_screen()
+    screen = pyglet.canvas.get_display().get_default_screen()
     cfg.WINDOW_WIDTH_FULLSCREEN  = screen.width
     cfg.WINDOW_HEIGHT_FULLSCREEN = screen.height
     window = MyWindow(cfg.WINDOW_WIDTH_FULLSCREEN, cfg.WINDOW_HEIGHT_FULLSCREEN, caption=''.join(caption), style=style, vsync=VSYNC, fullscreen=True)
