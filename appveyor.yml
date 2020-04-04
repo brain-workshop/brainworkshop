@@ -1,0 +1,27 @@
+# https://ci.appveyor.com/project/xantares/brainworkshop/
+
+install:
+  - curl -fSsLO https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe
+  - set CONDA_ROOT="%UserProfile%\Miniforge3"
+  - Miniforge3-Windows-x86_64.exe /InstallationType=JustMe /S /D=%CONDA_ROOT%
+  - call %CONDA_ROOT%\Scripts\activate.bat
+  - conda install -y pyglet cx_freeze ffmpeg
+  - dir /p %CONDA_ROOT%
+  - dir /p %CONDA_ROOT%\Library
+  - dir /p %CONDA_ROOT%\Library\bin
+
+build_script:
+  - cxfreeze --version
+  - call .\tools\freeze.bat
+  - xcopy %CONDA_ROOT%\ucrtbase.dll dist
+  - xcopy %CONDA_ROOT%\api-ms-win*.dll dist /y
+  - xcopy %CONDA_ROOT%\Library\bin\freetype.dll dist
+  - xcopy %CONDA_ROOT%\Library\bin\libpng16.dll dist
+  - xcopy %CONDA_ROOT%\Library\bin\zlib.dll dist
+  - dir /p dist
+  #- call .\dist\brainworkshop.exe
+  - 7z a brainworkshop.zip dist\*
+
+artifacts:
+  - path: brainworkshop.zip
+    name: binary
