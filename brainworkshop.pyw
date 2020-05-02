@@ -160,8 +160,6 @@ def get_settings_path(name):
     else: # on *nix, we want it to be lowercase and without spaces (~/.brainworkshop/data)
         return os.path.expanduser('~/.%s' % (name.lower().replace(' ', '')))
 
-def get_old_data_dir():
-    return os.path.join(get_main_dir(), FOLDER_DATA)
 def get_data_dir():
     rtrn = get_argv('--datadir')
     if rtrn:
@@ -683,21 +681,6 @@ class Message:
         self.batch.draw()
         return pyglet.event.EVENT_HANDLED
 
-def check_and_move_user_data():
-    if not '--datadir' in sys.argv and \
-      (not os.path.exists(get_data_dir()) or len(os.listdir(get_data_dir())) < 1):
-        import shutil
-        shutil.copytree(get_old_data_dir(), get_data_dir())
-        if len(os.listdir(get_old_data_dir())) > 2:
-            Message(
-"""Starting with version 4.8.2, Brain Workshop stores its user profiles \
-(statistics and configuration data) in "%s", rather than the old location, "%s". \
-Your configuration data has been copied to the new location. The files in the \
-old location have not been deleted. If you want to edit your config.ini, \
-make sure you look in "%s".
-
-Press space to continue.""" % (get_data_dir(),  get_old_data_dir(),  get_data_dir()))
-
 def load_last_user(lastuserpath):
     path = os.path.join(get_data_dir(), lastuserpath)
     if os.path.isfile(path):
@@ -822,8 +805,6 @@ def rewrite_configfile(configfile, overwrite=False):
     except OSError:
         f = open(os.path.join(get_data_dir(), STATS_BINARY), 'w')
         f.close()
-
-check_and_move_user_data()
 
 try:
     path = get_data_dir()
