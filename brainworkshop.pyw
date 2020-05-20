@@ -16,7 +16,7 @@
 #------------------------------------------------------------------------------
 # Use python3 style division for consistency
 from __future__ import division
-VERSION = '5.0-beta'
+VERSION = '5.0'
 def debug_msg(msg):
     if DEBUG:
         if isinstance(msg, Exception):
