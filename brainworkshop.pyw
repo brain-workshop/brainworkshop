@@ -3930,8 +3930,8 @@ def new_session():
 
     visuals[0].load_set()
     visuals[0].choose_random_images(8)
-    visuals[0].letters  = random.sample(sounds[mode.sound_mode ].keys(), 8)
-    visuals[0].letters2 = random.sample(sounds[mode.sound2_mode].keys(), 8)
+    visuals[0].letters  = random.sample(list(sounds[mode.sound_mode ].keys()), 8)
+    visuals[0].letters2 = random.sample(list(sounds[mode.sound2_mode].keys()), 8)
 
 
     for i in range(1, mode.flags[mode.mode]['multi']):
