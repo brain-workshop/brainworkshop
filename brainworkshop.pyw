@@ -571,8 +571,8 @@ SACCADIC_REPETITIONS = 60
 ######################################################################
 # Keyboard definitions.
 # The following keys cannot be used: ESC, X, P, F8, F10.
-# Look up the key codes here:
-# http://pyglet.org/doc/api/pyglet.window.key-module.html
+# You can find the codes using python "from pyglet.window import key; print(key.A)":
+# https://pyglet.readthedocs.io/en/latest/modules/window_key.html#module-pyglet.window.key
 ######################################################################
 
 # Position match. Default: 97 (A)
