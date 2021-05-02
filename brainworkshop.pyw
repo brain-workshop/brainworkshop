@@ -902,7 +902,6 @@ try:
     os.environ["PYGLET_SHADOW_WINDOW"] = "0"
     # import pyglet
     import pyglet
-    from pyglet.gl import *
     if NOVBO: pyglet.options['graphics_vbo'] = False
     from pyglet.window import key
 except Exception as e:
@@ -1170,9 +1169,9 @@ if sys.platform == 'linux2':
 
 # set the background color of the window
 if cfg.BLACK_BACKGROUND:
-    glClearColor(0, 0, 0, 1)
+    pyglet.gl.glClearColor(0, 0, 0, 1)
 else:
-    glClearColor(1, 1, 1, 1)
+    pyglet.gl.glClearColor(1, 1, 1, 1)
 if cfg.WINDOW_FULLSCREEN:
     window.maximize()
     window.set_fullscreen(cfg.WINDOW_FULLSCREEN)
@@ -1609,7 +1608,7 @@ class Graph:
             print(self.graph)
         graph_title = mode.long_mode_names[self.graph] + _(' N-Back')
 
-        self.batch.add(3, GL_LINE_STRIP,
+        self.batch.add(3, pyglet.gl.GL_LINE_STRIP,
             pyglet.graphics.OrderedGroup(order=1), ('v2i', (
             left, top,
             left, bottom,
@@ -1716,11 +1715,11 @@ class Graph:
                     font_size=calc_fontsize(8), bold=True, color=cfg.COLOR_TEXT,
                     x=x, y=bottom - scale_to_height(15),
                     anchor_x='center', anchor_y='top')
-                self.batch.add(2, GL_LINES,
+                self.batch.add(2, pyglet.gl.GL_LINES,
                     pyglet.graphics.OrderedGroup(order=0), ('v2i', (
                     x, bottom,
                     x, top)), ('c3B', minorcolor * 2))
-                self.batch.add(2, GL_LINES,
+                self.batch.add(2, pyglet.gl.GL_LINES,
                     pyglet.graphics.OrderedGroup(order=1), ('v2i', (
                     x, bottom - scale_to_height(10),
                     x, bottom)), ('c3B', axiscolor * 2))
@@ -1735,21 +1734,21 @@ class Graph:
                 font_size=calc_fontsize(10), bold=False, color=cfg.COLOR_TEXT,
                 x = left - scale_to_width(30), y = y + scale_to_width(1),
                 anchor_x = 'center', anchor_y = 'center')
-            self.batch.add(2, GL_LINES,
+            self.batch.add(2, pyglet.gl.GL_LINES,
                 pyglet.graphics.OrderedGroup(order=0), ('v2i', (
                 left, y,
                 right, y)), ('c3B', minorcolor * 2))
-            self.batch.add(2, GL_LINES,
+            self.batch.add(2, pyglet.gl.GL_LINES,
                 pyglet.graphics.OrderedGroup(order=1), ('v2i', (
                 left - scale_to_width(10), y,
                 left, y)), ('c3B', axiscolor * 2))
             y_marking += y_marking_interval
 
-        self.batch.add(len(avgpoints) // 2, GL_LINE_STRIP,
+        self.batch.add(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP,
             pyglet.graphics.OrderedGroup(order=2), ('v2i',
             avgpoints),
             ('c3B', linecolor * (len(avgpoints) // 2)))
-        self.batch.add(len(maxpoints) // 2, GL_LINE_STRIP,
+        self.batch.add(len(maxpoints) // 2, pyglet.gl.GL_LINE_STRIP,
             pyglet.graphics.OrderedGroup(order=3), ('v2i',
             maxpoints),
             ('c3B', linecolor2 * (len(maxpoints) // 2)))
@@ -1763,7 +1762,7 @@ class Graph:
             avg = avgpoints[index * 2 + 1]
             max = maxpoints[index * 2 + 1]
             # draw average
-            self.batch.add(4, GL_POLYGON,
+            self.batch.add(4, pyglet.gl.GL_POLYGON,
                 pyglet.graphics.OrderedGroup(order=o), ('v2i',
                 (x - radius, avg - radius,
                  x - radius, avg + radius,
@@ -1772,7 +1771,7 @@ class Graph:
                 ('c3B', linecolor * 4))
             o += 1
             # draw maximum
-            self.batch.add(4, GL_POLYGON,
+            self.batch.add(4, pyglet.gl.GL_POLYGON,
                 pyglet.graphics.OrderedGroup(order=o), ('v2i',
                 (x - radius, max - radius,
                  x - radius, max + radius,
@@ -1949,7 +1948,7 @@ class Menu:
             anchor_x='left', anchor_y='center', font_name=self.fontlist)
                        for i in range(self.pagesize)]
 
-        self.marker = self.batch.add(3, GL_POLYGON, None, ('v2i', (0,)*6,),
+        self.marker = self.batch.add(3, pyglet.gl.GL_POLYGON, None, ('v2i', (0,)*6,),
             ('c3B', self.markercolors))
 
         self.update_labels()
@@ -2397,7 +2396,7 @@ class Field:
 
         # add the inside lines
         if cfg.GRIDLINES:
-            self.v_lines = batch.add(8, GL_LINES, None, ('v2i', (
+            self.v_lines = batch.add(8, pyglet.gl.GL_LINES, None, ('v2i', (
                 self.x1, self.y3,
                 self.x2, self.y3,
                 self.x1, self.y4,
@@ -2419,7 +2418,7 @@ class Field:
         if (not mode.paused) and 'position1' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK:
             if not self.crosshair_visible:
                 length_of_crosshair = scale_to_height(8)
-                self.v_crosshair = batch.add(4, GL_LINES, None, ('v2i', (
+                self.v_crosshair = batch.add(4, pyglet.gl.GL_LINES, None, ('v2i', (
                     self.center_x - length_of_crosshair, self.center_y,
                     self.center_x + length_of_crosshair, self.center_y,
                     self.center_x, self.center_y - length_of_crosshair,
@@ -2496,7 +2495,7 @@ class Visual:
                 cr = self.size // 5
 
                 if cfg.OLD_STYLE_SHARP_CORNERS:
-                    self.square = batch.add(4, GL_POLYGON, None, ('v2i', (
+                    self.square = batch.add(4, pyglet.gl.GL_POLYGON, None, ('v2i', (
                         lx, by,
                         rx, by,
                         rx, ty,
@@ -2514,7 +2513,7 @@ class Visual:
                     xy = []
                     for a,b in zip(x,y): xy.extend((a, b))
 
-                    self.square = batch.add(40, GL_POLYGON, None,
+                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None,
                                             ('v2i', xy), ('c4B', self.color * 40))
 
             else:
@@ -2631,7 +2630,7 @@ class Circles:
 
         self.circle = []
         for index in range(0, cfg.THRESHOLD_FALLBACK_SESSIONS - 1):
-            self.circle.append(batch.add(4, GL_QUADS, None, ('v2i', (
+            self.circle.append(batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
                 self.start_x + self.distance * index - self.radius,
                 self.y + self.radius,
                 self.start_x + self.distance * index + self.radius,
@@ -3497,7 +3496,7 @@ class Saccadic:
             x = self.radius
         elif saccadic.position == 'right':
             x = window.width - self.radius
-        pyglet.graphics.draw(4, GL_POLYGON, ('v2i', (
+        pyglet.graphics.draw(4, pyglet.gl.GL_POLYGON, ('v2i', (
             x - self.radius, y - self.radius,  # lower-left
             x + self.radius, y - self.radius,  # lower-right
             x + self.radius, y + self.radius,  # upper-right
@@ -3505,7 +3504,7 @@ class Saccadic:
 
             )), ('c4B', self.color * 4))
 
-#                    self.square = batch.add(40, GL_POLYGON, None,
+#                    self.square = batch.add(40, pyglet.gl.GL_POLYGON, None,
 #                                            ('v2i', xy), ('c4B', self.color * 40))
 
 
@@ -4667,7 +4666,7 @@ def pulsate(dt):
 batch = pyglet.graphics.Batch()
 
 try:
-    test_polygon = batch.add(4, GL_QUADS, None, ('v2i', (
+    test_polygon = batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
         100, 100,
         100, 200,
         200, 200,
