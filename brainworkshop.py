@@ -3,16 +3,28 @@
 #------------------------------------------------------------------------------
 # Brain Workshop: a Dual N-Back game in Python
 #
+# This is a fork of the popular Brain Workshop game. Development on the original
+# has not happened for many years. The fork is available at:
+# https://github.com/brain-workshop/brainworkshop
+#
 # Tutorial, installation instructions & links to the dual n-back community
-# are available at the Brain Workshop web site:
+# are available at the original Brain Workshop web site:
 #
 #       http://brainworkshop.net/
 #
 # Also see Readme.txt.
 #
 # Copyright (C) 2009-2011: Paul Hoskinson (plhosk@gmail.com)
+# Copyright (C) 2017-2018: Samantha McVey (samantham@posteo.net)
+# SPDX-License-Identifier: GPL-2.0-or-later
 #
-# The code is GPL licensed (https://www.gnu.org/copyleft/gpl.html)
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not see https://www.gnu.org/licenses/gpl-2.0.html
 #------------------------------------------------------------------------------
 # Use python3 style division for consistency
 from __future__ import division
