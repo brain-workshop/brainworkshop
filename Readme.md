@@ -13,6 +13,10 @@ Python 2+3 in additon to making many changes and improvements.
 Version 5 is technically in Beta, although it is expected to be more
 stable compared to the original project and work with modern Python and Pyglet
 
+## Downloads
+
+ * Windows: https://github.com/brain-workshop/brainworkshop/releases
+
 ## New in this release:
 
 * Elements on the screen scale depending on the window size, making it much more
