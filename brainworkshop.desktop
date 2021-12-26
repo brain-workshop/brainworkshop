@@ -1,8 +1,9 @@
 [Desktop Entry]
-Name=Brain Workshop
+Name=Brain Workshop 5.0
 Comment=A free open-source version of the Dual N-Back mental exercise
 Exec=brainworkshop
 Icon=brainworkshop
 Categories=Education
 Terminal=false
 Type=Application
+StartupWMClass=Brain Workshop 5.0
