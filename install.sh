@@ -8,6 +8,7 @@ sudo apt install -y python3 python3-pyglet python3-future mpg123;
 #Let's use python3 for the program
 cd ${BASEDIR};
 sed -i 's[^#!/usr/bin/env python$[#!/usr/bin/env python3[g' brainworkshop.py;
+chmod +x brainworkshop.py;
 
 echo "Copying files to /opt and setting up desktop file";
 sudo mkdir -p /opt/;
