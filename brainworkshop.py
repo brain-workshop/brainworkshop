@@ -3998,7 +3998,13 @@ def end_session(cancelled=False):
             statsfile.close()       # don't manually edit their statsfiles
             if (sessions % cfg.PANHANDLE_FREQUENCY) == 0 and not CLINICAL_MODE:
                 Panhandle(n=sessions)
-
+            # load last game mode
+            stats.initialize_session()
+            stats.parse_statsfile()
+            if len(stats.full_history) > 0 and not cfg.JAEGGI_MODE:
+                mode.mode = stats.full_history[-1][1]
+            stats.retrieve_progress()
+            todayLabel.update()
 
 
 # this function causes the key labels along the bottom to revert to their
