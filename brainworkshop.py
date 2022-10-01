@@ -916,12 +916,10 @@ try:
 except Exception as e:
     debug_msg(e)
     quit_with_error(_('Error: unable to load pyglet.  If you already installed pyglet, please ensure ctypes is installed.  Please visit %s') % WEB_PYGLET_DOWNLOAD)
-try:
-    pyglet.options['audio'] = ('directsound', 'openal', 'alsa', )
-    # use in pyglet 1.2: pyglet.options['audio'] = ('directsound', 'pulse', 'openal', )
-    import pyglet.media
-except Exception as e:
-    debug_msg(e)
+
+audio_driver = pyglet.media.get_audio_driver()
+debug_msg("Loaded audio driver=" + audio_driver.__class__.__name__)
+if audio_driver.__class__.__name__ == "SilentDriver":
     quit_with_error(_('No suitable audio driver could be loaded.'))
 
 # Initialize resources (sounds and images)
