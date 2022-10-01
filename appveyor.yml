@@ -1,9 +1,10 @@
 install:
-  - curl -fSsLO https://github.com/conda-forge/miniforge/releases/download/4.10.0-0/Miniforge3-Windows-x86_64.exe
+  - curl -fSsLO https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe
   - set CONDA_ROOT="%UserProfile%\Miniforge3"
   - Miniforge3-Windows-x86_64.exe /InstallationType=JustMe /S /D=%CONDA_ROOT%
   - call %CONDA_ROOT%\Scripts\activate.bat
   - conda install -y pyglet cx_freeze ffmpeg
+  - conda list
   - dir /p %CONDA_ROOT%
   - dir /p %CONDA_ROOT%\Library
   - dir /p %CONDA_ROOT%\Library\bin
