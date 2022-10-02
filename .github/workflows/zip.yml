@@ -1,0 +1,28 @@
+name: Release
+
+on: push
+
+jobs:
+  win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniforge-version: latest
+      - name: Install
+        run: |
+          conda install -y pyglet cx_freeze ffmpeg
+          conda list
+          cxfreeze --version
+      - name: Build
+        run: |
+          .\tools\freeze.bat
+          xcopy C:\Miniconda3\envs\test\Library\bin\*.dll dist /y
+          xcopy C:\Miniconda3\envs\test\Library\bin\ffmpeg.exe dist
+          7z a brainworkshop.zip dist\*
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: brainworkshop.zip
