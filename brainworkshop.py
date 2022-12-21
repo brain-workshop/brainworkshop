@@ -66,6 +66,7 @@ from decimal import Decimal
 from time import strftime
 from datetime import date
 import gettext
+
 if sys.version_info >= (3,0):
     # TODO check if this is right
     gettext.install('messages', localedir='res/i18n')
@@ -913,6 +914,9 @@ try:
     import pyglet
     if NOVBO: pyglet.options['graphics_vbo'] = False
     from pyglet.window import key
+
+    # shapes submodule is available with pyglet >=1.5.4
+    have_shapes = hasattr(pyglet, 'shapes')
 except Exception as e:
     debug_msg(e)
     quit_with_error(_('Error: unable to load pyglet.  If you already installed pyglet, please ensure ctypes is installed.  Please visit %s') % WEB_PYGLET_DOWNLOAD)
@@ -2403,16 +2407,22 @@ class Field:
 
         # add the inside lines
         if cfg.GRIDLINES:
-            self.v_lines = batch.add(8, pyglet.gl.GL_LINES, None, ('v2i', (
-                self.x1, self.y3,
-                self.x2, self.y3,
-                self.x1, self.y4,
-                self.x2, self.y4,
-                self.x3, self.y1,
-                self.x3, self.y2,
-                self.x4, self.y1,
-                self.x4, self.y2)),
-                      ('c3B', self.color8))
+            if have_shapes:
+                self.v_lines = [pyglet.shapes.Line(self.x1, self.y3, self.x2, self.y3, color=self.color, batch=batch),
+                                pyglet.shapes.Line(self.x1, self.y4, self.x2, self.y4, color=self.color, batch=batch),
+                                pyglet.shapes.Line(self.x3, self.y1, self.x3, self.y2, color=self.color, batch=batch),
+                                pyglet.shapes.Line(self.x4, self.y1, self.x4, self.y2, color=self.color, batch=batch)]
+            else:
+                self.v_lines = batch.add(8, pyglet.gl.GL_LINES, None, ('v2i', (
+                    self.x1, self.y3,
+                    self.x2, self.y3,
+                    self.x1, self.y4,
+                    self.x2, self.y4,
+                    self.x3, self.y1,
+                    self.x3, self.y2,
+                    self.x4, self.y1,
+                    self.x4, self.y2)),
+                        ('c3B', self.color8))
 
         self.crosshair_visible = False
         # initialize crosshair
@@ -2425,15 +2435,27 @@ class Field:
         if (not mode.paused) and 'position1' in mode.modalities[mode.mode] and not cfg.VARIABLE_NBACK:
             if not self.crosshair_visible:
                 length_of_crosshair = scale_to_height(8)
-                self.v_crosshair = batch.add(4, pyglet.gl.GL_LINES, None, ('v2i', (
-                    self.center_x - length_of_crosshair, self.center_y,
-                    self.center_x + length_of_crosshair, self.center_y,
-                    self.center_x, self.center_y - length_of_crosshair,
-                    self.center_x, self.center_y + length_of_crosshair)), ('c3B', self.color4))
+                if have_shapes:
+                    self.v_crosshair = [pyglet.shapes.Line(self.center_x - length_of_crosshair, self.center_y,
+                                                           self.center_x + length_of_crosshair, self.center_y,
+                                                           color=self.color, batch=batch),
+                                        pyglet.shapes.Line(self.center_x, self.center_y - length_of_crosshair,
+                                                           self.center_x, self.center_y + length_of_crosshair,
+                                                           color=self.color, batch=batch)]
+                else:
+                    self.v_crosshair = batch.add(4, pyglet.gl.GL_LINES, None, ('v2i', (
+                        self.center_x - length_of_crosshair, self.center_y,
+                        self.center_x + length_of_crosshair, self.center_y,
+                        self.center_x, self.center_y - length_of_crosshair,
+                        self.center_x, self.center_y + length_of_crosshair)), ('c3B', self.color4))
                 self.crosshair_visible = True
         else:
             if self.crosshair_visible:
-                self.v_crosshair.delete()
+                if have_shapes:
+                    for i in range(2):
+                        self.v_crosshair[i].delete()
+                else:
+                    self.v_crosshair.delete()
                 self.crosshair_visible = False
 
 
@@ -2637,28 +2659,52 @@ class Circles:
 
         self.circle = []
         for index in range(0, cfg.THRESHOLD_FALLBACK_SESSIONS - 1):
-            self.circle.append(batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
-                self.start_x + self.distance * index - self.radius,
-                self.y + self.radius,
-                self.start_x + self.distance * index + self.radius,
-                self.y + self.radius,
-                self.start_x + self.distance * index + self.radius,
-                self.y - self.radius,
-                self.start_x + self.distance * index - self.radius,
-                self.y - self.radius)),
-                ('c4B', self.not_activated * 4)))
+            if have_shapes:
+                self.circle.append([pyglet.shapes.Rectangle(self.start_x + self.distance * index - self.radius,
+                                                            self.y + self.radius,
+                                                            self.start_x + self.distance * index + self.radius,
+                                                            self.y + self.radius,
+                                                            color=self.not_activated[:3], batch=batch),
+                                    pyglet.shapes.Rectangle(self.start_x + self.distance * index + self.radius,
+                                                            self.y - self.radius,
+                                                            self.start_x + self.distance * index - self.radius,
+                                                            self.y - self.radius,
+                                                            color=self.not_activated[:3], batch=batch)])
+            else:
+                self.circle.append(batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
+                    self.start_x + self.distance * index - self.radius,
+                    self.y + self.radius,
+                    self.start_x + self.distance * index + self.radius,
+                    self.y + self.radius,
+                    self.start_x + self.distance * index + self.radius,
+                    self.y - self.radius,
+                    self.start_x + self.distance * index - self.radius,
+                    self.y - self.radius)),
+                    ('c4B', self.not_activated * 4)))
 
         self.update()
 
     def update(self):
         if mode.manual or mode.started or cfg.JAEGGI_MODE:
             for i in range(0, cfg.THRESHOLD_FALLBACK_SESSIONS - 1):
-                self.circle[i].colors = (self.invisible * 4)
+                if have_shapes:
+                    for j in range(2):
+                        self.circle[i][j].colors = (self.invisible * 4)
+                else:
+                    self.circle[i].colors = (self.invisible * 4)
         else:
             for i in range(0, cfg.THRESHOLD_FALLBACK_SESSIONS - 1):
-                self.circle[i].colors = (self.not_activated * 4)
+                if have_shapes:
+                    for j in range(2):
+                        self.circle[i][j].colors = (self.not_activated * 4)
+                else:
+                    self.circle[i].colors = (self.not_activated * 4)
             for i in range(0, mode.progress):
-                self.circle[i].colors = (self.activated * 4)
+                if have_shapes:
+                    for j in range(2):
+                        self.circle[i][j].colors = (self.activated * 4)
+                else:
+                    self.circle[i].colors = (self.activated * 4)
 
 
 # this is the update notification
@@ -4673,12 +4719,15 @@ def pulsate(dt):
 batch = pyglet.graphics.Batch()
 
 try:
-    test_polygon = batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
-        100, 100,
-        100, 200,
-        200, 200,
-        200, 100)),
-              ('c3B', (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
+    if have_shapes:
+        test_polygon = pyglet.shapes.Rectangle(100, 100, 200, 200, color=[0] * 3, batch=batch)
+    else:
+        test_polygon = batch.add(4, pyglet.gl.GL_QUADS, None, ('v2i', (
+            100, 100,
+            100, 200,
+            200, 200,
+            200, 100)),
+                ('c3B', (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     test_polygon.delete()
 except Exception as e:
     debug_msg(e)
@@ -4728,14 +4777,24 @@ update_all_labels()
 
 # Initialize brain sprite
 brain_icon = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['brain'])))
-brain_icon.position = (field.center_x - brain_icon.width//2,
-                           field.center_y - brain_icon.height//2)
+pos = (field.center_x - brain_icon.width//2,
+       field.center_y - brain_icon.height//2)
+pyglet2x = pyglet.version >= "2"
+if pyglet2x:
+    # add z component
+    pos += (0,)
+brain_icon.position = pos
+
 if cfg.BLACK_BACKGROUND:
     brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash-black'])))
 else:
     brain_graphic = pyglet.sprite.Sprite(pyglet.image.load(random.choice(resourcepaths['misc']['splash'])))
-brain_graphic.position = (field.center_x - brain_graphic.width//2,
-                           field.center_y - brain_graphic.height//2 + 40)
+pos = (field.center_x - brain_graphic.width//2,
+       field.center_y - brain_graphic.height//2 + 40)
+if pyglet2x:
+    # add z component
+    pos += (0,)
+brain_graphic.position = pos
 def scale_brain(dt):
     brain_graphic.scale = dt
     brain_graphic.x = field.center_x - brain_graphic.image.width//2  + scale_to_width(2) + (brain_graphic.image.width - brain_graphic.width) // 2
