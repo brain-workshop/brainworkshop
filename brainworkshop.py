@@ -1170,7 +1170,7 @@ if cfg.WINDOW_FULLSCREEN:
     window = MyWindow(cfg.WINDOW_WIDTH_FULLSCREEN, cfg.WINDOW_HEIGHT_FULLSCREEN, caption=''.join(caption), style=style, vsync=VSYNC, fullscreen=True)
 else:
     window = MyWindow(cfg.WINDOW_WIDTH, cfg.WINDOW_HEIGHT, caption=''.join(caption), style=style, vsync=VSYNC)
-pyglet.gl.glLineWidth(calc_fontsize(2))
+
 #if DEBUG:
 #    window.push_handlers(pyglet.window.event.WindowEventLogger())
 if sys.platform == 'darwin' and cfg.WINDOW_FULLSCREEN:
