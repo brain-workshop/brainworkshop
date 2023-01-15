@@ -1619,11 +1619,15 @@ class Graph:
             print(self.graph)
         graph_title = mode.long_mode_names[self.graph] + _(' N-Back')
 
-        self.batch.add(3, pyglet.gl.GL_LINE_STRIP,
-            pyglet.graphics.OrderedGroup(order=1), ('v2i', (
-            left, top,
-            left, bottom,
-            right, bottom)), ('c3B', axiscolor * 3))
+        if have_shapes:
+            pyglet.shapes.Line(left, top, left, bottom, color=axiscolor, batch=self.batch)
+            pyglet.shapes.Line(left, bottom, right, bottom, color=axiscolor, batch=self.batch)
+        else:
+            self.batch.add(3, pyglet.gl.GL_LINE_STRIP,
+                pyglet.graphics.OrderedGroup(order=1), ('v2i', (
+                left, top,
+                left, bottom,
+                right, bottom)), ('c3B', axiscolor * 3))
 
         pyglet.text.Label(
             _('G: Return to Main Screen\n\nN: Next Game Type'),
@@ -1726,14 +1730,18 @@ class Graph:
                     font_size=calc_fontsize(8), bold=True, color=cfg.COLOR_TEXT,
                     x=x, y=bottom - scale_to_height(15),
                     anchor_x='center', anchor_y='top')
-                self.batch.add(2, pyglet.gl.GL_LINES,
-                    pyglet.graphics.OrderedGroup(order=0), ('v2i', (
-                    x, bottom,
-                    x, top)), ('c3B', minorcolor * 2))
-                self.batch.add(2, pyglet.gl.GL_LINES,
-                    pyglet.graphics.OrderedGroup(order=1), ('v2i', (
-                    x, bottom - scale_to_height(10),
-                    x, bottom)), ('c3B', axiscolor * 2))
+                if have_shapes:
+                    pyglet.shapes.Line(x, bottom, x, top, color=minorcolor, batch=self.batch)
+                    pyglet.shapes.Line(x, bottom - scale_to_height(10), x, bottom, color=minorcolor, batch=self.batch)
+                else:
+                    self.batch.add(2, pyglet.gl.GL_LINES,
+                        pyglet.graphics.OrderedGroup(order=0), ('v2i', (
+                        x, bottom,
+                        x, top)), ('c3B', minorcolor * 2))
+                    self.batch.add(2, pyglet.gl.GL_LINES,
+                        pyglet.graphics.OrderedGroup(order=1), ('v2i', (
+                        x, bottom - scale_to_height(10),
+                        x, bottom)), ('c3B', axiscolor * 2))
 
         if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 2
 
@@ -1745,24 +1753,32 @@ class Graph:
                 font_size=calc_fontsize(10), bold=False, color=cfg.COLOR_TEXT,
                 x = left - scale_to_width(30), y = y + scale_to_width(1),
                 anchor_x = 'center', anchor_y = 'center')
-            self.batch.add(2, pyglet.gl.GL_LINES,
-                pyglet.graphics.OrderedGroup(order=0), ('v2i', (
-                left, y,
-                right, y)), ('c3B', minorcolor * 2))
-            self.batch.add(2, pyglet.gl.GL_LINES,
-                pyglet.graphics.OrderedGroup(order=1), ('v2i', (
-                left - scale_to_width(10), y,
-                left, y)), ('c3B', axiscolor * 2))
+            if have_shapes:
+                pyglet.shapes.Line(left, y, right, y, color=minorcolor, batch=self.batch)
+                pyglet.shapes.Line(left - scale_to_width(10), y, left, y, color=minorcolor, batch=self.batch)
+            else:
+                self.batch.add(2, pyglet.gl.GL_LINES,
+                    pyglet.graphics.OrderedGroup(order=0), ('v2i', (
+                    left, y,
+                    right, y)), ('c3B', minorcolor * 2))
+                self.batch.add(2, pyglet.gl.GL_LINES,
+                    pyglet.graphics.OrderedGroup(order=1), ('v2i', (
+                    left - scale_to_width(10), y,
+                    left, y)), ('c3B', axiscolor * 2))
             y_marking += y_marking_interval
 
-        self.batch.add(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP,
-            pyglet.graphics.OrderedGroup(order=2), ('v2i',
-            avgpoints),
-            ('c3B', linecolor * (len(avgpoints) // 2)))
-        self.batch.add(len(maxpoints) // 2, pyglet.gl.GL_LINE_STRIP,
-            pyglet.graphics.OrderedGroup(order=3), ('v2i',
-            maxpoints),
-            ('c3B', linecolor2 * (len(maxpoints) // 2)))
+        if have_shapes:
+            for index in range(len(avgpoints) // 2 - 1):
+                pyglet.shapes.Line(avgpoints[index], avgpoints[index + 1], avgpoints[index + 2], avgpoints[index + 3], batch=self.batch)
+        else:
+            self.batch.add(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP,
+                pyglet.graphics.OrderedGroup(order=2), ('v2i',
+                avgpoints),
+                ('c3B', linecolor * (len(avgpoints) // 2)))
+            self.batch.add(len(maxpoints) // 2, pyglet.gl.GL_LINE_STRIP,
+                pyglet.graphics.OrderedGroup(order=3), ('v2i',
+                maxpoints),
+                ('c3B', linecolor2 * (len(maxpoints) // 2)))
 
         if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 3
 
@@ -1771,24 +1787,30 @@ class Graph:
         for index in range(0, len(avgpoints) // 2):
             x = avgpoints[index * 2]
             avg = avgpoints[index * 2 + 1]
-            max = maxpoints[index * 2 + 1]
+            maxp = maxpoints[index * 2 + 1]
             # draw average
-            self.batch.add(4, pyglet.gl.GL_POLYGON,
-                pyglet.graphics.OrderedGroup(order=o), ('v2i',
-                (x - radius, avg - radius,
-                 x - radius, avg + radius,
-                 x + radius, avg + radius,
-                 x + radius, avg - radius)),
-                ('c3B', linecolor * 4))
+            if have_shapes:
+                pyglet.shapes.Polygon((x - radius, avg - radius), (x - radius, avg + radius), (x + radius, avg + radius), (x + radius, avg - radius), color=linecolor, batch=self.batch)
+            else:
+                self.batch.add(4, pyglet.gl.GL_POLYGON,
+                    pyglet.graphics.OrderedGroup(order=o), ('v2i',
+                    (x - radius, avg - radius,
+                    x - radius, avg + radius,
+                    x + radius, avg + radius,
+                    x + radius, avg - radius)),
+                    ('c3B', linecolor * 4))
             o += 1
             # draw maximum
-            self.batch.add(4, pyglet.gl.GL_POLYGON,
-                pyglet.graphics.OrderedGroup(order=o), ('v2i',
-                (x - radius, max - radius,
-                 x - radius, max + radius,
-                 x + radius, max + radius,
-                 x + radius, max - radius)),
-                ('c3B', linecolor2 * 4))
+            if have_shapes:
+                pyglet.shapes.Polygon((x - radius, maxp - radius), (x - radius, maxp + radius), (x + radius, maxp + radius), (x + radius, maxp - radius), color=linecolor, batch=self.batch)
+            else:
+                self.batch.add(4, pyglet.gl.GL_POLYGON,
+                    pyglet.graphics.OrderedGroup(order=o), ('v2i',
+                    (x - radius, maxp - radius,
+                    x - radius, maxp + radius,
+                    x + radius, maxp + radius,
+                    x + radius, maxp - radius)),
+                    ('c3B', linecolor2 * 4))
             o += 1
 
         if preventMusicSkipping: pyglet.clock.tick(poll=True) # Prevent music skipping 4
@@ -1959,8 +1981,11 @@ class Menu:
             anchor_x='left', anchor_y='center', font_name=self.fontlist)
                        for i in range(self.pagesize)]
 
-        self.marker = self.batch.add(3, pyglet.gl.GL_POLYGON, None, ('v2i', (0,)*6,),
-            ('c3B', self.markercolors))
+        if have_shapes:
+            self.marker = pyglet.shapes.Polygon((0,0), (0,0), (0,0), color=[1] * 3, batch=self.batch)
+        else:
+            self.marker = self.batch.add(3, pyglet.gl.GL_POLYGON, None, ('v2i', (0,)*6,),
+                ('c3B', self.markercolors))
 
         self.update_labels()
 
