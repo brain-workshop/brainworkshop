@@ -2534,7 +2534,7 @@ class Visual:
 
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
         self.position = position
-        self.color = get_color(color)
+        self.color = get_color(color/COLOR_FACTOR)
         self.vis = vis
 
         self.center_x = field.center_x + (field.size // 3)*((position+1)%3 - 1) + (field.size // 3 - self.size)//2
@@ -2572,7 +2572,7 @@ class Visual:
 
             else:
                 # use sprite squares
-                self.square = self.spr_square[color-1]
+                self.square = self.spr_square[color-1] #根据图片的编号来确定颜色current_stim['color']
                 self.square.opacity = 255
                 self.square.x = self.center_x - field.size // 6
                 self.square.y = self.center_y - field.size // 6
@@ -3307,6 +3307,9 @@ def check_match(input_type, check_missed = False):
             return 'incorrect'
     return 'incorrect'
 
+COLOR_MAX_NUM=8
+IMAGE_MAX_NUM=16
+COLOR_FACTOR=IMAGE_MAX_NUM/COLOR_MAX_NUM
 
 # this controls the statistics which display upon completion of a session.
 class AnalysisLabel:
@@ -3349,10 +3352,15 @@ class AnalysisLabel:
                 # data is a dictionary of lists.
                 if mod in ['position1', 'position2', 'position3', 'position4',
                            'vis1', 'vis2', 'vis3', 'vis4', 'audio', 'audio2', 'color', 'image']:
-                    rights[mod] += int((data[mod][x] == data[mod][x-back]) and data[mod+'_input'][x])
+                    rights[mod] += int((data[mod][x] == data[mod][x-back]) and data[mod+'_input'][x]) #计算正确答案数量
                     wrongs[mod] += int((data[mod][x] == data[mod][x-back])  ^  data[mod+'_input'][x]) # ^ is XOR
                     if cfg.JAEGGI_SCORING:
                         rights[mod] += int(data[mod][x] != data[mod][x-back]  and not data[mod+'_input'][x])
+                if mod == 'color':
+                    rights[mod] += int(((data[mod][x]%COLOR_MAX_NUM) == (data[mod][x-back]%COLOR_MAX_NUM)) and data[mod+'_input'][x]) #计算正确答案数量
+                    wrongs[mod] += int(((data[mod][x]%COLOR_MAX_NUM) == (data[mod][x-back]%COLOR_MAX_NUM))  ^  data[mod+'_input'][x]) # ^ is XOR
+                    if cfg.JAEGGI_SCORING:
+                        rights[mod] += int((data[mod][x]%COLOR_MAX_NUM) != (data[mod][x-back]%COLOR_MAX_NUM) and not data[mod+'_input'][x])
 
                 if mod in ['visvis', 'visaudio', 'audiovis']:
                     modnow = mod.startswith('vis') and 'vis' or 'audio' # these are the python<2.5 compatible versions
@@ -4143,7 +4151,7 @@ def compute_bt_sequence():
 player = get_pyglet_media_Player()
 player2 = get_pyglet_media_Player()
 # responsible for the random generation of each new stimulus (audio, color, position)
-def generate_stimulus():
+def generate_stimulus(): #游戏进行时读取图片
     # first, randomly generate all stimuli
     positions = random.sample(range(1,9), 4)   # sample without replacement
     for s, p in zip(range(1, 5), positions):
@@ -4151,7 +4159,7 @@ def generate_stimulus():
         mode.current_stim['vis' + repr(s)] = random.randint(1, 8)
 
     #mode.current_stim['position1'] = random.randint(1, 8)
-    mode.current_stim['color']  = random.randint(1, 8)
+    mode.current_stim['color']  = random.randint(1, IMAGE_MAX_NUM)
     mode.current_stim['vis']    = random.randint(1, 8)
     mode.current_stim['audio']  = random.randint(1, 8)
     mode.current_stim['audio2'] = random.randint(1, 8)
