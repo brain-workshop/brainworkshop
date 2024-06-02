@@ -943,7 +943,7 @@ if pyglet.version < '1.1':
 
 supportedtypes = {'sounds' :['wav'],
                   'music'  :['wav', 'ogg', 'mp3', 'aac', 'mp2', 'ac3', 'm4a'], # what else?
-                  'sprites':['png', 'jpg', 'bmp']}
+                  'sprites':['png', 'jpg', 'bmp', 'BMP']}
 
 def test_music():
     try:
@@ -2534,7 +2534,7 @@ class Visual:
 
     def spawn(self, position=0, color=1, vis=0, number=-1, operation='none', variable = 0):
         self.position = position
-        self.color = get_color(color/COLOR_FACTOR)
+        self.color = get_color(color - COLOR_MAX_NUM * ((color - 1) / COLOR_MAX_NUM))
         self.vis = vis
 
         self.center_x = field.center_x + (field.size // 3)*((position+1)%3 - 1) + (field.size // 3 - self.size)//2
