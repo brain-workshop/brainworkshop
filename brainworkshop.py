@@ -26,8 +26,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not see https://www.gnu.org/licenses/gpl-2.0.html
 #------------------------------------------------------------------------------
-# Use python3 style division for consistency
-from __future__ import division
 VERSION = '5.0'
 def debug_msg(msg):
     if DEBUG:
