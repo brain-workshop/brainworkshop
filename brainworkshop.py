@@ -328,7 +328,7 @@ CROSSHAIRS = True
 # Default: [1, 3, 8, 6]
 VISUAL_COLORS = [1, 3, 8, 6]
 
-# Specify image sets here. This is a list of subfolders in the res\sprites\
+# Specify image sets here. This is a list of subfolders in the res/sprites/
 # folder which may be selected in Image mode.
 # The first item in the list is the default which is loaded on startup.
 IMAGE_SETS = ['polygons-basic', 'national-park-service', 'pentominoes',
