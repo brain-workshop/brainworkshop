@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# This Python file uses the following encoding: utf-8
 #------------------------------------------------------------------------------
 # Brain Workshop: a Dual N-Back game in Python
 #
@@ -52,24 +51,16 @@ def get_argv(arg):
             exit(1)
 
 import random, os, sys, socket, webbrowser, time, math, traceback, datetime, errno
-if sys.version_info >= (3,0):
-    import urllib.request, configparser as ConfigParser
-    from io import StringIO
-    import pickle
-else:
-    import urllib2 as urllib, ConfigParser, StringIO
-    import cPickle as pickle
-
+import urllib.request, configparser as ConfigParser
+from io import StringIO
+import pickle
 from decimal import Decimal
 from time import strftime
 from datetime import date
 import gettext
 
-if sys.version_info >= (3,0):
-    # TODO check if this is right
-    gettext.install('messages', localedir='res/i18n')
-else:
-    gettext.install('messages', localedir='res/i18n', unicode=True)
+# TODO check if this is right
+gettext.install('messages', localedir='res/i18n')
 
 # Clinical mode?  Clinical mode sets cfg.JAEGGI_MODE = True, enforces a minimal user
 # interface, and saves results into a binary file (default 'logfile.dat') which
@@ -759,10 +750,7 @@ def parse_config(configpath):
                                  os.path.join(get_data_dir(), configpath))
 
     defaultconfig = ConfigParser.ConfigParser()
-    if sys.version_info >= (3,):
-        defaultconfig.read_file(StringIO(CONFIGFILE_DEFAULT_CONTENTS))
-    else:
-        defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
+    defaultconfig.read_file(StringIO(CONFIGFILE_DEFAULT_CONTENTS))
 
     def try_eval(text):  # this is a one-use function for config parsing
         try:  return eval(text)
@@ -889,10 +877,7 @@ def update_check():
     global update_available
     global update_version
     socket.setdefaulttimeout(TIMEOUT_SILENT)
-    if sys.version_info >= (3,0):
-        req = urllib.request.Request(WEB_VERSION_CHECK)
-    else:
-        req = urllib.Request(WEB_VERSION_CHECK)
+    req = urllib.request.Request(WEB_VERSION_CHECK)
     try:
         response = urllib.urlopen(req)
         version = response.readline().strip()
