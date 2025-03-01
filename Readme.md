@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/0yqv9n8wv57f1g6c?svg=true)](https://ci.appveyor.com/project/xantares/brainworkshop)
+[![Build status](https://github.com/openturns/openturns/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/openturns/openturns/actions/workflows/build.yml)
 
 # BrainWorkshop 5
 PS: If you appreciated this work, please star the repository. It helps others
