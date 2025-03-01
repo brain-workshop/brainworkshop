@@ -1,4 +1,4 @@
-[![Build status](https://github.com/brain-workshop/brainworkshop/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/brain-workshop/brainworkshop/actions/workflows/build.yml)
+[![Build status](https://github.com/brain-workshop/brainworkshop/actions/workflows/zip.yml/badge.svg?branch=master)](https://github.com/brain-workshop/brainworkshop/actions/workflows/zip.yml)
 
 # BrainWorkshop 5
 PS: If you appreciated this work, please star the repository. It helps others
