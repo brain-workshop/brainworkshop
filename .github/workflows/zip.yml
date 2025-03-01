@@ -6,8 +6,8 @@ jobs:
   win:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
       - name: Install
@@ -22,7 +22,7 @@ jobs:
           xcopy C:\Miniconda3\envs\test\Library\bin\ffmpeg.exe dist
           7z a brainworkshop.zip dist\*
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: brainworkshop.zip
