@@ -1835,6 +1835,91 @@ class TextInputScreen:
         self.callback(self.text.strip())
         return pyglet.event.EVENT_HANDLED
 
+class TextInputScreen3():
+    titlesize = calc_fontsize(18)
+    textsize  = calc_fontsize(16)
+    instance = None
+
+    def __init__(self, title='', text='', callback=None, catch=''):
+        self.titletext = title
+        self.input_text = []  # Using list for easier manipulation
+        self.starttext = text
+        self.bgcolor = (255 * int(not cfg.BLACK_BACKGROUND), )*3
+        self.textcolor = (255 * int(cfg.BLACK_BACKGROUND), )*3 + (255, )
+        self.batch = pyglet.graphics.Batch()
+        self.title = pyglet.text.Label(title, font_size=10, #self.titlesize,
+            weight='normal', color=self.textcolor, batch=self.batch,
+            x=int(window.width/2), y=(window.height*8)/10+24,
+            anchor_x='center', anchor_y='center')
+        window.push_handlers(self.on_key_press, self.on_draw, self.on_text)
+        self.callback = callback
+        self.cursor_pos = 0
+        self.cursor_visible = True
+        self.cursor_time = 0
+        self.xInp = 250
+        self.yInp = (window.height*8)/10-18
+        pyglet.clock.schedule_interval(self.update_cursor, 0.5)
+        self.update_displ()
+
+    def on_text(self, text):
+        if text.isprintable() and len(text) == 1:
+            self.input_text.insert(self.cursor_pos, text)
+            self.cursor_pos += 1
+            self.update_displ()
+
+    def on_key_press(self, k, modifiers):
+        if k == key.BACKSPACE:
+            if self.cursor_pos > 0:
+                del self.input_text[self.cursor_pos - 1]
+                self.cursor_pos -= 1
+        elif k == key.LEFT:
+            self.cursor_pos = max(0, self.cursor_pos - 1)
+        elif k == key.RIGHT:
+            self.cursor_pos = min(len(self.input_text), self.cursor_pos + 1)
+        elif  k in (key.ESCAPE, key.RETURN, key.ENTER):
+            if k !=key.ESCAPE:
+                self.callback(''.join(self.input_text))
+            self.cursor_pos = 0
+            self.input_text = []
+            window.pop_handlers()
+        self.update_displ()
+        return pyglet.event.EVENT_HANDLED
+
+    def update_cursor(self, dt):
+        self.cursor_visible = not self.cursor_visible
+        self.update_displ()
+
+    def on_draw(self):
+        #window.clear()
+        self.batch.draw()
+        return pyglet.event.EVENT_HANDLED
+
+    def update_displ(self):
+        
+        # Draw input field background
+        bg = pyglet.shapes.Rectangle(
+            self.xInp, self.yInp, 400, 28,
+            color=(200, 200, 200)
+        )
+        bg.draw()
+        
+        # Create display text with cursor
+        cursor = "_" if self.cursor_visible else " "
+        display_text = (
+            ''.join(self.input_text[:self.cursor_pos]) +
+            cursor +
+            ''.join(self.input_text[self.cursor_pos:])
+        )
+        
+        # Create and draw label
+        label = pyglet.text.Label(
+            display_text,
+            font_size=12, 
+            x=self.xInp+4,
+            y=self.yInp+14,
+            anchor_y='center'
+        )
+        label.draw()
 
 class Cycler:
     def __init__(self, values, default=0):
@@ -1967,7 +2052,16 @@ class Menu:
         if ending:
             self.labels[i].text = '...'
         w, h, cs = window.width, window.height, self.choicesize
-        self.marker.vertices = [w//10, int((h*8)/10 - markerpos*(cs*3/2) + cs/2),
+        if have_shapes:
+            self.marker = pyglet.shapes.Polygon(
+                (w//10, int((h*8)/10 - markerpos*(cs*3/2) + cs/2)),
+                (w//9,  int((h*8)/10 - markerpos*(cs*3/2))),
+                (w//10, int((h*8)/10 - markerpos*(cs*3/2) - cs/2)),
+                color=(1,1,1), #(255, 55, 0),
+                batch=self.batch
+            )
+        else:
+            self.marker.vertices = [w//10, int((h*8)/10 - markerpos*(cs*3/2) + cs/2),
                                 w//9,  int((h*8)/10 - markerpos*(cs*3/2)),
                                 w//10, int((h*8)/10 - markerpos*(cs*3/2) - cs/2)]
 
@@ -2076,7 +2170,10 @@ class UserScreen(Menu):
         newuser = self.users[i]
         if newuser == _("New user"):
             # TODO Don't allow the user to create a username that's an empty string
-            textInput = TextInputScreen(_("Enter new user name:"), USER, callback=set_user, catch=' ')
+            if sys.version_info[0] == 2: # python 2
+                textInput = TextInputScreen(_("Enter new user name:"), USER, callback=set_user, catch=' ')
+            else:
+                textInput = TextInputScreen3(_("Enter new user name:"), USER, callback=set_user, catch=' ')
         else:
             set_user(newuser)
 
