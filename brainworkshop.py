@@ -58,6 +58,8 @@ from decimal import Decimal
 from time import strftime
 from datetime import date
 import gettext
+from pyglet.shapes import Line
+from pyglet.shapes import Polygon
 
 # TODO check if this is right
 gettext.install('messages', localedir='res/i18n')
@@ -1378,6 +1380,13 @@ class Mode:
 #
 
 class Graph:
+    class ShapesStore:
+        def __init__(self):
+            self.s = [] # shapes store
+        def __iadd__(self, o):
+            self.s.append(o)
+            return self
+    
     def __init__(self):
         self.graph = 2
         self.reset_dictionaries()
@@ -1385,6 +1394,8 @@ class Graph:
         self.batch = None
         self.styles = ['N+10/3+4/3', 'N', '%', 'N.%', 'N+2*%-1']
         self.style = 0
+        self.sh = self.ShapesStore()
+
 
     def next_style(self):
         self.style = (self.style + 1) % len(self.styles)
@@ -1563,8 +1574,8 @@ class Graph:
         graph_title = mode.long_mode_names[self.graph] + _(' N-Back')
 
         if have_shapes:
-            pyglet.shapes.Line(left, top, left, bottom, color=axiscolor, batch=self.batch)
-            pyglet.shapes.Line(left, bottom, right, bottom, color=axiscolor, batch=self.batch)
+            self.sh += Line(left, top   , left , bottom, color=axiscolor, batch=self.batch)
+            self.sh += Line(left, bottom, right, bottom, color=axiscolor, batch=self.batch)
         else:
             self.batch.add(3, pyglet.gl.GL_LINE_STRIP,
                 pyglet.graphics.OrderedGroup(order=1), ('v2i', (
@@ -1572,7 +1583,7 @@ class Graph:
                 left, bottom,
                 right, bottom)), ('c3B', axiscolor * 3))
 
-        pyglet.text.Label(
+        self.sh += pyglet.text.Label(
             _('G: Return to Main Screen\n\nN: Next Game Type'),
             batch=self.batch,
             multiline = True, width = scale_to_width(300),
@@ -1581,31 +1592,31 @@ class Graph:
             x=from_left_edge(10), y=from_top_edge(10),
             anchor_x='left', anchor_y='top')
 
-        pyglet.text.Label(graph_title,
+        self.sh += pyglet.text.Label(graph_title,
             batch=self.batch,
             font_size=calc_fontsize(18), weight='bold', color=cfg.COLOR_TEXT,
             x = center_x, y = top + scale_to_height(60),
             anchor_x = 'center', anchor_y = 'center')
 
-        pyglet.text.Label(_('Date'),
+        self.sh += pyglet.text.Label(_('Date'),
             batch=self.batch,
             font_size=calc_fontsize(12), weight='bold', color=cfg.COLOR_TEXT,
             x = center_x, y = bottom - scale_to_height(80),
             anchor_x = 'center', anchor_y = 'center')
 
-        pyglet.text.Label(_('Maximum'), width=scale_to_width(1),
+        self.sh += pyglet.text.Label(_('Maximum'), width=scale_to_width(1),
             batch=self.batch,
             font_size=calc_fontsize(12), weight='bold', color=linecolor2+(255,),
             x = left - scale_to_width(60), y = center_y + scale_to_height(50),
             anchor_x = 'right', anchor_y = 'center')
 
-        pyglet.text.Label(_('Average'), width=scale_to_width(1),
+        self.sh += pyglet.text.Label(_('Average'), width=scale_to_width(1),
             batch=self.batch,
             font_size=calc_fontsize(12), weight='bold', color=linecolor+(255,),
             x = left - scale_to_width(60), y = center_y + scale_to_height(25),
             anchor_x = 'right', anchor_y = 'center')
 
-        pyglet.text.Label(_('Score'), width=scale_to_width(1),
+        self.sh += pyglet.text.Label(_('Score'), width=scale_to_width(1),
             batch=self.batch,
             font_size=calc_fontsize(12), weight='bold', color=cfg.COLOR_TEXT,
             x = left - scale_to_width(60), y = center_y,
@@ -1614,7 +1625,7 @@ class Graph:
         dates = list(dictionary)
         dates.sort()
         if len(dates) < 2:
-            pyglet.text.Label(_('Insufficient data: two days needed'),
+            self.sh += pyglet.text.Label(_('Insufficient data: two days needed'),
                 batch=self.batch,
                 font_size=calc_fontsize(12), weight='bold', color = axiscolor + (255,),
                 x = center_x, y = center_y,
@@ -1668,14 +1679,14 @@ class Graph:
             if 10 < len(dates):
                 datestring = datestring.replace('-', '\n')
             if not index % (skip_x + 1):
-                pyglet.text.Label(datestring, multiline=True, width=scale_to_width(12),
+                self.sh += pyglet.text.Label(datestring, multiline=True, width=scale_to_width(12),
                     batch=self.batch,
                     font_size=calc_fontsize(8), weight='bold', color=cfg.COLOR_TEXT,
                     x=x, y=bottom - scale_to_height(15),
                     anchor_x='center', anchor_y='top')
                 if have_shapes:
-                    pyglet.shapes.Line(x, bottom, x, top, color=minorcolor, batch=self.batch)
-                    pyglet.shapes.Line(x, bottom - scale_to_height(10), x, bottom, color=minorcolor, batch=self.batch)
+                    self.sh += Line(x, bottom                      , x, top   , color=minorcolor, batch=self.batch)
+                    self.sh += Line(x, bottom - scale_to_height(10), x, bottom, color=minorcolor, batch=self.batch)
                 else:
                     self.batch.add(2, pyglet.gl.GL_LINES,
                         pyglet.graphics.OrderedGroup(order=0), ('v2i', (
@@ -1691,14 +1702,14 @@ class Graph:
         y_marking = ymin
         while y_marking <= ymax:
             y = int((y_marking - ymin)/(ymax - ymin) * height + bottom)
-            pyglet.text.Label(str(round(y_marking, 2)),
+            self.sh += pyglet.text.Label(str(round(y_marking, 2)),
                 batch=self.batch,
                 font_size=calc_fontsize(10), weight='normal', color=cfg.COLOR_TEXT,
                 x = left - scale_to_width(30), y = y + scale_to_width(1),
                 anchor_x = 'center', anchor_y = 'center')
             if have_shapes:
-                pyglet.shapes.Line(left, y, right, y, color=minorcolor, batch=self.batch)
-                pyglet.shapes.Line(left - scale_to_width(10), y, left, y, color=minorcolor, batch=self.batch)
+                self.sh += Line(left                     , y, right, y, color=minorcolor, batch=self.batch)
+                self.sh += Line(left - scale_to_width(10), y, left , y, color=minorcolor, batch=self.batch)
             else:
                 self.batch.add(2, pyglet.gl.GL_LINES,
                     pyglet.graphics.OrderedGroup(order=0), ('v2i', (
@@ -1711,8 +1722,12 @@ class Graph:
             y_marking += y_marking_interval
 
         if have_shapes:
-            for index in range(len(avgpoints) // 2 - 1):
-                pyglet.shapes.Line(avgpoints[index], avgpoints[index + 1], avgpoints[index + 2], avgpoints[index + 3], batch=self.batch)
+            # blue
+            for index in range(0, len(avgpoints)-2, 2):
+                self.sh += Line(avgpoints[index], avgpoints[index + 1], avgpoints[index + 2], avgpoints[index + 3], color=linecolor, batch=self.batch)
+            # red
+            for index in range(0, len(maxpoints)-2, 2):
+                self.sh += Line(maxpoints[index], maxpoints[index + 1], maxpoints[index + 2], maxpoints[index + 3], color=linecolor2, batch=self.batch)
         else:
             self.batch.add(len(avgpoints) // 2, pyglet.gl.GL_LINE_STRIP,
                 pyglet.graphics.OrderedGroup(order=2), ('v2i',
@@ -1733,7 +1748,8 @@ class Graph:
             maxp = maxpoints[index * 2 + 1]
             # draw average
             if have_shapes:
-                pyglet.shapes.Polygon((x - radius, avg - radius), (x - radius, avg + radius), (x + radius, avg + radius), (x + radius, avg - radius), color=linecolor, batch=self.batch)
+                None
+                #self.sh += Polygon((x - radius, avg - radius), (x - radius, avg + radius), (x + radius, avg + radius), (x + radius, avg - radius), color=linecolor, batch=self.batch)
             else:
                 self.batch.add(4, pyglet.gl.GL_POLYGON,
                     pyglet.graphics.OrderedGroup(order=o), ('v2i',
@@ -1745,7 +1761,8 @@ class Graph:
             o += 1
             # draw maximum
             if have_shapes:
-                pyglet.shapes.Polygon((x - radius, maxp - radius), (x - radius, maxp + radius), (x + radius, maxp + radius), (x + radius, maxp - radius), color=linecolor, batch=self.batch)
+                None
+                #self.sh += Polygon((x - radius, maxp - radius), (x - radius, maxp + radius), (x + radius, maxp + radius), (x + radius, maxp - radius), color=linecolor, batch=self.batch)
             else:
                 self.batch.add(4, pyglet.gl.GL_POLYGON,
                     pyglet.graphics.OrderedGroup(order=o), ('v2i',
@@ -1771,7 +1788,7 @@ class Graph:
             str_list.append(labelstrings[m] + '%i%% ' % self.percents[self.graph][m][-1]
                             + ' ' * (7-len(mode.modalities[self.graph])))
 
-        pyglet.text.Label(''.join(str_list),
+        self.sh += pyglet.text.Label(''.join(str_list),
             batch=self.batch,
             font_size=calc_fontsize(11), weight='normal', color = cfg.COLOR_TEXT,
             x = width_center(), y = scale_to_width(20),
